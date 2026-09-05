@@ -100,6 +100,10 @@ The job creation endpoint returns immediately. It must never block waiting for t
 
 Requesting generation requires `canProcessLearningData` from `AccountAccessPolicy`.
 
+Job creation is a rate-limited route (ADR 0009). Register its policy in
+`sinapse.rate-limit.routes` — prompt 00 built the mechanism and left the route list empty
+because no route existed yet. Each prompt registers the policy for the routes it creates.
+
 ### 7. Failure modes
 
 The core is a separate process over HTTP. Handle timeout, unavailability, malformed
