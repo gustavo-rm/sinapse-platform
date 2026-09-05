@@ -36,8 +36,9 @@ class ApplicationContextIntegrationTest extends IntegrationTest {
                 """, String.class);
 
         assertThat(tables)
-                .as("the bootstrap creates no domain table: only Flyway's own history and "
-                        + "the event publication registry required by Spring Modulith")
-                .containsExactly("event_publication", "flyway_schema_history");
+                .as("the bootstrap creates no table of its own: the schema holds nothing but "
+                        + "Flyway's own history, which Flyway creates before looking for "
+                        + "migrations to apply")
+                .containsExactly("flyway_schema_history");
     }
 }
