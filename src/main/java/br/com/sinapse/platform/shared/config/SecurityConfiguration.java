@@ -96,9 +96,11 @@ public class SecurityConfiguration {
                 policies, limiter, clientAddressResolver, problemDetailWriter);
 
         return http
-                // The API is consumed with an opaque token in a header, never with an
-                // ambient cookie, so there is no cross-site request forgery vector to
-                // protect against. Revisit if a cookie is ever introduced.
+                // Off by decision, not by omission. The session is carried by a browser
+                // cookie (ADR 0010), so the vector does exist; what stands in for a token is
+                // SameSite=Strict on that cookie, set where the cookie is issued. The
+                // decision holds only while no state-changing operation is reachable by GET.
+                // If one ever is, CSRF tokens come back.
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
                 .httpBasic(AbstractHttpConfigurer::disable)

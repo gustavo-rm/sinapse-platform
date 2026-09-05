@@ -104,7 +104,8 @@ sinapse:
     # the address reported by the container is used. Fill this in with the addresses of
     # the reverse proxy actually in front of the application, and with nothing else.
     trusted-proxies: []
-    # Policies arrive with the routes they govern. ADR 0009 lists the ones that require
-    # limiting from the start: invite redemption, authentication, generation job
-    # creation, e-mail verification and password recovery.
+    # The mechanism exists from the bootstrap and the list starts empty: each prompt
+    # registers the policy for the routes it creates. ADR 0009 names the ones that require
+    # limiting from the start: invite redemption, authentication, generation job creation,
+    # e-mail verification and password recovery.
     routes: []
