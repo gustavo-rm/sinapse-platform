@@ -61,6 +61,16 @@ execução. Para reaproveitar o mesmo contêiner entre execuções e encurtar a 
 export TESTCONTAINERS_REUSE_ENABLE=true
 ```
 
+Onde não houver Docker — uma máquina sem ele, ou uma integração contínua que já publica o
+PostgreSQL como serviço —, aponte a suíte para um banco existente. Nada mais muda: as mesmas
+migrações rodam nele e as mesmas verificações valem.
+
+```bash
+export SINAPSE_TEST_DB_URL=jdbc:postgresql://localhost:5432/sinapse_test
+export SINAPSE_TEST_DB_USERNAME=<usuário>
+export SINAPSE_TEST_DB_PASSWORD=<senha>
+```
+
 O relatório de cobertura fica em `target/site/jacoco/index.html`.
 
 ---
@@ -121,6 +131,16 @@ reuse the same container across runs and shorten the suite:
 
 ```bash
 export TESTCONTAINERS_REUSE_ENABLE=true
+```
+
+Where there is no Docker — a machine without it, or a continuous integration job that
+already publishes PostgreSQL as a service — point the suite at an existing database.
+Nothing else changes: the same migrations run against it and the same assertions apply.
+
+```bash
+export SINAPSE_TEST_DB_URL=jdbc:postgresql://localhost:5432/sinapse_test
+export SINAPSE_TEST_DB_USERNAME=<user>
+export SINAPSE_TEST_DB_PASSWORD=<password>
 ```
 
 The coverage report is written to `target/site/jacoco/index.html`.

@@ -1,5 +1,6 @@
 package br.com.sinapse.platform.shared.ratelimit;
 
+import br.com.sinapse.platform.shared.web.ClientAddressResolver;
 import br.com.sinapse.platform.shared.web.problem.ApiErrorType;
 import br.com.sinapse.platform.shared.web.problem.ProblemDetailWriter;
 import jakarta.servlet.FilterChain;

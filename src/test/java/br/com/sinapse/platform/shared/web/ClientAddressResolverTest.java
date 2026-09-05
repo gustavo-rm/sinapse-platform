@@ -1,4 +1,6 @@
-package br.com.sinapse.platform.shared.ratelimit;
+package br.com.sinapse.platform.shared.web;
+
+import br.com.sinapse.platform.shared.ratelimit.RateLimitProperties;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

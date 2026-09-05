@@ -61,6 +61,18 @@ public enum ApiErrorType {
             "Not acceptable",
             "No representation available in the media types accepted by the client."),
 
+    /**
+     * Registration on behalf of someone below the configured consent age.
+     *
+     * <p>It has a type of its own because the client has to be able to say why the
+     * registration was refused, and the catalogue is the only place a text may come from.
+     * The wording states the rule and never the submitted date of birth.
+     */
+    MINOR_REGISTRATION_NOT_SUPPORTED("minor-registration-not-supported", HttpStatus.UNPROCESSABLE_ENTITY,
+            "Registration not available for a minor",
+            "This version registers only account holders who are of age. Registration with "
+                    + "consent from a guardian is not available yet."),
+
     /** Request contradicts the current state of the resource. */
     CONFLICT("conflict", HttpStatus.CONFLICT,
             "Conflict",

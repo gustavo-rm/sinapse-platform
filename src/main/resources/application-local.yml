@@ -18,9 +18,56 @@ logging:
 
 sinapse:
   rate-limit:
+    # Repeated from the base configuration on purpose. A list is bound whole from the
+    # highest-priority source that defines any of its elements, so declaring the probe route
+    # here would otherwise drop every policy declared there.
     routes:
       - id: probe
         path: /api/v1/probe/rate-limited
         phase: BEFORE_AUTHENTICATION
         limit: 5
         window: 1m
+      - id: identity-registration
+        path: /api/v1/accounts
+        phase: BEFORE_AUTHENTICATION
+        limit: 5
+        window: 1h
+      - id: identity-authentication
+        path: /api/v1/sessions
+        phase: BEFORE_AUTHENTICATION
+        limit: 10
+        window: 5m
+      - id: identity-email-verification
+        path: /api/v1/email-verifications
+        phase: BEFORE_AUTHENTICATION
+        limit: 10
+        window: 5m
+      - id: identity-password-reset-confirmation
+        path: /api/v1/password-resets/confirmation
+        phase: BEFORE_AUTHENTICATION
+        limit: 10
+        window: 5m
+      - id: identity-password-reset
+        path: /api/v1/password-resets
+        phase: BEFORE_AUTHENTICATION
+        limit: 5
+        window: 1h
+
+  identity:
+    session:
+      # A workstation serves plain HTTP, and a Secure cookie would never be stored. This is
+      # the only reason the flag is configurable; every deployed profile keeps it on.
+      cookie-secure: false
+    # Development placeholders. They exist so that registration can be exercised locally and
+    # are marked as what they are. The wordings of a deployed environment are supplied by
+    # whoever is responsible for them, and this file is not that place.
+    terms:
+      - purpose: LEARNING_DATA_PROCESSING
+        version: dev-0
+        body: 'Development placeholder. Not a consent term.'
+      - purpose: INSTITUTION_SHARING
+        version: dev-0
+        body: 'Development placeholder. Not a consent term.'
+      - purpose: ACADEMIC_RESEARCH
+        version: dev-0
+        body: 'Development placeholder. Not a consent term.'

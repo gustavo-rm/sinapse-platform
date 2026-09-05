@@ -8,9 +8,49 @@ logging:
 
 sinapse:
   rate-limit:
+    # Repeated from the base configuration: a list is bound whole from the highest-priority
+    # source that defines any of its elements. The limits are lowered so that a test can
+    # exhaust a window in a handful of requests.
     routes:
       - id: probe
         path: /api/v1/probe/rate-limited
         phase: BEFORE_AUTHENTICATION
         limit: 3
         window: 1m
+      - id: identity-authentication
+        path: /api/v1/sessions
+        phase: BEFORE_AUTHENTICATION
+        limit: 5
+        window: 1m
+      - id: identity-email-verification
+        path: /api/v1/email-verifications
+        phase: BEFORE_AUTHENTICATION
+        limit: 50
+        window: 1m
+      - id: identity-password-reset-confirmation
+        path: /api/v1/password-resets/confirmation
+        phase: BEFORE_AUTHENTICATION
+        limit: 50
+        window: 1m
+      - id: identity-password-reset
+        path: /api/v1/password-resets
+        phase: BEFORE_AUTHENTICATION
+        limit: 50
+        window: 1m
+    # Registration is deliberately absent from this list. It is limited to five per hour in
+    # the deployed configuration, and the suite registers many more accounts than that.
+
+  identity:
+    # A job that fires on its own in the middle of a suite makes a failure depend on the hour
+    # the suite ran. The sweep is exercised by calling it.
+    majority-sweep-cron: '-'
+    terms:
+      - purpose: LEARNING_DATA_PROCESSING
+        version: test-0
+        body: 'Test fixture. Not a consent term.'
+      - purpose: INSTITUTION_SHARING
+        version: test-0
+        body: 'Test fixture. Not a consent term.'
+      - purpose: ACADEMIC_RESEARCH
+        version: test-0
+        body: 'Test fixture. Not a consent term.'
