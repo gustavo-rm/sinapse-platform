@@ -1,0 +1,110 @@
+# Base configuration. Cross-cutting decisions come from ADR 0009 and ADR 0010.
+# Credentials are never written here: the datasource is read from the environment.
+
+spring:
+  application:
+    name: sinapse-platform
+
+  datasource:
+    url: ${SINAPSE_DB_URL}
+    username: ${SINAPSE_DB_USERNAME}
+    password: ${SINAPSE_DB_PASSWORD}
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      # The schema belongs to Flyway. Never "update", never "create": a schema created
+      # by Hibernate is a schema no migration describes.
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          # Instants are stored as timestamptz; the driver must not reinterpret them in
+          # the zone of whatever host the JVM happens to run on.
+          time_zone: UTC
+
+  flyway:
+    enabled: true
+    # The schema is built by migrations from the first commit, so there is no legacy
+    # state to baseline over. Turning this on would let an undescribed schema pass.
+    baseline-on-migrate: false
+    locations: classpath:db/migration
+
+  mvc:
+    # Request parameters and bodies must never reach a log.
+    log-request-details: false
+
+  jackson:
+    default-property-inclusion: non_null
+    serialization:
+      # Instants travel as ISO-8601 with offset, not as epoch numbers.
+      write-dates-as-timestamps: false
+
+server:
+  port: ${SINAPSE_HTTP_PORT:8080}
+  error:
+    # Nothing about the failure is disclosed by the container. Error bodies are produced
+    # by GlobalExceptionHandler, from a closed catalogue of texts.
+    whitelabel:
+      enabled: false
+    include-message: never
+    include-binding-errors: never
+    include-stacktrace: never
+    include-exception: false
+  # Forwarded headers are not honoured globally. The only component that may consider
+  # X-Forwarded-For is the rate limiter, and only for configured trusted proxies.
+  forward-headers-strategy: none
+
+management:
+  server:
+    # Separate port, bound to the loopback address, not published by the infrastructure.
+    port: ${SINAPSE_MANAGEMENT_PORT:8081}
+    address: 127.0.0.1
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: never
+      show-components: never
+  info:
+    env:
+      enabled: false
+
+logging:
+  structured:
+    format:
+      # Structured JSON with the correlation id carried in the logging context.
+      console: ecs
+  level:
+    root: INFO
+    # SQL and bound parameters would carry student data into the logs.
+    org.hibernate.SQL: 'OFF'
+    org.hibernate.orm.jdbc.bind: 'OFF'
+    org.springframework.web: INFO
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: alpha
+    tags-sorter: alpha
+
+sinapse:
+  api:
+    version: '@project.version@'
+  time:
+    # Zone the application performs internal operations in. It is not the zone of any
+    # user: local times belonging to an account are interpreted in Account.timeZone.
+    zone: UTC
+  rate-limit:
+    # Empty by default: with no trusted proxy configured, X-Forwarded-For is ignored and
+    # the address reported by the container is used. Fill this in with the addresses of
+    # the reverse proxy actually in front of the application, and with nothing else.
+    trusted-proxies: []
+    # Policies arrive with the routes they govern. ADR 0009 lists the ones that require
+    # limiting from the start: invite redemption, authentication, generation job
+    # creation, e-mail verification and password recovery.
+    routes: []

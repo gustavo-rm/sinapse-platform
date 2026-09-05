@@ -1,0 +1,46 @@
+# Maven. The wrapper itself is committed: mvnw, mvnw.cmd and
+# .mvn/wrapper/maven-wrapper.properties. The wrapper is script-only, so there is no jar.
+target/
+.mvn/timing.properties
+
+# Java
+*.class
+*.jar
+*.war
+*.ear
+hs_err_pid*
+replay_pid*
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# Eclipse
+.classpath
+.project
+.settings/
+bin/
+
+# Visual Studio Code
+.vscode/
+.factorypath
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# Operating system
+.DS_Store
+Thumbs.db
+
+# Local environment. Datasource credentials are read from the environment and must never
+# be committed.
+.env
+*.local.yml
+*.local.yaml

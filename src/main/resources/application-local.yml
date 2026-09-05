@@ -1,0 +1,26 @@
+# Local development profile.
+#
+# The URL has a default so that a developer can start the application against a
+# PostgreSQL on the workstation. User and password are still read from the environment;
+# no credential is written to a file in the repository.
+
+spring:
+  datasource:
+    url: ${SINAPSE_DB_URL:jdbc:postgresql://localhost:5432/sinapse}
+
+logging:
+  structured:
+    format:
+      # Readable output while developing. Production keeps the structured format.
+      console:
+  level:
+    br.com.sinapse.platform: DEBUG
+
+sinapse:
+  rate-limit:
+    routes:
+      - id: probe
+        path: /api/v1/probe/rate-limited
+        phase: BEFORE_AUTHENTICATION
+        limit: 5
+        window: 1m

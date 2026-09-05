@@ -1,0 +1,16 @@
+# Profile used by the integration tests. The datasource comes from the container started
+# by IntegrationTest, so nothing about it is declared here.
+
+logging:
+  structured:
+    format:
+      console:
+
+sinapse:
+  rate-limit:
+    routes:
+      - id: probe
+        path: /api/v1/probe/rate-limited
+        phase: BEFORE_AUTHENTICATION
+        limit: 3
+        window: 1m
