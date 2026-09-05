@@ -217,6 +217,11 @@ Decided once in ADR 0009 and ADR 0010. Do not re-decide per endpoint.
 - **Routes:** everything under `/api/v1`.
 - **Rate limiting:** single filter, per-route policy. Client address comes from the
   infrastructure; `X-Forwarded-For` is trusted only from a configured trusted proxy.
+  The mechanism exists since bootstrap and the route list starts empty: **each prompt
+  registers the policy for the routes it creates**, in `sinapse.rate-limit.routes`.
+- **CSRF:** disabled, with the browser session cookie set to `SameSite=Strict`. This holds
+  only while no state-changing operation uses `GET`. If that ever changes, CSRF tokens come
+  back.
 - **Time:** instants are `timestamptz`; local times are interpreted in `Account.timeZone`.
   No code depends on the JVM or server default zone.
 - **Sessions:** server-side opaque tokens, stored hashed. Not JWT. Suspending an account

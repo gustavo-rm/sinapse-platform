@@ -92,6 +92,19 @@ is not acceptable.
 - Delivered as an `HttpOnly`, `Secure`, `SameSite=Lax` cookie for browsers, and as
   `Authorization: Bearer` with the same opaque token for non-browser clients
 
+**CSRF and the cookie — correction to prompt 00.** Prompt 00 disabled CSRF on the premise
+that the API is only consumed with a header token. That premise is wrong: this ADR decides a
+browser cookie, which is ambient credential, and `SameSite=Lax` still permits cross-site
+top-level navigation.
+
+Apply this: keep CSRF disabled, set the cookie to `SameSite=Strict`, and ensure **no
+state-changing operation uses `GET`**. Add a test asserting the cookie attributes and a test
+asserting no `GET` mapping performs a write. Update the justification comment in
+`SecurityConfiguration`, which currently states the wrong premise.
+
+E-mail verification links keep working, since they carry a token and do not depend on the
+session cookie.
+
 Required behaviour, all needing tests:
 
 - Suspending or anonymising an account revokes its sessions in the same transaction

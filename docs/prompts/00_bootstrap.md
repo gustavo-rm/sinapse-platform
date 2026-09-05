@@ -21,8 +21,14 @@ Create the Maven project skeleton for the Sinapse platform backend.
 - Dependencies: `spring-boot-starter-web`, `spring-boot-starter-data-jpa`,
   `spring-boot-starter-security`, `spring-boot-starter-validation`,
   `flyway-core`, `flyway-database-postgresql`, `postgresql`,
-  `springdoc-openapi-starter-webmvc-ui`, `spring-modulith-starter-core`,
-  `spring-modulith-starter-jpa`
+  `springdoc-openapi-starter-webmvc-ui`, `spring-boot-starter-actuator`,
+  `spring-modulith-starter-core`
+
+**Do not add `spring-modulith-starter-jpa`.** It exists for the event publication registry,
+and this architecture uses no inter-module events — ADR 0005 rejected event propagation
+explicitly. Including it forces an `event_publication` table under `ddl-auto: validate` and
+collides with `V1__identity.sql`. Boundary verification needs only `starter-core` and
+`starter-test`.
 - Test: `spring-boot-starter-test`, `spring-modulith-starter-test`,
   `testcontainers`, `junit-jupiter` (Testcontainers), `postgresql` (Testcontainers)
 - JaCoCo plugin bound to `verify`

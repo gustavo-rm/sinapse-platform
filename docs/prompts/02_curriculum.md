@@ -30,6 +30,11 @@ reorder. Never derive it from the name at runtime.
 `curriculum` is a base module. It must not import any other module. `ModularityTests`
 enforces this; do not work around it.
 
+**Tighten rule R3 in the build.** Declare `allowedDependencies = {}` on the `curriculum` and
+`identity` module descriptors, so the base layer having no outgoing dependency is verified
+rather than merely documented. Prompt 00 deliberately left this out while the modules were
+empty.
+
 ### 2. Prerequisite edges
 
 Directed edge: `prerequisiteTopicId` precedes `dependentTopicId`.
