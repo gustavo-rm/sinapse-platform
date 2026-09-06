@@ -2,6 +2,7 @@ package br.com.sinapse.platform.shared.config;
 
 import com.fasterxml.jackson.databind.SerializationFeature;
 import java.time.Clock;
+import java.time.Duration;
 import java.util.TimeZone;
 import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
@@ -19,15 +20,27 @@ import org.springframework.context.annotation.Configuration;
 @Configuration(proxyBeanMethods = false)
 public class TimeConfiguration {
 
+    /** Resolution of {@code timestamptz}, which is what every instant is eventually stored at. */
+    private static final Duration STORAGE_RESOLUTION = Duration.ofNanos(1_000);
+
     /**
      * The clock every component reads the current instant from.
      *
+     * <p>It ticks in microseconds rather than nanoseconds, which is not a detail. PostgreSQL
+     * stores {@code timestamptz} to the microsecond, so an instant read from the JVM at
+     * nanosecond resolution is not the instant that comes back out of the database. Without
+     * the truncation, the {@code createdAt} in the response to a write and the
+     * {@code createdAt} in the next read of the same row differ in their last digits — the
+     * same value, rendered two ways, which is exactly the kind of thing a client ends up
+     * writing a comparison around.
+     *
      * @param properties time configuration
-     * @return a clock fixed to the configured application zone
+     * @return a clock fixed to the configured application zone, at the resolution the
+     *         database keeps
      */
     @Bean
     public Clock clock(TimeProperties properties) {
-        return Clock.system(properties.zone());
+        return Clock.tick(Clock.system(properties.zone()), STORAGE_RESOLUTION);
     }
 
     /**

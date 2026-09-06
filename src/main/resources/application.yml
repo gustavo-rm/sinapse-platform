@@ -225,6 +225,16 @@ sinapse:
     # A ceiling, so the mandatory expiry is not a formality a client can set to a century.
     max-invite-lifetime: 90d
 
+  planning:
+    # A schedule read has to be bounded, like every other windowed read in this API. Ninety
+    # days covers a term, which is longer than any horizon the generation job produces and is
+    # therefore enough to read several plans' worth at once.
+    max-schedule-window: 90d
+    # Ceiling on a plan history returned whole. Re-planning is manual (decision F6), so this
+    # list grows in single figures; the number is here so that "returned whole" cannot come to
+    # mean "returned however large it got".
+    max-plan-history: 100
+
   learning-record:
     # A history has no natural size, and this API has no generic pagination by decision, so
     # the window of a history read is mandatory and its span is capped here. Ninety days
