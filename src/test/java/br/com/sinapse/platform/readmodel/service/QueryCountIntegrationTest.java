@@ -2,6 +2,7 @@ package br.com.sinapse.platform.readmodel.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import br.com.sinapse.platform.curriculum.api.SubjectView;
 import br.com.sinapse.platform.curriculum.api.TopicView;
 import br.com.sinapse.platform.educational.api.ClassroomView;
 import br.com.sinapse.platform.identity.internal.domain.Account;
@@ -13,6 +14,7 @@ import br.com.sinapse.platform.readmodel.support.ReadModelIntegrationTest;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -44,6 +46,9 @@ class QueryCountIntegrationTest extends ReadModelIntegrationTest {
 
     /** Statements a class list costs, whatever the size of the classroom. */
     private static final long ROSTER_QUERIES = 9;
+
+    /** Statements the invite preview costs, whatever the size of the catalogue. */
+    private static final long INVITE_PREVIEW_QUERIES = 4;
 
     @Test
     void theInitialScreenCostsAFixedNumberOfQueries() {
@@ -166,6 +171,34 @@ class QueryCountIntegrationTest extends ReadModelIntegrationTest {
         StudyPlanView plan = planWithDueSessions(student, topic.id(), 2, 1);
         PlannedSessionView due = directory.sessionsOfPlan(plan.id()).getFirst();
         executed(student, topic.id(), due.id(), Duration.ofDays(2));
+    }
+
+    /**
+     * The sixth read model of section 3 of the API contract, measured like the other five.
+     *
+     * <p>It lives in {@code educational} rather than here — see the report accompanying this
+     * change — but it is one of the six, so it is held to the same rule. It used to read the
+     * whole catalogue and filter; it now asks for the classroom's own subjects by identifier,
+     * which is what makes this count independent of how large the catalogue has grown.
+     */
+    @Test
+    void theInvitePreviewCostsTheSameHoweverLargeTheCatalogueIs() {
+        Account teacher = teacherAccount();
+        SubjectView subject = subject();
+        ClassroomView small = classrooms.open(teacher.id(), "Turma pequena", Set.of(subject.id()));
+        String smallCode = invites.issue(teacher.id(), small.id(), null, null).code();
+
+        for (int index = 0; index < 30; index++) {
+            subject();
+        }
+        ClassroomView large = classrooms.open(teacher.id(), "Turma grande", Set.of(subject.id()));
+        String largeCode = invites.issue(teacher.id(), large.id(), null, null).code();
+
+        Measured<?> beforeGrowth = queries.measure(() -> invites.preview(smallCode));
+        Measured<?> afterGrowth = queries.measure(() -> invites.preview(largeCode));
+
+        assertThat(beforeGrowth.queries()).isEqualTo(INVITE_PREVIEW_QUERIES);
+        assertThat(afterGrowth.queries()).isEqualTo(beforeGrowth.queries());
     }
 
     private List<TopicView> manyTopics(int count) {
