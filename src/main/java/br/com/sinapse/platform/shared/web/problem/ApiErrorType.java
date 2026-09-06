@@ -99,6 +99,19 @@ public enum ApiErrorType {
             "The operation would make a topic a prerequisite of itself, directly or through "
                     + "other topics. The prerequisite graph has to stay acyclic."),
 
+    /**
+     * A plan was asked for before there is anything to plan.
+     *
+     * <p>It has a type of its own because the client's remedy is specific and a generic
+     * conflict does not name it: declare availability and at least one goal. Decision F2
+     * requires both and nothing else — without them the optimiser has nothing to optimise, and
+     * a plan built from defaults would be fiction presented as a recommendation.
+     */
+    SETUP_INCOMPLETE("setup-incomplete", HttpStatus.CONFLICT,
+            "Setup incomplete",
+            "A study plan cannot be generated before availability and at least one goal have "
+                    + "been declared."),
+
     /** Request contradicts the current state of the resource. */
     CONFLICT("conflict", HttpStatus.CONFLICT,
             "Conflict",

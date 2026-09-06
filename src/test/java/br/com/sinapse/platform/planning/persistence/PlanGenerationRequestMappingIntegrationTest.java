@@ -30,7 +30,7 @@ class PlanGenerationRequestMappingIntegrationTest extends PlanningIntegrationTes
         Instant requestedAt = clock.instant();
 
         requests.saveAndFlush(new PlanGenerationRequest(id, student.id(), start,
-                start.plusWeeks(4), requestedAt));
+                start.plusWeeks(4), null, requestedAt));
 
         assertThat(requests.findById(id)).hasValueSatisfying(request -> {
             assertThat(request.status()).isEqualTo(GenerationRequestStatus.PENDING);
@@ -57,7 +57,7 @@ class PlanGenerationRequestMappingIntegrationTest extends PlanningIntegrationTes
         Account student = student();
         LocalDate start = LocalDate.now(clock);
         requests.saveAndFlush(new PlanGenerationRequest(UUID.randomUUID(), student.id(), start,
-                start.plusWeeks(4), clock.instant()));
+                start.plusWeeks(4), null, clock.instant()));
 
         assertThat(requests.findByAccountIdAndStatusIn(student.id(),
                 List.of(GenerationRequestStatus.PENDING, GenerationRequestStatus.RUNNING)))

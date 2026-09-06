@@ -32,6 +32,9 @@ public final class PlanningRoutes {
     /** The plan currently in force. */
     public static final String CURRENT_PLAN = STUDY_PLANS + "/current";
 
+    /** Plan generation jobs. Creation is rate limited, per account. */
+    public static final String GENERATION_REQUESTS = STUDY_PLANS + "/generation-requests";
+
     /** The caller's scheduled sessions, over a date range. */
     public static final String PLANNED_SESSIONS = ApiPaths.V1 + "/planned-sessions";
 
