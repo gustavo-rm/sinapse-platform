@@ -3,14 +3,18 @@ package br.com.sinapse.platform.educational.internal.service;
 import br.com.sinapse.platform.educational.api.ClassroomView;
 import br.com.sinapse.platform.educational.api.EducationalDirectory;
 import br.com.sinapse.platform.educational.api.EnrollmentView;
+import br.com.sinapse.platform.educational.api.TeacherView;
 import br.com.sinapse.platform.educational.internal.domain.Teacher;
 import br.com.sinapse.platform.educational.internal.persistence.ClassroomRepository;
 import br.com.sinapse.platform.educational.internal.persistence.EnrollmentRepository;
 import br.com.sinapse.platform.educational.internal.persistence.TeacherRepository;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -75,5 +79,37 @@ public class EducationalDirectoryService implements EducationalDirectory {
         return enrollments.findByClassroomIdAndEndedAtIsNullOrderByEnrolledAtAsc(classroomId).stream()
                 .map(EducationalViews::of)
                 .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<EnrollmentView> enrollmentsOf(UUID accountId) {
+        return enrollments.findByAccountIdOrderByEnrolledAtDesc(accountId).stream()
+                .map(EducationalViews::of)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<UUID, ClassroomView> classroomsByIds(Collection<UUID> classroomIds) {
+        if (classroomIds.isEmpty()) {
+            return Map.of();
+        }
+        return classrooms.findAllById(classroomIds).stream()
+                .map(EducationalViews::of)
+                .collect(Collectors.toMap(ClassroomView::id, view -> view,
+                        (first, second) -> first, LinkedHashMap::new));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<UUID, TeacherView> teachersByIds(Collection<UUID> teacherIds) {
+        if (teacherIds.isEmpty()) {
+            return Map.of();
+        }
+        return teachers.findAllById(teacherIds).stream()
+                .map(EducationalViews::of)
+                .collect(Collectors.toMap(TeacherView::id, view -> view,
+                        (first, second) -> first, LinkedHashMap::new));
     }
 }

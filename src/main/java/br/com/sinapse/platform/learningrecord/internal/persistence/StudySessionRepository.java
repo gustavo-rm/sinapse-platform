@@ -8,15 +8,17 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 /**
  * Study sessions.
  *
- * <p>Nothing here deletes and nothing here bulk-updates. A trigger refuses a delete on any
- * row and an update on any closed row, so a method offering either would be a way of turning
- * an invariant into a runtime failure.
+ * <p>Nothing here bulk-updates, and the one delete is the Article 18 erasure. A trigger
+ * refuses a delete on any row unless the transaction-local erasure flag is set, so
+ * {@link #eraseFor} is not a hole in the append-only rule — it is the one path that carries
+ * the exception with it, and any other caller meets the trigger.
  *
  * <p>Every window is half-open: {@code from} inclusive, {@code to} exclusive, compared
  * against {@code startedAt}. Consecutive windows therefore tile without a session falling
@@ -167,6 +169,35 @@ public interface StudySessionRepository extends JpaRepository<StudySession, UUID
             """)
     long countCompletedPlannedSessions(@Param("accountId") UUID accountId,
             @Param("plannedSessionIds") Collection<UUID> plannedSessionIds);
+
+    /**
+     * Every session of an account, newest first.
+     *
+     * <p>Unwindowed, unlike every other read here, because it answers the holder asking for
+     * their own data: an export bounded by a window would not be the export Article 18 means.
+     *
+     * @param accountId student
+     * @return their whole history
+     */
+    List<StudySession> findByAccountIdOrderByStartedAtDesc(UUID accountId);
+
+    /**
+     * Removes every session of an account.
+     *
+     * <p>Only ever called from the erasure transaction. The trigger refuses this statement
+     * unless the transaction-local flag is set, so a caller that reaches it by another route
+     * fails rather than succeeding quietly.
+     *
+     * <p>A longitudinal sequence of timestamped topics is a behavioural fingerprint and
+     * re-identifies when crossed with a classroom roster, so there is no "scrub and keep" path
+     * here and there must never be one (ADR 0011).
+     *
+     * @param accountId student whose data is being erased
+     * @return how many rows were removed
+     */
+    @Modifying
+    @Query("delete from StudySession session where session.accountId = :accountId")
+    int eraseFor(@Param("accountId") UUID accountId);
 
     /**
      * Every planned session identifier this module holds a reference to.

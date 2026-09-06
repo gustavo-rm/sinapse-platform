@@ -2,6 +2,7 @@ package br.com.sinapse.platform.educational.api;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -49,4 +50,32 @@ public interface EducationalDirectory {
      * @return who is currently in it
      */
     List<EnrollmentView> activeEnrollmentsIn(UUID classroomId);
+
+    /**
+     * Every enrollment of a student, active and ended, newest first.
+     *
+     * @param accountId student
+     * @return their whole history of memberships
+     */
+    List<EnrollmentView> enrollmentsOf(UUID accountId);
+
+    /**
+     * Classrooms by identifier.
+     *
+     * @param classroomIds classrooms to read
+     * @return the ones that exist, keyed by identifier
+     */
+    Map<UUID, ClassroomView> classroomsByIds(Collection<UUID> classroomIds);
+
+    /**
+     * Teachers by identifier.
+     *
+     * <p>A set rather than one at a time, per rule R7: the caller that needs this is putting a
+     * name next to each of a student's memberships, and asking per row would issue one query
+     * per classroom.
+     *
+     * @param teacherIds teachers to read
+     * @return the ones that exist, keyed by identifier
+     */
+    Map<UUID, TeacherView> teachersByIds(Collection<UUID> teacherIds);
 }

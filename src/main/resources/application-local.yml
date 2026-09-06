@@ -85,6 +85,12 @@ sinapse:
         limit: 10
         window: 1h
 
+      - id: datarights-export
+        path: /api/v1/me/data-export
+        phase: AFTER_AUTHENTICATION
+        limit: 5
+        window: 1h
+
   identity:
     session:
       # A workstation serves plain HTTP, and a Secure cookie would never be stored. This is

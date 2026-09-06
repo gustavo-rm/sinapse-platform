@@ -19,5 +19,6 @@
         allowedDependencies = {
                 "identity :: api", "curriculum :: api", "learningrecord :: api",
                 "coreclient :: api", "coreclient :: contract",
-                "shared :: web", "shared :: problem", "shared :: security"})
+                "shared :: web", "shared :: problem", "shared :: security",
+                "shared :: datarights"})
 package br.com.sinapse.platform.planning;

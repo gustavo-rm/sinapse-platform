@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -31,6 +32,14 @@ public interface PlanGenerationRequestRepository extends JpaRepository<PlanGener
      */
     Optional<PlanGenerationRequest> findByAccountIdAndStatusIn(UUID accountId,
             List<GenerationRequestStatus> statuses);
+
+    /**
+     * Every job an account has asked for, newest first.
+     *
+     * @param accountId student
+     * @return their jobs
+     */
+    List<PlanGenerationRequest> findByAccountIdOrderByRequestedAtDesc(UUID accountId);
 
     /**
      * Claims work from the queue.
@@ -67,4 +76,17 @@ public interface PlanGenerationRequestRepository extends JpaRepository<PlanGener
             """, nativeQuery = true)
     List<PlanGenerationRequest> claimPending(@Param("backoffSeconds") double backoffSeconds,
             @Param("batchSize") int batchSize);
+
+    /**
+     * Removes every row of this kind belonging to an account.
+     *
+     * <p>Only ever called from the erasure transaction. ADR 0011 lists this table among the
+     * ones that do not survive.
+     *
+     * @param accountId student whose data is being erased
+     * @return how many rows were removed
+     */
+    @Modifying
+    @Query("delete from PlanGenerationRequest request where request.accountId = :accountId")
+    int eraseFor(@Param("accountId") UUID accountId);
 }

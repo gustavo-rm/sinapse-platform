@@ -2,8 +2,10 @@ package br.com.sinapse.platform.educational.internal.service;
 
 import br.com.sinapse.platform.educational.api.ClassroomView;
 import br.com.sinapse.platform.educational.api.EnrollmentView;
+import br.com.sinapse.platform.educational.api.TeacherView;
 import br.com.sinapse.platform.educational.internal.domain.Classroom;
 import br.com.sinapse.platform.educational.internal.domain.Enrollment;
+import br.com.sinapse.platform.educational.internal.domain.Teacher;
 
 /**
  * The one place an entity becomes a DTO.
@@ -34,5 +36,14 @@ public final class EducationalViews {
     public static EnrollmentView of(Enrollment enrollment) {
         return new EnrollmentView(enrollment.id(), enrollment.classroomId(), enrollment.accountId(),
                 enrollment.enrolledAt(), enrollment.endedAt(), enrollment.endedReason());
+    }
+
+    /**
+     * @param teacher teacher to publish
+     * @return their view
+     */
+    public static TeacherView of(Teacher teacher) {
+        return new TeacherView(teacher.id(), teacher.accountId(), teacher.displayName(),
+                teacher.institutionName());
     }
 }

@@ -18,5 +18,5 @@
  */
 @org.springframework.modulith.ApplicationModule(
         displayName = "Identity",
-        allowedDependencies = {"shared :: web", "shared :: problem", "shared :: security"})
+        allowedDependencies = {"shared :: web", "shared :: problem", "shared :: security", "shared :: datarights"})
 package br.com.sinapse.platform.identity;

@@ -7,6 +7,9 @@ import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Limit;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 /** Plans. Never deleted, and never edited beyond their supersession. */
 public interface StudyPlanRepository extends JpaRepository<StudyPlan, UUID> {
@@ -46,4 +49,17 @@ public interface StudyPlanRepository extends JpaRepository<StudyPlan, UUID> {
      * @return the plan it produced, if it produced one
      */
     Optional<StudyPlan> findByGenerationRequestId(UUID generationRequestId);
+
+    /**
+     * Removes every row of this kind belonging to an account.
+     *
+     * <p>Only ever called from the erasure transaction. ADR 0011 lists this table among the
+     * ones that do not survive.
+     *
+     * @param accountId student whose data is being erased
+     * @return how many rows were removed
+     */
+    @Modifying
+    @Query("delete from StudyPlan plan where plan.accountId = :accountId")
+    int eraseFor(@Param("accountId") UUID accountId);
 }

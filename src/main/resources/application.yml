@@ -202,6 +202,15 @@ sinapse:
         limit: 10
         window: 1h
 
+      # Assembling an export reads every table that mentions the holder, so the route is
+      # limited even though it is a read and even though it can only read the caller's own
+      # data. Keyed by account, because that is what is being bounded.
+      - id: datarights-export
+        path: /api/v1/me/data-export
+        phase: AFTER_AUTHENTICATION
+        limit: 5
+        window: 1h
+
   identity:
     # Age from which consent is the holder's own to give. A parameter, not a constant: the
     # legal question is open (J1), and the default of 18 is the conservative reading.
@@ -235,6 +244,15 @@ sinapse:
     default-invite-lifetime: 14d
     # A ceiling, so the mandatory expiry is not a formality a client can set to a century.
     max-invite-lifetime: 90d
+
+  data-rights:
+    # How long the holder has to withdraw a request. Seven days by ADR 0011, and configuration
+    # rather than a constant because whether that period is adequate is one of the three points
+    # the ADR leaves open for legal confirmation.
+    erasure-window: 7d
+    # Daily pass over the requests whose window has elapsed. Set to "-" to disable.
+    sweep-cron: '0 20 3 * * *'
+    batch-size: 50
 
   core:
     # Where the optimiser answers. It is a separate process (ADR 0002) and this address is

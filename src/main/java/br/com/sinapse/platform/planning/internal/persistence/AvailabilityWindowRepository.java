@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -50,4 +51,17 @@ public interface AvailabilityWindowRepository extends JpaRepository<Availability
             """)
     List<AvailabilityWindow> findEffectiveOn(@Param("accountId") UUID accountId,
             @Param("date") LocalDate date);
+
+    /**
+     * Removes every row of this kind belonging to an account.
+     *
+     * <p>Only ever called from the erasure transaction. ADR 0011 lists this table among the
+     * ones that do not survive.
+     *
+     * @param accountId student whose data is being erased
+     * @return how many rows were removed
+     */
+    @Modifying
+    @Query("delete from AvailabilityWindow window where window.accountId = :accountId")
+    int eraseFor(@Param("accountId") UUID accountId);
 }

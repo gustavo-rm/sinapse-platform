@@ -6,6 +6,9 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 /** Single-use tokens delivered to the account holder. */
 public interface AccountTokenRepository extends JpaRepository<AccountToken, UUID> {
@@ -32,4 +35,16 @@ public interface AccountTokenRepository extends JpaRepository<AccountToken, UUID
      */
     boolean existsByAccountIdAndPurposeAndConsumedAtIsNullAndExpiresAtAfter(
             UUID accountId, AccountTokenPurpose purpose, Instant now);
+
+    /**
+     * Removes every row of this kind belonging to an account.
+     *
+     * <p>Only ever called from the erasure transaction. A verification or reset token outlives its use by design and is worthless afterwards; there is no basis for keeping one.
+     *
+     * @param accountId holder whose data is being erased
+     * @return how many rows were removed
+     */
+    @Modifying
+    @Query("delete from AccountToken token where token.accountId = :accountId")
+    int eraseFor(@Param("accountId") UUID accountId);
 }

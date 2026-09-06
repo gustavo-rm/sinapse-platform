@@ -91,6 +91,25 @@ public class Account {
     @OneToOne(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Guardian guardian;
 
+    /**
+     * What an erased account's e-mail becomes.
+     *
+     * <p>The column is {@code not null} and {@code citext}, so something has to go in it. This
+     * carries no personal data — the identifier it embeds is already the primary key of the
+     * row — and stays unique, so it would still be safe if the partial index that excludes
+     * anonymised accounts were ever widened.
+     */
+    private static final String ANONYMIZED_EMAIL_PREFIX = "anonymized:";
+
+    /** A password hash that is not one, so that nothing can ever verify against it. */
+    private static final String ANONYMIZED_PASSWORD_HASH = "anonymized";
+
+    /** The epoch: a date that is obviously not a date of birth. */
+    private static final LocalDate ANONYMIZED_DATE_OF_BIRTH = LocalDate.EPOCH;
+
+    /** UTC, because the column is {@code not null} and a shell keeps no local times. */
+    private static final ZoneId ANONYMIZED_TIME_ZONE = ZoneId.of("UTC");
+
     /** For JPA. */
     protected Account() {
     }
@@ -308,12 +327,23 @@ public class Account {
     }
 
     /**
-     * Moves the account to its terminal state.
+     * Moves the account to its terminal state and empties it.
      *
-     * <p>Only the status and the timestamp are set here. What is erased, what survives and
-     * what the e-mail becomes belong to the data rights context; this method exists so
-     * that the transition and the revocation of sessions that accompanies it have one
-     * place, and it is idempotent so that the erasure service can be retried.
+     * <p>What is left is the shell that anchors the two records which survive an Article 18
+     * erasure: the consent records that prove the legal basis for treatment that already
+     * happened, and the ended enrollments that account for the access a teacher once had.
+     * Neither can point at nothing.
+     *
+     * <p><strong>The columns are overwritten, not nulled.</strong> ADR 0011 says they are
+     * nulled and the schema declares all four {@code not null}; dropping that to serve the
+     * last thing that ever happens to an account would weaken every live row in the table.
+     * What goes in instead identifies nobody: an opaque value derived from the identifier that
+     * is already the primary key, a password hash that cannot verify, the epoch, and UTC.
+     *
+     * <p>The e-mail is free for a new registration immediately, because the unique index on it
+     * is partial over accounts that have not been anonymised.
+     *
+     * <p>Idempotent, so that an erasure which failed and rolled back can be retried whole.
      *
      * @param now instant of the anonymisation
      */
@@ -323,5 +353,12 @@ public class Account {
         }
         this.status = AccountStatus.ANONYMIZED;
         this.anonymizedAt = now;
+        this.email = ANONYMIZED_EMAIL_PREFIX + id;
+        this.passwordHash = ANONYMIZED_PASSWORD_HASH;
+        this.dateOfBirth = ANONYMIZED_DATE_OF_BIRTH;
+        this.timeZone = ANONYMIZED_TIME_ZONE;
+        // orphanRemoval on the association: nulling it deletes the guardian row, which is a
+        // third party's data with no basis for retention once the holder's is gone.
+        this.guardian = null;
     }
 }
