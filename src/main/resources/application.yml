@@ -180,6 +180,17 @@ sinapse:
         limit: 20
         window: 10m
 
+      # Recording a session after the fact. Keyed by account, because the route is
+      # authenticated and the thing being bounded is one student writing a study history they
+      # did not study — an origin limit would bound a script and not that. It is generous
+      # enough for a student catching up on a week they forgot to time, and far below what
+      # composing a plausible term of study would need.
+      - id: learningrecord-retroactive-entry
+        path: /api/v1/study-sessions/retroactive-entries
+        phase: AFTER_AUTHENTICATION
+        limit: 30
+        window: 1h
+
   identity:
     # Age from which consent is the holder's own to give. A parameter, not a constant: the
     # legal question is open (J1), and the default of 18 is the conservative reading.
@@ -213,6 +224,22 @@ sinapse:
     default-invite-lifetime: 14d
     # A ceiling, so the mandatory expiry is not a formality a client can set to a century.
     max-invite-lifetime: 90d
+
+  learning-record:
+    # A history has no natural size, and this API has no generic pagination by decision, so
+    # the window of a history read is mandatory and its span is capped here. Ninety days
+    # covers a school term, which is the longest window a pilot screen has a reason to ask
+    # for.
+    max-history-window: 90d
+    # How far back a session may be entered after the fact. Retroactive entry is the marked
+    # exception of decision F5; without a bound it is a way of writing a study history that
+    # was never studied, and the mark on the duration only means something while the history
+    # it describes is recent enough to be remembered.
+    max-retroactive-backdating: 7d
+    # Daily pass looking for references to planned sessions that no longer exist. It reports
+    # and never deletes: an orphan reference is the accepted cost of the missing foreign key,
+    # and removing the evidence would be worse than the orphan. Set to "-" to disable.
+    consistency-check-cron: '0 40 3 * * *'
 
   curriculum:
     # How long a topic of each effort band is planned for (ADR 0012). The band is what a
