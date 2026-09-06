@@ -5,6 +5,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 /** Server-side sessions. */
 public interface UserSessionRepository extends JpaRepository<UserSession, UUID> {
@@ -38,4 +41,16 @@ public interface UserSessionRepository extends JpaRepository<UserSession, UUID> 
      * @return the session, when it is that holder's
      */
     Optional<UserSession> findByIdAndAccountId(UUID id, UUID accountId);
+
+    /**
+     * Removes every row of this kind belonging to an account.
+     *
+     * <p>Only ever called from the erasure transaction. Sessions are not evidence of anything and there is no basis for keeping them once the holder is gone.
+     *
+     * @param accountId holder whose data is being erased
+     * @return how many rows were removed
+     */
+    @Modifying
+    @Query("delete from UserSession session where session.accountId = :accountId")
+    int eraseFor(@Param("accountId") UUID accountId);
 }

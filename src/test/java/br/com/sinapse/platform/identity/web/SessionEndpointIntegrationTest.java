@@ -286,14 +286,50 @@ class SessionEndpointIntegrationTest extends IdentityIntegrationTest {
                 .isEqualTo(bodyOf(unknownAddress));
     }
 
+    /**
+     * A suspended holder signs in, and can do nothing but exercise their own rights.
+     *
+     * <p>This used to be a refusal, and ADR 0011 is what changed it. Asking to be erased
+     * suspends the account and revokes its sessions at once, and the holder then has seven days
+     * to withdraw that request — which they cannot do if suspension locks them out. The same
+     * applies to asking for their own data: Article 18 is about data the platform holds, not
+     * about whether it may still process it for anything else.
+     *
+     * <p>What keeps that from being a hole is that authentication only says who is calling.
+     * Every use case in every module asks {@code AccountAccessPolicy} at its entry, and it
+     * answers false for anything but an active account with a valid essential consent.
+     */
     @Test
-    void aSuspendedHolderCannotSignInAgain() throws Exception {
+    void aSuspendedHolderSignsInAndCanOnlyExerciseTheirOwnRights() throws Exception {
         Account account = fixtures.activeAdult(fixtures.uniqueEmail());
         consents.revoke(account.id(), ConsentPurpose.LEARNING_DATA_PROCESSING);
+
+        MvcResult signedIn = mockMvc.perform(post(SESSIONS)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(credentials(account.email(), IdentityFixtures.DEFAULT_PASSWORD)))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        String token = JsonPath.read(bodyOf(signedIn), "$.token");
+        mockMvc.perform(get("/api/v1/me/data-export")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/goals")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.type").value("urn:sinapse:problem:access-denied"));
+    }
+
+    @Test
+    void anAnonymisedHolderCannotSignInAtAll() throws Exception {
+        Account account = fixtures.activeAdult(fixtures.uniqueEmail());
+        jdbc.update("update account set status = 'ANONYMIZED', anonymized_at = now() where id = ?",
+                account.id());
 
         mockMvc.perform(post(SESSIONS)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(credentials(account.email(), IdentityFixtures.DEFAULT_PASSWORD)))
+                // An anonymised account no longer has a holder.
                 .andExpect(status().isUnauthorized());
     }
 

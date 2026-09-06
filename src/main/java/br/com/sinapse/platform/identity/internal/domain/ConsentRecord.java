@@ -9,6 +9,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.DynamicUpdate;
 import java.time.Instant;
 import java.util.UUID;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -31,8 +32,16 @@ import org.hibernate.type.SqlTypes;
  * an association would be possible, but the record is read on its own — the whole reason
  * it is a separate root — and an association would drag an account into every read of a
  * consent history.
+ *
+ * <p><strong>{@link DynamicUpdate} is load-bearing.</strong> {@code evidence} and
+ * {@code guardian_id} are writable in the mapping only so that an erasure can clear them, and
+ * without dynamic updates Hibernate would put both in every update statement — including the
+ * one that records a withdrawal. The trigger compares the two documents, the round trip through
+ * the converter is not guaranteed to reproduce the stored one byte for byte, and an ordinary
+ * withdrawal would then be refused as a rewrite of evidence it never meant to touch.
  */
 @Entity
+@DynamicUpdate
 @Table(name = "consent_record")
 public class ConsentRecord {
 
@@ -54,7 +63,14 @@ public class ConsentRecord {
     @Column(name = "granted_by", nullable = false, updatable = false)
     private ConsentGrantedBy grantedBy;
 
-    @Column(name = "guardian_id", updatable = false)
+    /**
+     * Guardian who granted it, or {@code null}.
+     *
+     * <p>Writable in the mapping only so that an Article 18 erasure can clear it. The
+     * database is what guarantees it does not move otherwise: the trigger refuses any change
+     * to this column unless the transaction-local erasure flag is set.
+     */
+    @Column(name = "guardian_id")
     private UUID guardianId;
 
     @Column(name = "granted_at", nullable = false, updatable = false)
@@ -65,7 +81,7 @@ public class ConsentRecord {
     private Instant revokedAt;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "evidence", nullable = false, updatable = false)
+    @Column(name = "evidence")
     private ConsentEvidence evidence;
 
     /** For JPA. */
@@ -162,6 +178,24 @@ public class ConsentRecord {
     /** What was observed about the act. Personal data: never log it. */
     public ConsentEvidence evidence() {
         return evidence;
+    }
+
+    /**
+     * Removes the personal data from the record, keeping the record.
+     *
+     * <p>Only ever called from the erasure transaction, and the database enforces that: the
+     * trigger refuses either column to move unless the erasure flag is set.
+     *
+     * <p>What survives is the fact — which purpose, which wording, granted by whom, when, and
+     * whether it was withdrawn. That is what proves the legal basis for treatment that already
+     * happened, and the burden of that proof is the controller's. What does not survive is the
+     * address and the agent string, which prove nothing about the fact and are personal data
+     * belonging to the holder, and the guardian, who is a third party with no basis for
+     * retention once the holder's data is gone.
+     */
+    public void clearPersonalData() {
+        this.evidence = null;
+        this.guardianId = null;
     }
 
     /** Whether the consent is currently in force. */

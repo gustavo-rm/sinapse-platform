@@ -8,14 +8,17 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 /**
  * Planned sessions.
  *
- * <p>Read-only in practice. They are written by cascade from the plan that owns them and a
- * trigger refuses every update and delete, so nothing here offers either.
+ * <p>Read-only but for one statement. They are written by cascade from the plan that owns
+ * them, a trigger refuses every update outright, and it refuses a delete unless the
+ * transaction-local erasure flag is set — so {@link #eraseFor} is not a hole in the
+ * immutability rule, it is the one path that carries the exception with it.
  */
 public interface PlannedSessionRepository extends JpaRepository<PlannedSession, UUID> {
 
@@ -75,4 +78,21 @@ public interface PlannedSessionRepository extends JpaRepository<PlannedSession, 
              where session.id in :plannedSessionIds
             """)
     Set<UUID> findExistingIds(@Param("plannedSessionIds") Collection<UUID> plannedSessionIds);
+
+    /**
+     * Removes every planned session belonging to an account's plans.
+     *
+     * <p>Only ever called from the erasure transaction, and before the plans themselves: these
+     * rows reference them.
+     *
+     * @param accountId student whose data is being erased
+     * @return how many rows were removed
+     */
+    @Modifying
+    @Query("""
+            delete from PlannedSession session
+             where session.plan.id in (select plan.id from StudyPlan plan
+                                        where plan.accountId = :accountId)
+            """)
+    int eraseFor(@Param("accountId") UUID accountId);
 }

@@ -5,7 +5,9 @@ import br.com.sinapse.platform.identity.internal.domain.Account;
 import br.com.sinapse.platform.identity.internal.error.InvalidCredentialsException;
 import br.com.sinapse.platform.identity.internal.persistence.AccountRepository;
 import br.com.sinapse.platform.identity.api.AuthenticatedAccount;
+import java.util.EnumSet;
 import java.util.Optional;
+import java.util.Set;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +26,27 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 public class AuthenticationService {
+
+    /**
+     * The states from which a holder may open a session.
+     *
+     * <p><strong>Suspended is on the list, and it has to be.</strong> A request to be erased
+     * suspends the account and revokes its sessions at once, and ADR 0011 gives the holder seven
+     * days to withdraw that request — which they cannot do if suspension locks them out. The
+     * same applies to asking for their own data: the rights of Article 18 are exercised over
+     * data the platform holds, and whether it may still process that data for anything else has
+     * nothing to do with it.
+     *
+     * <p>A suspended session can do nothing but that. Every use case in every module asks
+     * {@code AccountAccessPolicy} at its entry, and it answers false for anything but an active
+     * account with a valid essential consent.
+     *
+     * <p>The other three states stay out. A holder who has not proved control of the address
+     * has not shown the account is theirs; one waiting on a guardian has nobody who may act for
+     * them yet; and an anonymised account no longer has a holder.
+     */
+    private static final Set<AccountStatus> SIGN_IN_ALLOWED =
+            EnumSet.of(AccountStatus.ACTIVE, AccountStatus.SUSPENDED);
 
     private final AccountRepository accounts;
     private final SessionService sessions;
@@ -69,7 +92,7 @@ public class AuthenticationService {
         boolean matches = passwordEncoder.matches(password,
                 account == null ? decoyHash : account.passwordHash());
 
-        if (account == null || !matches || account.status() != AccountStatus.ACTIVE) {
+        if (account == null || !matches || !SIGN_IN_ALLOWED.contains(account.status())) {
             throw new InvalidCredentialsException();
         }
         return sessions.open(account, ipAddress, userAgent);

@@ -1,6 +1,7 @@
 package br.com.sinapse.platform.identity.internal.service;
 
 import br.com.sinapse.platform.identity.api.AccountStatus;
+import br.com.sinapse.platform.identity.api.AccountLifecycle;
 import br.com.sinapse.platform.identity.api.ConsentGrantedBy;
 import br.com.sinapse.platform.identity.api.ConsentPurpose;
 import br.com.sinapse.platform.identity.internal.config.IdentityProperties;
@@ -52,7 +53,7 @@ import org.springframework.transaction.annotation.Transactional;
  * consent record or moves an account between states.
  */
 @Service
-public class ConsentService {
+public class ConsentService implements AccountLifecycle {
 
     private final AccountRepository accounts;
     private final ConsentRecordRepository consents;
@@ -236,11 +237,37 @@ public class ConsentService {
      *
      * @param accountId holder
      */
+    @Override
     @Transactional
     public void suspend(UUID accountId) {
         Account account = require(accountId);
         account.suspend(clock.instant());
         sessions.revokeAll(accountId);
+    }
+
+    /**
+     * Restores a suspended account to active.
+     *
+     * <p>The one caller is the cancellation of an erasure request: the request suspended the
+     * account, and withdrawing it has to put that back. It is here rather than there because
+     * this service is the only thing in the platform that moves an account between states, and
+     * a second place that could activate one would be a second place invariant 1 can break.
+     *
+     * <p><strong>It re-asserts that invariant rather than assuming it.</strong> An account can
+     * be suspended for more than one reason, and cancelling an erasure says nothing about a
+     * consent that was withdrawn in the meantime. If an essential purpose has no valid consent
+     * the account stays suspended and the caller is told, which is the same answer activation
+     * after e-mail verification gives.
+     *
+     * @param accountId holder
+     * @throws EssentialConsentMissingException if an essential purpose has no valid consent
+     */
+    @Override
+    @Transactional
+    public void reactivate(UUID accountId) {
+        Account account = require(accountId);
+        assertEssentialConsentIsValid(account);
+        account.activate(clock.instant());
     }
 
     /**

@@ -67,6 +67,11 @@ sinapse:
         phase: AFTER_AUTHENTICATION
         limit: 3
         window: 1m
+      - id: datarights-export
+        path: /api/v1/me/data-export
+        phase: AFTER_AUTHENTICATION
+        limit: 3
+        window: 1m
     # Registration is deliberately absent from this list. It is limited to five per hour in
     # the deployed configuration, and the suite registers many more accounts than that.
 
@@ -85,6 +90,11 @@ sinapse:
       algorithm-params:
         population-size: 8
         generations: 3
+
+  data-rights:
+    # A job that fires on its own in the middle of a suite makes a failure depend on the second
+    # the suite ran. The sweep is driven by calling it.
+    sweep-cron: '-'
 
   learning-record:
     # Narrow enough that a test can ask for one day more and be refused.

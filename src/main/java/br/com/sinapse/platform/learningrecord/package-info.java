@@ -16,5 +16,6 @@
         displayName = "Learning Record",
         allowedDependencies = {
                 "identity :: api", "curriculum :: api",
-                "shared :: web", "shared :: problem", "shared :: security"})
+                "shared :: web", "shared :: problem", "shared :: security",
+                "shared :: datarights"})
 package br.com.sinapse.platform.learningrecord;
