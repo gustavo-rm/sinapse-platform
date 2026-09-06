@@ -1,5 +1,6 @@
 package br.com.sinapse.platform.identity.internal.security;
 
+import br.com.sinapse.platform.identity.api.AuthenticatedAccount;
 import br.com.sinapse.platform.identity.internal.config.IdentityProperties;
 import br.com.sinapse.platform.identity.internal.service.AuthenticationService;
 import jakarta.servlet.FilterChain;

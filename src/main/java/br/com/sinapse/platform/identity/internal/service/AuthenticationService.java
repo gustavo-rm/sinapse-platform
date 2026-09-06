@@ -4,7 +4,7 @@ import br.com.sinapse.platform.identity.api.AccountStatus;
 import br.com.sinapse.platform.identity.internal.domain.Account;
 import br.com.sinapse.platform.identity.internal.error.InvalidCredentialsException;
 import br.com.sinapse.platform.identity.internal.persistence.AccountRepository;
-import br.com.sinapse.platform.identity.internal.security.AuthenticatedAccount;
+import br.com.sinapse.platform.identity.api.AuthenticatedAccount;
 import java.util.Optional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;

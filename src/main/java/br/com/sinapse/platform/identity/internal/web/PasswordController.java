@@ -1,6 +1,6 @@
 package br.com.sinapse.platform.identity.internal.web;
 
-import br.com.sinapse.platform.identity.internal.security.CurrentAccount;
+import br.com.sinapse.platform.identity.api.CurrentAccount;
 import br.com.sinapse.platform.identity.internal.service.PasswordService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;

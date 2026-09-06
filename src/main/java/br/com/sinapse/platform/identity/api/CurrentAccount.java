@@ -1,4 +1,4 @@
-package br.com.sinapse.platform.identity.internal.security;
+package br.com.sinapse.platform.identity.api;
 
 import br.com.sinapse.platform.shared.web.problem.ApiErrorType;
 import br.com.sinapse.platform.shared.web.problem.ApiException;

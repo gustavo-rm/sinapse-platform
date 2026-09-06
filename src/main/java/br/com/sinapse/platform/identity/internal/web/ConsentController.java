@@ -1,11 +1,11 @@
 package br.com.sinapse.platform.identity.internal.web;
 
+import br.com.sinapse.platform.identity.api.AuthenticatedAccount;
 import br.com.sinapse.platform.identity.api.ConsentPurpose;
+import br.com.sinapse.platform.identity.api.CurrentAccount;
 import br.com.sinapse.platform.identity.internal.domain.TermsVersion;
 import br.com.sinapse.platform.identity.internal.persistence.ConsentRecordRepository;
 import br.com.sinapse.platform.identity.internal.persistence.TermsVersionRepository;
-import br.com.sinapse.platform.identity.internal.security.AuthenticatedAccount;
-import br.com.sinapse.platform.identity.internal.security.CurrentAccount;
 import br.com.sinapse.platform.identity.internal.service.ConsentService;
 import br.com.sinapse.platform.identity.internal.service.MajorityReaffirmationService;
 import br.com.sinapse.platform.identity.internal.service.TermsService;

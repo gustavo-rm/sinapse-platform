@@ -148,6 +148,38 @@ sinapse:
         limit: 5
         window: 1h
 
+      # Invite redemption, limited twice over. This is the compensation for storing invite
+      # codes in clear text, and section 7.2 of the architecture document states it as a
+      # condition of that design rather than as later hardening: fifty bits of entropy
+      # protect nothing against a caller who may guess without limit.
+      #
+      # Two policies on the same path, one per phase, because the two keys answer different
+      # attacks. Keyed by origin, it bounds a script working through the code space; keyed by
+      # account, it bounds a signed-in student doing the same from a fresh address each time.
+      # Both filters run, so both limits have to be satisfied.
+      - id: educational-invite-redemption-origin
+        path: /api/v1/invites/*/redemptions
+        phase: BEFORE_AUTHENTICATION
+        limit: 10
+        window: 10m
+      - id: educational-invite-redemption-account
+        path: /api/v1/invites/*/redemptions
+        phase: AFTER_AUTHENTICATION
+        limit: 10
+        window: 10m
+      # The preview reveals a classroom name and a teacher's name to whoever holds a code, so
+      # it is guessable in exactly the same way and limited in exactly the same way.
+      - id: educational-invite-preview-origin
+        path: /api/v1/invites/*/preview
+        phase: BEFORE_AUTHENTICATION
+        limit: 20
+        window: 10m
+      - id: educational-invite-preview-account
+        path: /api/v1/invites/*/preview
+        phase: AFTER_AUTHENTICATION
+        limit: 20
+        window: 10m
+
   identity:
     # Age from which consent is the holder's own to give. A parameter, not a constant: the
     # legal question is open (J1), and the default of 18 is the conservative reading.
@@ -173,6 +205,14 @@ sinapse:
     # worse than refusing to register anyone. The operator supplies the texts; startup
     # publishes whatever is missing and never rewrites what is already published.
     terms: []
+
+  educational:
+    # Every invite expires. Omitting a lifetime uses this default; there is no way to ask for
+    # a code that never expires, because a code in clear text that never expires is a
+    # credential nobody remembers exists.
+    default-invite-lifetime: 14d
+    # A ceiling, so the mandatory expiry is not a formality a client can set to a century.
+    max-invite-lifetime: 90d
 
   curriculum:
     # How long a topic of each effort band is planned for (ADR 0012). The band is what a
