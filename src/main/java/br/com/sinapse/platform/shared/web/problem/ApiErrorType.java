@@ -73,6 +73,19 @@ public enum ApiErrorType {
             "This version registers only account holders who are of age. Registration with "
                     + "consent from a guardian is not available yet."),
 
+    /**
+     * An operation that would leave the prerequisite graph cyclic.
+     *
+     * <p>It has a type of its own because a curator needs to know which rule was broken, and
+     * the database's own message names two identifiers, which a body may not carry. The text
+     * states the rule; where the cycle is stays in the log, and the importer of ADR 0014
+     * finds it before the database ever has to.
+     */
+    PREREQUISITE_CYCLE("prerequisite-cycle", HttpStatus.CONFLICT,
+            "Prerequisite cycle",
+            "The operation would make a topic a prerequisite of itself, directly or through "
+                    + "other topics. The prerequisite graph has to stay acyclic."),
+
     /** Request contradicts the current state of the resource. */
     CONFLICT("conflict", HttpStatus.CONFLICT,
             "Conflict",

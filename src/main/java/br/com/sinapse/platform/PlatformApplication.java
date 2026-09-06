@@ -16,6 +16,7 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
  * appear in a log. The exclusion stays now that identity exists: authentication here is an
  * opaque server-side session (ADR 0010), resolved by a filter of the identity module, and
  * nothing in the platform loads a user by name and password through Spring Security.
+ *
  */
 @SpringBootApplication(exclude = UserDetailsServiceAutoConfiguration.class)
 @ConfigurationPropertiesScan
