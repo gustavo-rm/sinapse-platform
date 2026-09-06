@@ -112,4 +112,17 @@ public class EducationalDirectoryService implements EducationalDirectory {
                 .collect(Collectors.toMap(TeacherView::id, view -> view,
                         (first, second) -> first, LinkedHashMap::new));
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<ClassroomView> classroomOwnedBy(UUID teacherAccountId, UUID classroomId) {
+        if (teacherAccountId == null || classroomId == null) {
+            return Optional.empty();
+        }
+        return teachers.findByAccountId(teacherAccountId)
+                .map(Teacher::id)
+                .flatMap(teacherId -> classrooms.findById(classroomId)
+                        .filter(classroom -> classroom.teacherId().equals(teacherId)))
+                .map(EducationalViews::of);
+    }
 }

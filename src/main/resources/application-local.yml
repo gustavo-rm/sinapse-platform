@@ -90,6 +90,34 @@ sinapse:
         phase: AFTER_AUTHENTICATION
         limit: 5
         window: 1h
+      # The two teacher reads. Both compose several modules over a window the caller chooses,
+      # and the class list aggregates the history of every student in the classroom — it is the
+      # heaviest read in this system, and ADR 0013 says so before anything has been measured.
+      # Keyed by account, because the routes are authenticated and what is being bounded is one
+      # teacher asking for expensive work repeatedly. Generous by design: a teacher moving
+      # between a class list and several panels is ordinary use, not abuse.
+      - id: readmodel-classroom-students
+        path: /api/v1/classrooms/*/students
+        phase: AFTER_AUTHENTICATION
+        limit: 60
+        window: 10m
+      - id: readmodel-student-panel
+        path: /api/v1/classrooms/*/students/*/panel
+        phase: AFTER_AUTHENTICATION
+        limit: 120
+        window: 10m
+
+  read-model:
+    # Ceiling on the window of a composed read. Narrower than the per-module ceilings on
+    # purpose: a read model asks several modules for the same window at once, so the same span
+    # costs more here than it does in any one of them. A month covers every screen the pilot
+    # has, and a client wanting a term reads the modules directly.
+    max-window: 31d
+    # Hard caps on the two lists that come back whole. Section 1 of the API contract refuses a
+    # generic pagination mechanism, so a bounded list needs a bound: these are what stop
+    # "returned whole" from coming to mean "returned however large it got".
+    max-recent-sessions: 50
+    max-classroom-students: 200
 
   identity:
     session:

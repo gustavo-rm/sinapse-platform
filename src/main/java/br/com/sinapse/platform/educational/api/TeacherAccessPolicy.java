@@ -1,5 +1,7 @@
 package br.com.sinapse.platform.educational.api;
 
+import java.util.Collection;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -49,4 +51,23 @@ public interface TeacherAccessPolicy {
      *         teacher may see nothing
      */
     VisibilityScope scopeFor(UUID teacherAccountId, UUID studentAccountId);
+
+    /**
+     * Which of several students the teacher may read.
+     *
+     * <p>The same two conditions as {@link #canViewStudent}, asked about a whole classroom at
+     * once. Rule R7: a class list of forty students asked one at a time is eighty queries for
+     * one screen, and the class list is the heaviest read in this system before it has done
+     * anything useful.
+     *
+     * <p>This answers exactly the subset {@link #canViewStudent} would answer {@code true}
+     * for. A student the teacher may not read is absent from the result rather than present
+     * with something blanked out — the caller has nothing to render for them, which is what
+     * makes a withdrawal look like a disappearance instead of a redaction.
+     *
+     * @param teacherAccountId account of the teacher asking
+     * @param studentAccountIds accounts being asked about
+     * @return the subset the teacher may read right now
+     */
+    Set<UUID> viewableStudents(UUID teacherAccountId, Collection<UUID> studentAccountIds);
 }

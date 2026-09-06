@@ -44,6 +44,21 @@ public enum ConsentPurpose {
         return essential;
     }
 
+    /**
+     * Whether this platform asks the holder about this purpose on its own initiative.
+     *
+     * <p>{@link #INSTITUTION_SHARING} is the one that does not: ADR 0004 has it granted when
+     * an invite is redeemed and never at registration, because consenting up front to
+     * something the holder may never do is not informed consent. The prose above says so
+     * already; this predicate is what lets a screen that lists undecided purposes obey it,
+     * instead of every such screen having to remember the exception.
+     *
+     * @return whether the purpose is one to raise unprompted
+     */
+    public boolean isRequestedOnItsOwn() {
+        return this != INSTITUTION_SHARING;
+    }
+
     /** The purposes an active account must have consented to. */
     public static Set<ConsentPurpose> essentialPurposes() {
         return ESSENTIAL;

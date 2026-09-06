@@ -7,14 +7,19 @@ import br.com.sinapse.platform.planning.api.PlannedSessionView;
 import br.com.sinapse.platform.planning.api.PlanningDirectory;
 import br.com.sinapse.platform.planning.api.StudyGoalView;
 import br.com.sinapse.platform.planning.api.StudyPlanView;
+import br.com.sinapse.platform.planning.api.GenerationRequestStatus;
 import br.com.sinapse.platform.planning.internal.config.PlanningProperties;
+import br.com.sinapse.platform.planning.internal.domain.PlanGenerationRequest;
 import br.com.sinapse.platform.planning.internal.domain.PlannedSession;
 import br.com.sinapse.platform.planning.internal.persistence.AvailabilityWindowRepository;
+import br.com.sinapse.platform.planning.internal.persistence.PlanGenerationRequestRepository;
 import br.com.sinapse.platform.planning.internal.persistence.PlannedSessionRepository;
 import br.com.sinapse.platform.planning.internal.persistence.StudyGoalRepository;
 import br.com.sinapse.platform.planning.internal.persistence.StudyPlanRepository;
+import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.Period;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -41,27 +46,40 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class PlanningDirectoryService implements PlanningDirectory {
 
+    /** States a generation job can be in without having finished. */
+    private static final List<GenerationRequestStatus> UNFINISHED =
+            List.of(GenerationRequestStatus.PENDING, GenerationRequestStatus.RUNNING);
+
     private final StudyPlanRepository plans;
     private final PlannedSessionRepository plannedSessions;
     private final AvailabilityWindowRepository windows;
     private final StudyGoalRepository goals;
+    private final PlanGenerationRequestRepository generationRequests;
     private final Limit historyLimit;
+    private final Period horizon;
+    private final Clock clock;
 
     /**
-     * @param plans           plans
-     * @param plannedSessions planned sessions
-     * @param windows         availability windows
-     * @param goals           goals
-     * @param properties      configured limits of this module
+     * @param plans              plans
+     * @param plannedSessions    planned sessions
+     * @param windows            availability windows
+     * @param goals              goals
+     * @param generationRequests generation jobs
+     * @param properties         configured limits and horizon of this module
+     * @param clock              application clock, read for the day the horizon starts on
      */
     public PlanningDirectoryService(StudyPlanRepository plans,
             PlannedSessionRepository plannedSessions, AvailabilityWindowRepository windows,
-            StudyGoalRepository goals, PlanningProperties properties) {
+            StudyGoalRepository goals, PlanGenerationRequestRepository generationRequests,
+            PlanningProperties properties, Clock clock) {
         this.plans = plans;
         this.plannedSessions = plannedSessions;
         this.windows = windows;
         this.goals = goals;
+        this.generationRequests = generationRequests;
         this.historyLimit = Limit.of(properties.maxPlanHistory());
+        this.horizon = properties.generation().horizon();
+        this.clock = clock;
     }
 
     @Override
@@ -133,5 +151,42 @@ public class PlanningDirectoryService implements PlanningDirectory {
         return goals.findByAccountIdOrderByPriorityDescCreatedAtDesc(accountId).stream()
                 .map(PlanningViews::of)
                 .toList();
+    }
+
+    @Override
+    public Map<UUID, List<PlannedSessionView>> plannedSessionsOfAccounts(Collection<UUID> accountIds,
+            Instant from, Instant to) {
+
+        if (accountIds.isEmpty()) {
+            return Map.of();
+        }
+        return plannedSessions.findInWindowForAccounts(accountIds, PlanStatus.ACTIVE, from, to)
+                .stream()
+                .collect(Collectors.groupingBy(session -> session.plan().accountId(),
+                        LinkedHashMap::new,
+                        Collectors.mapping(PlanningViews::of, Collectors.toList())));
+    }
+
+    @Override
+    public Optional<UUID> unfinishedGenerationRequestIdOf(UUID accountId) {
+        return generationRequests.findByAccountIdAndStatusIn(accountId, UNFINISHED)
+                .map(PlanGenerationRequest::id);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * <p>The single statement of decision F2, read both by the screen that reports readiness
+     * and by the job that refuses to run without it. Both are checked over the horizon a job
+     * asked for now would plan: a routine that ended last month is not availability for next
+     * month, and a plan built from defaults would be fiction presented as a recommendation.
+     */
+    @Override
+    public boolean isReadyToPlan(UUID accountId) {
+        LocalDate start = LocalDate.now(clock);
+        LocalDate end = start.plus(horizon);
+        boolean hasAvailability = availabilityOf(accountId).stream()
+                .anyMatch(window -> window.isEffectiveDuring(start, end));
+        return hasAvailability && !activeGoalsOf(accountId).isEmpty();
     }
 }

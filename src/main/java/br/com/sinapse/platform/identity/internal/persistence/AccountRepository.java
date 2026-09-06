@@ -3,10 +3,14 @@ package br.com.sinapse.platform.identity.internal.persistence;
 import br.com.sinapse.platform.identity.api.AccountStatus;
 import br.com.sinapse.platform.identity.internal.domain.Account;
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 /** Accounts. */
 public interface AccountRepository extends JpaRepository<Account, UUID> {
@@ -51,4 +55,26 @@ public interface AccountRepository extends JpaRepository<Account, UUID> {
      * @return the candidates
      */
     List<Account> findByStatusAndDateOfBirthLessThanEqual(AccountStatus status, LocalDate bornOnOrBefore);
+
+    /**
+     * Which of a set of accounts are in a given state.
+     *
+     * <p>Identifiers rather than rows, and one query rather than one per account (rule R7).
+     * The caller is an access check over a whole classroom, and it wants a yes or a no per
+     * student — loading forty accounts, every one of them carrying an address and a date of
+     * birth, to read one column off each would be personal data brought into memory for
+     * nothing.
+     *
+     * @param accountIds accounts to test
+     * @param status     state they must be in
+     * @return the identifiers of those that are
+     */
+    @Query("""
+            select account.id
+              from Account account
+             where account.id in :accountIds
+               and account.status = :status
+            """)
+    Set<UUID> findIdsByStatus(@Param("accountIds") Collection<UUID> accountIds,
+            @Param("status") AccountStatus status);
 }
