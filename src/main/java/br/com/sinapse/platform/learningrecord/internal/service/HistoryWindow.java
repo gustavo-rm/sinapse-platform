@@ -2,6 +2,7 @@ package br.com.sinapse.platform.learningrecord.internal.service;
 
 import br.com.sinapse.platform.learningrecord.internal.config.LearningRecordProperties;
 import br.com.sinapse.platform.learningrecord.internal.error.InvalidTimeWindowException;
+import br.com.sinapse.platform.shared.web.TimeWindows;
 import java.time.Duration;
 import java.time.Instant;
 import org.springframework.stereotype.Component;
@@ -39,7 +40,7 @@ public class HistoryWindow {
      * @throws InvalidTimeWindowException if the window is empty, inverted or too wide
      */
     public void require(Instant from, Instant to) {
-        if (!to.isAfter(from) || Duration.between(from, to).compareTo(maxSpan) > 0) {
+        if (!TimeWindows.isAcceptable(from, to, maxSpan)) {
             throw new InvalidTimeWindowException();
         }
     }

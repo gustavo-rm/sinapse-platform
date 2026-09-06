@@ -65,6 +65,11 @@ sinapse:
     # Registration is deliberately absent from this list. It is limited to five per hour in
     # the deployed configuration, and the suite registers many more accounts than that.
 
+  planning:
+    # Narrow enough that a test can ask for one day more and be refused.
+    max-schedule-window: 30d
+    max-plan-history: 100
+
   learning-record:
     # Narrow enough that a test can ask for one day more and be refused.
     max-history-window: 30d

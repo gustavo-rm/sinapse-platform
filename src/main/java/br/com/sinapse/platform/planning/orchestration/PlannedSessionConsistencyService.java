@@ -1,7 +1,8 @@
 package br.com.sinapse.platform.planning.orchestration;
 
 import br.com.sinapse.platform.learningrecord.api.LearningRecordConsistency;
-import br.com.sinapse.platform.planning.internal.persistence.PlannedSessionExistence;
+import br.com.sinapse.platform.planning.internal.persistence.PlannedSessionRepository;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -36,15 +37,18 @@ public class PlannedSessionConsistencyService {
     private static final Logger LOG =
             LoggerFactory.getLogger(PlannedSessionConsistencyService.class);
 
+    /** Chunk size for the lookup, so that one enormous statement is never assembled. */
+    private static final int BATCH = 1000;
+
     private final LearningRecordConsistency learningRecord;
-    private final PlannedSessionExistence plannedSessions;
+    private final PlannedSessionRepository plannedSessions;
 
     /**
      * @param learningRecord  the references the learning record holds
      * @param plannedSessions which planned sessions exist
      */
     public PlannedSessionConsistencyService(LearningRecordConsistency learningRecord,
-            PlannedSessionExistence plannedSessions) {
+            PlannedSessionRepository plannedSessions) {
         this.learningRecord = learningRecord;
         this.plannedSessions = plannedSessions;
     }
@@ -61,7 +65,7 @@ public class PlannedSessionConsistencyService {
         if (referenced.isEmpty()) {
             return List.of();
         }
-        Set<UUID> existing = plannedSessions.existing(referenced);
+        Set<UUID> existing = existingAmong(referenced);
         List<UUID> orphans = referenced.stream()
                 .filter(id -> !existing.contains(id))
                 .toList();
@@ -71,5 +75,24 @@ public class PlannedSessionConsistencyService {
                     + "referenced={}", orphans.size(), referenced.size());
         }
         return orphans;
+    }
+
+    /**
+     * Which of the given identifiers name a planned session.
+     *
+     * <p>Asked in chunks. The set is every reference the learning record holds, which grows
+     * with the whole pilot, and a single {@code in} list of that size is a statement no
+     * database should be handed.
+     *
+     * @param plannedSessionIds identifiers to look for
+     * @return the ones that exist
+     */
+    private Set<UUID> existingAmong(List<UUID> plannedSessionIds) {
+        Set<UUID> existing = new HashSet<>();
+        for (int start = 0; start < plannedSessionIds.size(); start += BATCH) {
+            int end = Math.min(start + BATCH, plannedSessionIds.size());
+            existing.addAll(plannedSessions.findExistingIds(plannedSessionIds.subList(start, end)));
+        }
+        return existing;
     }
 }
