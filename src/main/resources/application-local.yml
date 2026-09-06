@@ -73,6 +73,12 @@ sinapse:
         limit: 20
         window: 10m
 
+      - id: learningrecord-retroactive-entry
+        path: /api/v1/study-sessions/retroactive-entries
+        phase: AFTER_AUTHENTICATION
+        limit: 30
+        window: 1h
+
   identity:
     session:
       # A workstation serves plain HTTP, and a Secure cookie would never be stored. This is

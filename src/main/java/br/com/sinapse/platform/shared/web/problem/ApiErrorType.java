@@ -32,6 +32,19 @@ public enum ApiErrorType {
             "Malformed request",
             "The request could not be read."),
 
+    /**
+     * Time window of a history request that the server will not answer.
+     *
+     * <p>It has a type of its own because the client's remedy is specific — ask for a
+     * narrower interval — and neither "malformed" nor "validation failed" says that. The text
+     * states the rule and never the configured maximum: the limit is configuration, the
+     * catalogue is not, and a client that needs the number reads it from the API description.
+     */
+    TIME_WINDOW_INVALID("time-window-invalid", HttpStatus.BAD_REQUEST,
+            "Invalid time window",
+            "The requested time window must end after it starts and may not be wider than the "
+                    + "maximum this API accepts for a history."),
+
     /** No credentials, or credentials that are no longer valid. */
     UNAUTHENTICATED("unauthenticated", HttpStatus.UNAUTHORIZED,
             "Unauthenticated",

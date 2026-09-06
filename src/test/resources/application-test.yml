@@ -57,8 +57,21 @@ sinapse:
         phase: AFTER_AUTHENTICATION
         limit: 50
         window: 1m
+      - id: learningrecord-retroactive-entry
+        path: /api/v1/study-sessions/retroactive-entries
+        phase: AFTER_AUTHENTICATION
+        limit: 3
+        window: 1m
     # Registration is deliberately absent from this list. It is limited to five per hour in
     # the deployed configuration, and the suite registers many more accounts than that.
+
+  learning-record:
+    # Narrow enough that a test can ask for one day more and be refused.
+    max-history-window: 30d
+    max-retroactive-backdating: 7d
+    # A job that fires on its own in the middle of a suite makes a failure depend on the hour
+    # the suite ran. The consistency check is exercised by calling it.
+    consistency-check-cron: '-'
 
   identity:
     # A job that fires on its own in the middle of a suite makes a failure depend on the hour
