@@ -79,6 +79,12 @@ sinapse:
         limit: 30
         window: 1h
 
+      - id: planning-generation-request
+        path: /api/v1/study-plans/generation-requests
+        phase: AFTER_AUTHENTICATION
+        limit: 10
+        window: 1h
+
   identity:
     session:
       # A workstation serves plain HTTP, and a Secure cookie would never be stored. This is

@@ -62,6 +62,11 @@ sinapse:
         phase: AFTER_AUTHENTICATION
         limit: 3
         window: 1m
+      - id: planning-generation-request
+        path: /api/v1/study-plans/generation-requests
+        phase: AFTER_AUTHENTICATION
+        limit: 3
+        window: 1m
     # Registration is deliberately absent from this list. It is limited to five per hour in
     # the deployed configuration, and the suite registers many more accounts than that.
 
@@ -69,6 +74,17 @@ sinapse:
     # Narrow enough that a test can ask for one day more and be refused.
     max-schedule-window: 30d
     max-plan-history: 100
+    generation:
+      # A worker that fires on its own in the middle of a suite makes a failure depend on the
+      # second the suite ran. The worker is driven by calling it.
+      poll-cron: '-'
+      max-attempts: 2
+      # Zero, so that a released job is claimable again without the suite waiting. The backoff
+      # arithmetic itself is exercised directly against the claim query.
+      retry-backoff: 0s
+      algorithm-params:
+        population-size: 8
+        generations: 3
 
   learning-record:
     # Narrow enough that a test can ask for one day more and be refused.

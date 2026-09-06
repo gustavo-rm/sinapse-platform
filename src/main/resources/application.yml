@@ -191,6 +191,17 @@ sinapse:
         limit: 30
         window: 1h
 
+      # Asking for a plan. ADR 0009 names this one: each run costs minutes of CPU, so the limit
+      # is resource control rather than interface polish. Keyed by account, because the route is
+      # authenticated and what is being bounded is one student queuing work. It is the second
+      # half of the partial index that allows one unfinished job at a time — the index stops a
+      # student from having two at once, and this stops them from cycling through them.
+      - id: planning-generation-request
+        path: /api/v1/study-plans/generation-requests
+        phase: AFTER_AUTHENTICATION
+        limit: 10
+        window: 1h
+
   identity:
     # Age from which consent is the holder's own to give. A parameter, not a constant: the
     # legal question is open (J1), and the default of 18 is the conservative reading.
@@ -225,6 +236,19 @@ sinapse:
     # A ceiling, so the mandatory expiry is not a formality a client can set to a century.
     max-invite-lifetime: 90d
 
+  core:
+    # Where the optimiser answers. It is a separate process (ADR 0002) and this address is
+    # deployment configuration; the default points at a local one so that the application
+    # starts on a workstation without a core in front of it, and every job then fails with
+    # CORE_UNAVAILABLE, which is the honest outcome.
+    base-url: ${SINAPSE_CORE_URL:http://localhost:8090}
+    plan-path: /plans
+    connect-timeout: 5s
+    # Generous by nature: the optimisation is CPU-bound and runs for minutes. This bounds a run
+    # that has hung, not one that is merely slow. Without it a hung core holds a worker forever
+    # and the partial index keeps the student from ever asking again.
+    read-timeout: 10m
+
   planning:
     # A schedule read has to be bounded, like every other windowed read in this API. Ninety
     # days covers a term, which is longer than any horizon the generation job produces and is
@@ -234,6 +258,38 @@ sinapse:
     # list grows in single figures; the number is here so that "returned whole" cannot come to
     # mean "returned however large it got".
     max-plan-history: 100
+    generation:
+      # Four weeks, by decision F3. Preparation for an examination can run for a year, and
+      # generating a year of plan is expensive and mostly wrong: availability and knowledge
+      # change long before that. A goal's target date is pressure inside the horizon, never the
+      # horizon itself.
+      horizon: 4w
+      # Retries. Only an unreachable core is worth another attempt; a core that rejected the
+      # payload will reject the same payload again. The backoff is exponential from this base
+      # and is computed in the claim query, from each job's own attempt count.
+      max-attempts: 3
+      retry-backoff: 30s
+      batch-size: 1
+      # How often a worker looks for work. Set to "-" to disable.
+      poll-cron: '0/10 * * * * *'
+      # How much of the student's past a run considers: the per-topic history in the snapshot
+      # and the effort adjustment derived from it are the same question asked twice.
+      history-window: 90d
+      # Parameters every run asks the optimiser for. Stored on the job with the snapshot and the
+      # seed, because without all four a plan generated today cannot be regenerated tomorrow.
+      # What they mean belongs to the core's own contract; this side does not interpret them.
+      algorithm-params:
+        population-size: 120
+        generations: 400
+        mutation-rate: 0.05
+      # Guards on the per-student effort adjustment (decision L1). THESE ARE A JUDGEMENT, NOT A
+      # FINDING. Below the minimum there is no adjustment at all, because a ratio computed from
+      # one session is not a measurement; the bounds exist because an unbounded ratio lets a
+      # handful of unusual sessions rewrite every estimate in the plan. Both should be revisited
+      # against observed data rather than kept because they were written here.
+      min-calibration-sessions: 5
+      min-effort-factor: 0.5
+      max-effort-factor: 2.0
 
   learning-record:
     # A history has no natural size, and this API has no generic pagination by decision, so

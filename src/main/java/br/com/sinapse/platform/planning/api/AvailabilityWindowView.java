@@ -47,6 +47,21 @@ public record AvailabilityWindowView(
                 && (effectiveUntil == null || !date.isAfter(effectiveUntil));
     }
 
+    /**
+     * Whether the window was in force at any point between two days, both inclusive.
+     *
+     * <p>What the snapshot assembly asks: a horizon sees every window whose validity overlaps
+     * it, not only the ones that already applied on its first day. A routine that starts in the
+     * third week of the horizon is availability the plan can use.
+     *
+     * @param from first day of the range, inclusive
+     * @param to   last day of the range, inclusive
+     * @return whether the two ranges meet
+     */
+    public boolean isEffectiveDuring(LocalDate from, LocalDate to) {
+        return !effectiveFrom.isAfter(to) && (effectiveUntil == null || !effectiveUntil.isBefore(from));
+    }
+
     /** Whether the window has been closed. */
     public boolean isClosed() {
         return effectiveUntil != null;

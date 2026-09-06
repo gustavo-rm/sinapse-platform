@@ -35,4 +35,15 @@ public interface StudyPlanRepository extends JpaRepository<StudyPlan, UUID> {
      * @return the plans, most recent first
      */
     List<StudyPlan> findByAccountIdOrderByCreatedAtDesc(UUID accountId, Limit limit);
+
+    /**
+     * The plan a generation job produced.
+     *
+     * <p>At most one: the foreign key to the job is unique. This is how a client that polled a
+     * job to {@code READY} finds the plan it was waiting for.
+     *
+     * @param generationRequestId job
+     * @return the plan it produced, if it produced one
+     */
+    Optional<StudyPlan> findByGenerationRequestId(UUID generationRequestId);
 }

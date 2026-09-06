@@ -12,23 +12,28 @@ import org.junit.jupiter.api.Test;
 /**
  * Rule R2, stated where it can actually be checked.
  *
- * <p>"Planning does not read the learning record. Composition happens in
- * {@code planning.orchestration}." The module descriptor cannot express that: Spring Modulith
- * declares allowed targets per module, and {@code orchestration} is a sub-package of this
- * module rather than a module of its own. So the descriptor has to permit
- * {@code learningrecord :: api} for the whole of planning, and the narrower rule — the one the
- * architecture actually states — is enforced here.
+ * <p>"Planning does not read the learning record" (rule R2), and section 9.5 adds that the
+ * orchestration layer is the component that reads curriculum, the learning record and planning,
+ * assembles the snapshot and calls the core. The module descriptor cannot express either:
+ * Spring Modulith declares allowed targets per module, and {@code orchestration} is a
+ * sub-package of this module rather than a module of its own. So the descriptor has to permit
+ * both dependencies for the whole of planning, and the narrower rule — the one the architecture
+ * actually states — is enforced here.
  *
- * <p>What the rule buys is an acyclic dependency graph. The learning record is forbidden from
- * depending on planning by its own descriptor, and planning is forbidden from depending on the
- * learning record anywhere its aggregates live. One package composes the two, and it is the
- * one section 9.5 says exists for that purpose.
+ * <p>What the rule buys is an acyclic dependency graph and one place that knows more than one
+ * context. The learning record is forbidden from depending on planning by its own descriptor;
+ * planning is forbidden from depending on the learning record, or on the optimiser, anywhere
+ * its aggregates live. One package composes them, and it is the one section 9.5 says exists for
+ * that purpose.
  */
-class PlanningReadsLearningRecordOnlyInOrchestrationTest {
+class OrchestrationIsTheOnlyComposerTest {
 
     private static final String APPLICATION_PACKAGE = "br.com.sinapse.platform";
 
-    private static final String LEARNING_RECORD = "br.com.sinapse.platform.learningrecord";
+    /** The two things only the composition layer may reach. */
+    private static final List<String> COMPOSED_ONLY_IN_ORCHESTRATION = List.of(
+            "br.com.sinapse.platform.learningrecord",
+            "br.com.sinapse.platform.coreclient");
 
     /** The one package allowed to know both contexts. */
     private static final String ORCHESTRATION = "br.com.sinapse.platform.planning.orchestration";
@@ -42,18 +47,18 @@ class PlanningReadsLearningRecordOnlyInOrchestrationTest {
             .importPackages(APPLICATION_PACKAGE);
 
     @Test
-    void nothingOutsideOrchestrationTouchesTheLearningRecord() {
+    void nothingOutsideOrchestrationComposesAcrossContexts() {
         List<String> offenders = PRODUCTION_CLASSES.stream()
-                .filter(PlanningReadsLearningRecordOnlyInOrchestrationTest::isPlanningProper)
-                .filter(PlanningReadsLearningRecordOnlyInOrchestrationTest::readsLearningRecord)
+                .filter(OrchestrationIsTheOnlyComposerTest::isPlanningProper)
+                .filter(OrchestrationIsTheOnlyComposerTest::composesAcrossContexts)
                 .map(JavaClass::getName)
                 .toList();
 
         assertThat(offenders)
-                .as("rule R2. A dependency from an aggregate of this module onto the learning "
-                        + "record is the cycle the architecture is built to avoid, and it would "
-                        + "also make a self-directed study session structurally different from "
-                        + "a planned one")
+                .as("rule R2 and section 9.5. A dependency from an aggregate of this module "
+                        + "onto the learning record is the cycle the architecture is built to "
+                        + "avoid; one onto the core client would put an HTTP call to a separate "
+                        + "process inside the module that owns the plan")
                 .isEmpty();
     }
 
@@ -61,7 +66,7 @@ class PlanningReadsLearningRecordOnlyInOrchestrationTest {
     void orchestrationIsWhereTheCompositionActuallyHappens() {
         List<String> composers = PRODUCTION_CLASSES.stream()
                 .filter(candidate -> candidate.getPackageName().startsWith(ORCHESTRATION))
-                .filter(PlanningReadsLearningRecordOnlyInOrchestrationTest::readsLearningRecord)
+                .filter(OrchestrationIsTheOnlyComposerTest::composesAcrossContexts)
                 .map(JavaClass::getName)
                 .toList();
 
@@ -76,9 +81,10 @@ class PlanningReadsLearningRecordOnlyInOrchestrationTest {
         return PLANNING_PROPER.stream().anyMatch(candidate.getPackageName()::startsWith);
     }
 
-    private static boolean readsLearningRecord(JavaClass candidate) {
+    private static boolean composesAcrossContexts(JavaClass candidate) {
         return candidate.getDirectDependenciesFromSelf().stream()
                 .map(dependency -> dependency.getTargetClass().getName())
-                .anyMatch(target -> target.startsWith(LEARNING_RECORD));
+                .anyMatch(target -> COMPOSED_ONLY_IN_ORCHESTRATION.stream()
+                        .anyMatch(target::startsWith));
     }
 }

@@ -1,6 +1,8 @@
 package br.com.sinapse.platform.planning.internal.domain;
 
 import br.com.sinapse.platform.planning.api.GenerationRequestStatus;
+import br.com.sinapse.platform.planning.api.PlanGenerationFailure;
+import br.com.sinapse.platform.planning.internal.error.GenerationRequestNotRunningException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -104,19 +106,24 @@ public class PlanGenerationRequest {
     /**
      * Queues a request.
      *
-     * @param id            identifier
-     * @param accountId     student
-     * @param horizonStart  first day of the horizon, inclusive
-     * @param horizonEnd    last day of the horizon
-     * @param requestedAt   when it was asked for
+     * @param id              identifier
+     * @param accountId       student
+     * @param horizonStart    first day of the horizon, inclusive
+     * @param horizonEnd      last day of the horizon
+     * @param catalogImportId curated catalogue state in effect, or {@code null} when the
+     *                        catalogue has never been imported. Recorded at this moment and
+     *                        never afterwards: the point is which revision produced the edges
+     *                        this run will see
+     * @param requestedAt     when it was asked for
      */
     public PlanGenerationRequest(UUID id, UUID accountId, LocalDate horizonStart,
-            LocalDate horizonEnd, Instant requestedAt) {
+            LocalDate horizonEnd, UUID catalogImportId, Instant requestedAt) {
         this.id = id;
         this.accountId = accountId;
         this.status = GenerationRequestStatus.PENDING;
         this.horizonStart = horizonStart;
         this.horizonEnd = horizonEnd;
+        this.catalogImportId = catalogImportId;
         this.requestedAt = requestedAt;
         this.attemptCount = 0;
     }
@@ -194,5 +201,95 @@ public class PlanGenerationRequest {
     /** Why it failed, or {@code null}. */
     public String failureReason() {
         return failureReason;
+    }
+
+    /** Whether the job has finished, whatever the outcome. */
+    public boolean isTerminal() {
+        return status.isTerminal();
+    }
+
+    /**
+     * Marks the job as claimed by a worker.
+     *
+     * <p>The attempt is counted here rather than on failure, so that a worker which dies
+     * without recording anything still spends one. The alternative loses the count exactly in
+     * the case the count exists for.
+     *
+     * @param at instant it was claimed
+     */
+    public void claim(Instant at) {
+        this.status = GenerationRequestStatus.RUNNING;
+        this.startedAt = at;
+        this.attemptCount = attemptCount + 1;
+    }
+
+    /**
+     * Records what was sent to the core, before it is sent.
+     *
+     * <p>Written first on purpose. A run that dies mid-call still leaves the record of what was
+     * attempted, and a snapshot stored only on success would be a snapshot of the runs that
+     * happened to work.
+     *
+     * @param snapshot        the exact document sent
+     * @param algorithmParams parameters the run was asked to use
+     * @param randomSeed      seed the run was asked to use, chosen by this backend
+     */
+    public void recordSubmission(Map<String, Object> snapshot, Map<String, Object> algorithmParams,
+            long randomSeed) {
+        requireRunning();
+        this.snapshot = snapshot == null ? null : Map.copyOf(snapshot);
+        this.algorithmParams = algorithmParams == null ? null : Map.copyOf(algorithmParams);
+        this.randomSeed = randomSeed;
+    }
+
+    /**
+     * Closes the job as finished, with the version that produced the plan.
+     *
+     * <p>The fourth of the four fields that make a plan reproducible, and the only one that
+     * could not be known before the call.
+     *
+     * @param at          instant it finished
+     * @param coreVersion version of the optimiser that ran
+     */
+    public void succeed(Instant at, String coreVersion) {
+        requireRunning();
+        this.status = GenerationRequestStatus.READY;
+        this.finishedAt = at;
+        this.coreVersion = coreVersion;
+    }
+
+    /**
+     * Closes the job as failed.
+     *
+     * <p>The reason is a value from a closed set and never a message. What actually happened is
+     * in the log; a client learns which kind of failure it was, which is what it can act on,
+     * and nothing about the core's address, its response or the payload that was sent.
+     *
+     * @param at     instant it finished
+     * @param reason which kind of failure it was
+     */
+    public void fail(Instant at, PlanGenerationFailure reason) {
+        requireRunning();
+        this.status = GenerationRequestStatus.FAILED;
+        this.finishedAt = at;
+        this.failureReason = reason.name();
+    }
+
+    /**
+     * Puts the job back in the queue for another attempt.
+     *
+     * <p>{@code startedAt} is deliberately left where it is: it is the instant of the last
+     * attempt, and the claim query computes the backoff from it. Clearing it would make every
+     * failed job immediately eligible again, which is a retry policy of "at once, forever".
+     */
+    public void releaseForRetry() {
+        requireRunning();
+        this.status = GenerationRequestStatus.PENDING;
+    }
+
+    private void requireRunning() {
+        if (status != GenerationRequestStatus.RUNNING) {
+            throw new GenerationRequestNotRunningException();
+        }
     }
 }
