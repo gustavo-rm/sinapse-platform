@@ -1,12 +1,16 @@
-package br.com.sinapse.platform.identity.internal.security;
+package br.com.sinapse.platform.identity.api;
 
-import br.com.sinapse.platform.identity.api.AccountRole;
 import java.util.Set;
 import java.util.UUID;
 import org.springframework.security.core.AuthenticatedPrincipal;
 
 /**
  * Who a request belongs to, once its token has been resolved.
+ *
+ * <p>Published rather than internal because "who is calling" is a question every module
+ * with a protected route has to ask, and identity is the module that answers it. The
+ * alternative — each module reaching into the security context and guessing at the shape of
+ * what it finds — is how a principal type ends up parsed from a string in four places.
  *
  * <p>The name is the account identifier, which is what the rate limiter keys an
  * authenticated counter by. It is an internal identifier and not personal data — no

@@ -1,8 +1,8 @@
 package br.com.sinapse.platform.identity.internal.web;
 
+import br.com.sinapse.platform.identity.api.AuthenticatedAccount;
+import br.com.sinapse.platform.identity.api.CurrentAccount;
 import br.com.sinapse.platform.identity.internal.config.IdentityProperties;
-import br.com.sinapse.platform.identity.internal.security.AuthenticatedAccount;
-import br.com.sinapse.platform.identity.internal.security.CurrentAccount;
 import br.com.sinapse.platform.identity.internal.security.SessionCookies;
 import br.com.sinapse.platform.identity.internal.service.AuthenticationService;
 import br.com.sinapse.platform.identity.internal.service.SessionService;

@@ -37,6 +37,26 @@ sinapse:
         phase: BEFORE_AUTHENTICATION
         limit: 50
         window: 1m
+      - id: educational-invite-redemption-origin
+        path: /api/v1/invites/*/redemptions
+        phase: BEFORE_AUTHENTICATION
+        limit: 3
+        window: 1m
+      - id: educational-invite-redemption-account
+        path: /api/v1/invites/*/redemptions
+        phase: AFTER_AUTHENTICATION
+        limit: 5
+        window: 1m
+      - id: educational-invite-preview-origin
+        path: /api/v1/invites/*/preview
+        phase: BEFORE_AUTHENTICATION
+        limit: 50
+        window: 1m
+      - id: educational-invite-preview-account
+        path: /api/v1/invites/*/preview
+        phase: AFTER_AUTHENTICATION
+        limit: 50
+        window: 1m
     # Registration is deliberately absent from this list. It is limited to five per hour in
     # the deployed configuration, and the suite registers many more accounts than that.
 

@@ -52,6 +52,26 @@ sinapse:
         phase: BEFORE_AUTHENTICATION
         limit: 5
         window: 1h
+      - id: educational-invite-redemption-origin
+        path: /api/v1/invites/*/redemptions
+        phase: BEFORE_AUTHENTICATION
+        limit: 10
+        window: 10m
+      - id: educational-invite-redemption-account
+        path: /api/v1/invites/*/redemptions
+        phase: AFTER_AUTHENTICATION
+        limit: 10
+        window: 10m
+      - id: educational-invite-preview-origin
+        path: /api/v1/invites/*/preview
+        phase: BEFORE_AUTHENTICATION
+        limit: 20
+        window: 10m
+      - id: educational-invite-preview-account
+        path: /api/v1/invites/*/preview
+        phase: AFTER_AUTHENTICATION
+        limit: 20
+        window: 10m
 
   identity:
     session:
