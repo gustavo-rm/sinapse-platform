@@ -32,6 +32,13 @@
         <spring-modulith.version>1.4.13</spring-modulith.version>
         <springdoc.version>2.9.0</springdoc.version>
 
+        <!--
+          Bouncy Castle is not managed by spring-boot-dependencies, so the version is
+          pinned here. It is a transitive-by-choice dependency of Spring Security's
+          Argon2PasswordEncoder, which spring-security-crypto declares as optional.
+        -->
+        <bouncycastle.version>1.82</bouncycastle.version>
+
         <jacoco.version>0.8.13</jacoco.version>
 
         <!--
@@ -66,6 +73,17 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+        <!--
+          Argon2PasswordEncoder delegates the hashing to Bouncy Castle's Argon2
+          implementation, which spring-security-crypto declares as optional and therefore
+          does not bring in. Section 5.8 of the architecture document chooses Argon2id, so
+          the dependency is required rather than incidental.
+        -->
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk18on</artifactId>
+            <version>${bouncycastle.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

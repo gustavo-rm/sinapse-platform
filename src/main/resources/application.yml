@@ -104,8 +104,72 @@ sinapse:
     # the address reported by the container is used. Fill this in with the addresses of
     # the reverse proxy actually in front of the application, and with nothing else.
     trusted-proxies: []
-    # The mechanism exists from the bootstrap and the list starts empty: each prompt
-    # registers the policy for the routes it creates. ADR 0009 names the ones that require
-    # limiting from the start: invite redemption, authentication, generation job creation,
-    # e-mail verification and password recovery.
-    routes: []
+    # Each prompt registers the policy for the routes it creates. ADR 0009 names the ones
+    # that require limiting from the start: invite redemption, authentication, generation job
+    # creation, e-mail verification and password recovery.
+    #
+    # Declaration order decides, so a specific path goes above a broader one. All of these are
+    # anonymous routes, so they are keyed by client address and run before authentication;
+    # the address comes from the infrastructure and never from a header.
+    #
+    # A profile that declares this list replaces it whole rather than adding to it: a list is
+    # bound from the highest-priority source that defines any element of it.
+    routes:
+      # Registration is throttled because it writes a row and hashes a password on demand.
+      - id: identity-registration
+        path: /api/v1/accounts
+        phase: BEFORE_AUTHENTICATION
+        limit: 5
+        window: 1h
+      # Authentication. The limit bounds password guessing per origin; the Argon2 cost bounds
+      # what each attempt is worth.
+      - id: identity-authentication
+        path: /api/v1/sessions
+        phase: BEFORE_AUTHENTICATION
+        limit: 10
+        window: 5m
+      # Token consumption. Tokens are 256 bits, so this is not what makes guessing hopeless;
+      # it is what keeps guessing from costing the database anything.
+      - id: identity-email-verification
+        path: /api/v1/email-verifications
+        phase: BEFORE_AUTHENTICATION
+        limit: 10
+        window: 5m
+      - id: identity-password-reset-confirmation
+        path: /api/v1/password-resets/confirmation
+        phase: BEFORE_AUTHENTICATION
+        limit: 10
+        window: 5m
+      # Requesting a reset sends a message to an address somebody else chose. Without a limit
+      # the route is a way of mailing a stranger repeatedly.
+      - id: identity-password-reset
+        path: /api/v1/password-resets
+        phase: BEFORE_AUTHENTICATION
+        limit: 5
+        window: 1h
+
+  identity:
+    # Age from which consent is the holder's own to give. A parameter, not a constant: the
+    # legal question is open (J1), and the default of 18 is the conservative reading.
+    consent-age-threshold: 18
+    # Days to reaffirm, in one's own name, a consent a guardian had granted (ADR 0004). The
+    # account stays usable throughout.
+    majority-grace-period-days: 30
+    # Daily pass over the holders who have reached the threshold. Evaluated in the zone
+    # configured under sinapse.time, never in the zone of the host. Set to "-" to disable.
+    majority-sweep-cron: '0 15 3 * * *'
+    tokens:
+      email-verification: 24h
+      password-reset: 1h
+      majority-reaffirmation: 30d
+    session:
+      idle-timeout: 7d
+      absolute-timeout: 30d
+      cookie-name: sinapse_session
+      cookie-path: /api/v1
+      cookie-secure: true
+    # The wordings of the consent terms. Empty here on purpose: this is a legal document, and
+    # inventing placeholder text that someone would then be recorded as having accepted is
+    # worse than refusing to register anyone. The operator supplies the texts; startup
+    # publishes whatever is missing and never rewrites what is already published.
+    terms: []

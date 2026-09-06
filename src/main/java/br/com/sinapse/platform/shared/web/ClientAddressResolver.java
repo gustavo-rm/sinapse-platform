@@ -1,4 +1,6 @@
-package br.com.sinapse.platform.shared.ratelimit;
+package br.com.sinapse.platform.shared.web;
+
+import br.com.sinapse.platform.shared.ratelimit.RateLimitProperties;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
@@ -15,6 +17,12 @@ import org.springframework.stereotype.Component;
  * {@code ServletRequest#getRemoteAddr()}. {@code X-Forwarded-For} is consulted only
  * when that address belongs to a configured trusted proxy; otherwise the header is
  * ignored entirely, because any client can send it.
+ *
+ * <p>It lives in the web package rather than with the rate limiter because more than the
+ * limiter needs it: the identity module records the address of a consent as legal evidence
+ * and keeps a hash of it on a session. The list of trusted proxies stays under
+ * {@code sinapse.rate-limit}, where it was configured first, so that no deployment has to
+ * be reconfigured for the class to move.
  *
  * <p>When the direct peer is trusted, the header is walked from the right, discarding
  * addresses that are themselves trusted proxies. The first untrusted address found is
