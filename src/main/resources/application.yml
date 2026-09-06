@@ -173,3 +173,18 @@ sinapse:
     # worse than refusing to register anyone. The operator supplies the texts; startup
     # publishes whatever is missing and never rewrites what is already published.
     terms: []
+
+  curriculum:
+    # How long a topic of each effort band is planned for (ADR 0012). The band is what a
+    # curator judges; the minutes are configuration precisely so that the number can be
+    # calibrated against observed data instead of being asserted by whoever curated.
+    #
+    # THESE VALUES ARE AN ASSUMPTION, NOT A FINDING. They were chosen to be plausible and
+    # evenly spaced, and no pilot data has confirmed them. Calibrating them against the
+    # durations actually observed in completed study sessions is analysis work belonging to
+    # the pilot; until then, read them as a starting point.
+    effort-tier-duration:
+      SHORT: 25m
+      STANDARD: 50m
+      LONG: 90m
+      EXTENDED: 150m
