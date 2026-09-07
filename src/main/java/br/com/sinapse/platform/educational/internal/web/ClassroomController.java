@@ -146,7 +146,7 @@ public class ClassroomController {
             @ApiResponse(responseCode = "404", description = "No such classroom for this teacher",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
                             schema = @Schema(implementation = ProblemDetail.class)))})
-    public List<EnrollmentResponse> students(@PathVariable UUID classroomId) {
+    public List<EnrollmentResponse> enrollments(@PathVariable UUID classroomId) {
         UUID caller = CurrentAccount.require().accountId();
         Classroom classroom = classrooms.requireOwned(caller, classroomId);
         return directory.activeEnrollmentsIn(classroom.id()).stream()
