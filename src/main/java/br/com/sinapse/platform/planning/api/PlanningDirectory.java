@@ -127,4 +127,47 @@ public interface PlanningDirectory {
      * @return the goals, most pressing first, then newest first
      */
     List<StudyGoalView> goalsOf(UUID accountId);
+
+    /**
+     * The sessions of several accounts' <em>active</em> plans that start within a window.
+     *
+     * <p>The batch form of {@link #plannedSessionsOf}, in one query. Rule R7 and section 4 of
+     * the API contract: the class list needs every student's due sessions in order to say
+     * anything about adherence, and asking per student would be forty queries before a single
+     * figure is computed.
+     *
+     * @param accountIds students
+     * @param from       start of the window, inclusive
+     * @param to         end of the window, exclusive
+     * @return the sessions per account, earliest first. An account with no active plan, or
+     *         none scheduled in the window, is absent from the map
+     */
+    Map<UUID, List<PlannedSessionView>> plannedSessionsOfAccounts(Collection<UUID> accountIds,
+            Instant from, Instant to);
+
+    /**
+     * The generation job an account has that has not finished.
+     *
+     * <p>The identifier and nothing else. What the job is doing is read by polling the job
+     * itself, which is a route this module already publishes; a screen that only has to decide
+     * between "waiting" and "not waiting" needs to know that one exists, and copying its whole
+     * state into an unrelated read would be two places to keep in step.
+     *
+     * @param accountId student
+     * @return its identifier, if there is one
+     */
+    Optional<UUID> unfinishedGenerationRequestIdOf(UUID accountId);
+
+    /**
+     * Whether the account has said enough for a plan to be generated.
+     *
+     * <p>Decision F2: availability effective over the horizon a job would plan, and at least
+     * one active goal. The horizon is this module's own configuration, so the question is
+     * answered here rather than by the caller — a screen that computed the horizon itself
+     * would tell the student they are ready and then be refused by the job, or the reverse.
+     *
+     * @param accountId student
+     * @return whether a generation job asked for now would be accepted on these grounds
+     */
+    boolean isReadyToPlan(UUID accountId);
 }

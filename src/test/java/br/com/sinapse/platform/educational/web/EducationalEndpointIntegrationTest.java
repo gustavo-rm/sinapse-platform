@@ -194,7 +194,7 @@ class EducationalEndpointIntegrationTest extends EducationalIntegrationTest {
         Account student = student();
         invites.redeem(student.id(), invite(teacher, classroom).code());
 
-        mockMvc.perform(get(CLASSROOMS + "/" + classroom.id() + "/students")
+        mockMvc.perform(get(CLASSROOMS + "/" + classroom.id() + "/enrollments")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
@@ -204,7 +204,7 @@ class EducationalEndpointIntegrationTest extends EducationalIntegrationTest {
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
                 .andExpect(status().isNoContent());
 
-        mockMvc.perform(get(CLASSROOMS + "/" + classroom.id() + "/students")
+        mockMvc.perform(get(CLASSROOMS + "/" + classroom.id() + "/enrollments")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
@@ -216,7 +216,7 @@ class EducationalEndpointIntegrationTest extends EducationalIntegrationTest {
         Account other = teacher("Prof. Alheio");
         ClassroomView classroom = classroom(owner);
 
-        mockMvc.perform(get(CLASSROOMS + "/" + classroom.id() + "/students")
+        mockMvc.perform(get(CLASSROOMS + "/" + classroom.id() + "/enrollments")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenFor(other)))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.type").value("urn:sinapse:problem:resource-not-found"));

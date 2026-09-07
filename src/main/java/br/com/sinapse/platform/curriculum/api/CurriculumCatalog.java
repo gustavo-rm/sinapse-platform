@@ -2,6 +2,7 @@ package br.com.sinapse.platform.curriculum.api;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -48,4 +49,16 @@ public interface CurriculumCatalog {
      * @return the ones that exist, in curricular order
      */
     List<TopicView> topicsByIds(Collection<UUID> topicIds);
+
+    /**
+     * Subjects by identifier.
+     *
+     * <p>Keyed rather than listed because every caller of this method is putting a subject
+     * name next to something that already holds a {@code subjectId} — a planned session, a
+     * topic, a classroom — and a list would only be turned into this map by the caller.
+     *
+     * @param subjectIds subjects to read
+     * @return the ones that exist, keyed by identifier
+     */
+    Map<UUID, SubjectView> subjectsByIds(Collection<UUID> subjectIds);
 }

@@ -3,9 +3,14 @@ package br.com.sinapse.platform.identity.internal.service;
 import br.com.sinapse.platform.identity.api.AccountAccessPolicy;
 import br.com.sinapse.platform.identity.api.AccountStatus;
 import br.com.sinapse.platform.identity.api.ConsentPurpose;
+import br.com.sinapse.platform.identity.internal.domain.ConsentRecord;
 import br.com.sinapse.platform.identity.internal.persistence.AccountRepository;
 import br.com.sinapse.platform.identity.internal.persistence.ConsentRecordRepository;
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -52,6 +57,33 @@ public class DefaultAccountAccessPolicy implements AccountAccessPolicy {
     @Transactional(readOnly = true)
     public boolean canUseForResearch(UUID accountId) {
         return allows(accountId, ConsentPurpose.ACADEMIC_RESEARCH);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Two queries for any number of students, and the same two conditions in the same
+     * order: which of them are active, and which of those hold the consent. Nothing is
+     * cached here either — the set is assembled from rows read inside this call, so a
+     * withdrawal that happened a moment ago is already reflected.
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Set<UUID> canShareWithInstitution(Collection<UUID> accountIds) {
+        if (accountIds == null || accountIds.isEmpty()) {
+            return Set.of();
+        }
+        Set<UUID> active = accounts.findIdsByStatus(accountIds, AccountStatus.ACTIVE);
+        if (active.isEmpty()) {
+            return Set.of();
+        }
+        Set<UUID> allowed = consents
+                .findByAccountIdInAndRevokedAtIsNull(active).stream()
+                .filter(record -> record.purpose() == ConsentPurpose.INSTITUTION_SHARING)
+                .map(ConsentRecord::accountId)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+        allowed.retainAll(active);
+        return allowed;
     }
 
     private boolean allows(UUID accountId, ConsentPurpose purpose) {

@@ -1,5 +1,7 @@
 package br.com.sinapse.platform.identity.api;
 
+import java.util.Collection;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -48,4 +50,18 @@ public interface AccountAccessPolicy {
      *         {@link ConsentPurpose#ACADEMIC_RESEARCH} consent
      */
     boolean canUseForResearch(UUID accountId);
+
+    /**
+     * Which of several accounts may have their data disclosed to a teacher.
+     *
+     * <p>The same rule as {@link #canShareWithInstitution(UUID)}, asked about a whole
+     * classroom at once. Rule R7: the class list reads forty students, and asking one at a
+     * time would be forty pairs of queries for one screen. There is no second rule here —
+     * this answers exactly the set of accounts the unit method would answer {@code true} for.
+     *
+     * @param accountIds accounts being asked about
+     * @return the subset that is active and holds a valid
+     *         {@link ConsentPurpose#INSTITUTION_SHARING} consent right now
+     */
+    Set<UUID> canShareWithInstitution(Collection<UUID> accountIds);
 }

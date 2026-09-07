@@ -1,6 +1,15 @@
 # Profile used by the integration tests. The datasource comes from the container started
 # by IntegrationTest, so nothing about it is declared here.
 
+spring:
+  jpa:
+    properties:
+      hibernate:
+        # Statement counting, for the tests that assert a read model issues a fixed number of
+        # queries whatever the size of the data. Without them an N+1 introduced later passes
+        # every functional test and shows up only as latency in production.
+        generate_statistics: true
+
 logging:
   structured:
     format:
@@ -72,8 +81,27 @@ sinapse:
         phase: AFTER_AUTHENTICATION
         limit: 3
         window: 1m
+      # Repeated from the base configuration, and lowered so that a test can exhaust a window
+      # in a handful of requests.
+      - id: readmodel-classroom-students
+        path: /api/v1/classrooms/*/students
+        phase: AFTER_AUTHENTICATION
+        limit: 50
+        window: 1m
+      - id: readmodel-student-panel
+        path: /api/v1/classrooms/*/students/*/panel
+        phase: AFTER_AUTHENTICATION
+        limit: 50
+        window: 1m
     # Registration is deliberately absent from this list. It is limited to five per hour in
     # the deployed configuration, and the suite registers many more accounts than that.
+
+  read-model:
+    # Narrow enough that a test can ask for one day more and be refused.
+    max-window: 30d
+    # Low enough that a test can produce more sessions than the cap allows and see it applied.
+    max-recent-sessions: 5
+    max-classroom-students: 200
 
   planning:
     # Narrow enough that a test can ask for one day more and be refused.

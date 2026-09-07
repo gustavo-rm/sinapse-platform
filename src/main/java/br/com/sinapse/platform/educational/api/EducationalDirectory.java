@@ -78,4 +78,19 @@ public interface EducationalDirectory {
      * @return the ones that exist, keyed by identifier
      */
     Map<UUID, TeacherView> teachersByIds(Collection<UUID> teacherIds);
+
+    /**
+     * A classroom, provided it belongs to the teacher asking.
+     *
+     * <p>Empty both when the classroom is somebody else's and when it does not exist, so that
+     * the caller cannot tell the two apart and a route built on this cannot be used to find
+     * out which identifiers are real. It is the same rule the write side applies; published
+     * here because the read models are outside this module and must not each invent their own
+     * ownership check.
+     *
+     * @param teacherAccountId account of the teacher asking
+     * @param classroomId      classroom
+     * @return the classroom, if it is theirs
+     */
+    Optional<ClassroomView> classroomOwnedBy(UUID teacherAccountId, UUID classroomId);
 }

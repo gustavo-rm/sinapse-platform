@@ -89,7 +89,7 @@ public class GenerationRequestService {
 
         LocalDate start = LocalDate.now(clock);
         Period horizon = configuration.horizon();
-        requireSomethingToPlan(accountId, start, start.plus(horizon));
+        requireSomethingToPlan(accountId);
         PlanGenerationRequest request = new PlanGenerationRequest(UUID.randomUUID(), accountId,
                 start, start.plus(horizon), catalogImportId, clock.instant());
         try {
@@ -206,14 +206,13 @@ public class GenerationRequestService {
      * Refuses a plan for a student who has not said what to plan.
      *
      * <p>Decision F2: availability and at least one goal, and nothing beyond them, so that
-     * activation is not penalised. Both are checked over the horizon this job would plan — a
-     * routine that ended last month is not availability for next month, and a plan built from
-     * defaults would be fiction presented as a recommendation.
+     * activation is not penalised. The condition itself is
+     * {@link PlanningDirectory#isReadyToPlan}, stated once and read here as well as by the
+     * initial screen. Two copies of it would be a student told they are ready and then
+     * refused, which is the worst of both answers.
      */
-    private void requireSomethingToPlan(UUID accountId, LocalDate from, LocalDate to) {
-        boolean hasAvailability = directory.availabilityOf(accountId).stream()
-                .anyMatch(window -> window.isEffectiveDuring(from, to));
-        if (!hasAvailability || directory.activeGoalsOf(accountId).isEmpty()) {
+    private void requireSomethingToPlan(UUID accountId) {
+        if (!directory.isReadyToPlan(accountId)) {
             throw new SetupIncompleteException();
         }
     }

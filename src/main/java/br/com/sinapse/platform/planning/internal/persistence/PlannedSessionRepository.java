@@ -31,7 +31,8 @@ public interface PlannedSessionRepository extends JpaRepository<PlannedSession, 
     @Query("""
             select session
               from PlannedSession session
-             where session.plan.id = :planId
+              join fetch session.plan plan
+             where plan.id = :planId
              order by session.sequenceIndex
             """)
     List<PlannedSession> findByPlan(@Param("planId") UUID planId);
@@ -51,8 +52,9 @@ public interface PlannedSessionRepository extends JpaRepository<PlannedSession, 
     @Query("""
             select session
               from PlannedSession session
-             where session.plan.accountId = :accountId
-               and session.plan.status = :status
+              join fetch session.plan plan
+             where plan.accountId = :accountId
+               and plan.status = :status
                and session.scheduledStart >= :from
                and session.scheduledStart < :to
              order by session.scheduledStart
@@ -95,4 +97,32 @@ public interface PlannedSessionRepository extends JpaRepository<PlannedSession, 
                                         where plan.accountId = :accountId)
             """)
     int eraseFor(@Param("accountId") UUID accountId);
+
+    /**
+     * The sessions of several accounts' plans in a given state that start within a window.
+     *
+     * <p>The batch form of {@link #findInWindow}, for the class list. The plan is fetched with
+     * the session because the view carries the plan identifier: read lazily, one query would
+     * become one more per distinct plan, which is the N+1 rule R7 exists to prevent, appearing
+     * exactly where the batch was supposed to remove it.
+     *
+     * @param accountIds students
+     * @param status     state of the plan the sessions must belong to
+     * @param from       start of the window, inclusive
+     * @param to         end of the window, exclusive
+     * @return the sessions, grouped by nothing: ordered by account and then by start
+     */
+    @Query("""
+            select session
+              from PlannedSession session
+              join fetch session.plan plan
+             where plan.accountId in :accountIds
+               and plan.status = :status
+               and session.scheduledStart >= :from
+               and session.scheduledStart < :to
+             order by plan.accountId, session.scheduledStart
+            """)
+    List<PlannedSession> findInWindowForAccounts(@Param("accountIds") Collection<UUID> accountIds,
+            @Param("status") PlanStatus status, @Param("from") Instant from,
+            @Param("to") Instant to);
 }

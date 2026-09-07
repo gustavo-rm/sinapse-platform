@@ -180,12 +180,10 @@ public class InviteService {
         Teacher teacher = teachers.findById(invite.createdBy())
                 .orElseThrow(InviteNotRedeemableException::new);
 
-        // The catalogue is a curated global list of the order of dozens, read whole and
-        // filtered here rather than through a lookup curriculum does not offer. If it ever
-        // grows to where that matters, the answer is a batch lookup by identifier there, not
-        // a join across the boundary from here.
-        List<String> subjectNames = catalog.subjects().stream()
-                .filter(subject -> classroom.subjectIds().contains(subject.id()))
+        // By identifier rather than by reading the catalogue whole and filtering. Curriculum
+        // publishes the batch lookup now (rule R7), so the read is the classroom's own subjects
+        // and its cost no longer depends on how large the catalogue has grown.
+        List<String> subjectNames = catalog.subjectsByIds(classroom.subjectIds()).values().stream()
                 .map(SubjectView::name)
                 .toList();
 

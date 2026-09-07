@@ -4,6 +4,8 @@ import br.com.sinapse.platform.educational.api.TeacherAccessPolicy;
 import br.com.sinapse.platform.educational.api.VisibilityScope;
 import br.com.sinapse.platform.educational.internal.persistence.EnrollmentRepository;
 import br.com.sinapse.platform.identity.api.AccountAccessPolicy;
+import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
@@ -52,6 +54,29 @@ public class DefaultTeacherAccessPolicy implements TeacherAccessPolicy {
         }
         return enrollments.existsActiveEnrollmentUnderTeacher(teacherAccountId, studentAccountId)
                 && accounts.canShareWithInstitution(studentAccountId);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Two calls for any number of students, in the same order and for the same reason as
+     * the unit case: the enrollment query is an index scan that usually eliminates most of the
+     * set, and only what survives it is worth asking identity about.
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Set<UUID> viewableStudents(UUID teacherAccountId, Collection<UUID> studentAccountIds) {
+        if (teacherAccountId == null || studentAccountIds == null || studentAccountIds.isEmpty()) {
+            return Set.of();
+        }
+        Set<UUID> enrolled = enrollments
+                .findStudentsEnrolledUnderTeacher(teacherAccountId, studentAccountIds);
+        if (enrolled.isEmpty()) {
+            return Set.of();
+        }
+        Set<UUID> viewable = new LinkedHashSet<>(accounts.canShareWithInstitution(enrolled));
+        viewable.retainAll(enrolled);
+        return viewable;
     }
 
     /**

@@ -118,19 +118,29 @@ public class ClassroomController {
     }
 
     /**
-     * Who is currently in a classroom.
+     * Who is currently enrolled in a classroom.
      *
      * <p>Identifiers and enrollment dates, and no names: identity stores no display name for a
-     * student, so there is none to return. The classroom list of the API contract, which does
-     * carry a name and adherence figures, is a read model composed across modules and belongs
-     * where those live.
+     * student, so there is none to return.
+     *
+     * <p><strong>Under {@code /enrollments} and not {@code /students}.</strong> Section 3.6 of
+     * the API contract gives {@code /classrooms/&#123;id&#125;/students} to the class list, which
+     * is a read model composed across modules and returns a different thing: figures per
+     * student, and only for the students whose sharing consent is in force at that moment.
+     * This one is enrollment management, and it has to keep showing a student who has
+     * withdrawn — otherwise the teacher could not remove them. Two answers, so two paths, and
+     * the payload here is an enrollment, which is what the path now says.
      *
      * @param classroomId classroom
      * @return its active enrollments
      */
-    @GetMapping(value = EducationalRoutes.CLASSROOMS + "/{classroomId}/students",
+    @GetMapping(value = EducationalRoutes.CLASSROOMS + "/{classroomId}/enrollments",
             produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Lists the students currently in a classroom")
+    @Operation(summary = "Lists the enrollments currently open in a classroom",
+            description = "Enrollment management, and distinct from the class list of section "
+                    + "3.6 of the API contract: it shows every student who is in the classroom, "
+                    + "including one who has withdrawn their sharing consent, because removing "
+                    + "them has to remain possible.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "The active enrollments"),
             @ApiResponse(responseCode = "404", description = "No such classroom for this teacher",

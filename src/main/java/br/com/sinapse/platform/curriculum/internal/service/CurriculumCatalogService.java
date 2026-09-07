@@ -6,9 +6,13 @@ import br.com.sinapse.platform.curriculum.api.TopicView;
 import br.com.sinapse.platform.curriculum.internal.persistence.SubjectRepository;
 import br.com.sinapse.platform.curriculum.internal.persistence.TopicRepository;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -65,5 +69,17 @@ public class CurriculumCatalogService implements CurriculumCatalog {
         return topics.findByIdInOrderBySubjectIdAscPositionAsc(topicIds).stream()
                 .map(CurriculumViews::of)
                 .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<UUID, SubjectView> subjectsByIds(Collection<UUID> subjectIds) {
+        if (subjectIds.isEmpty()) {
+            return Map.of();
+        }
+        return subjects.findAllById(subjectIds).stream()
+                .map(CurriculumViews::of)
+                .collect(Collectors.toMap(SubjectView::id, Function.identity(),
+                        (first, second) -> first, LinkedHashMap::new));
     }
 }
