@@ -38,8 +38,14 @@ class QueryCountIntegrationTest extends ReadModelIntegrationTest {
     /** Statements the agenda costs: the gate, the zone, the schedule, the catalogue, executions. */
     private static final long AGENDA_QUERIES = 7;
 
-    /** Statements a plan summary costs. */
-    private static final long PLAN_SUMMARY_QUERIES = 7;
+    /**
+     * Statements a plan summary costs once anything has fallen due.
+     *
+     * <p>Eight rather than seven because adherence skips its count entirely when the due set is
+     * empty. The measured figure is the one for a plan that has started, which is the plan a
+     * student actually opens a summary of.
+     */
+    private static final long PLAN_SUMMARY_QUERIES = 8;
 
     /** Statements a panel costs: two gates, four reads of the record, and the catalogue. */
     private static final long PANEL_QUERIES = 12;
@@ -93,18 +99,30 @@ class QueryCountIntegrationTest extends ReadModelIntegrationTest {
         assertThat(forLarge.queries()).isEqualTo(forSmall.queries());
     }
 
+    /**
+     * Both plans are written with explicit instants, and both have sessions already due.
+     *
+     * <p>Two reasons, and the second is the one that bit. Adherence skips its query entirely
+     * when nothing has fallen due, so a fixture where that differs between the two measurements
+     * compares two different code paths. And a <em>generated</em> plan lands in the student's
+     * declared availability, which is an evening — so whether anything is due depends on the
+     * hour the suite runs, and the count would differ between a morning build and an evening
+     * one.
+     */
     @Test
     void aPlanSummaryCostsTheSameHoweverManySessionsThePlanHas() {
-        Account small = studentReadyToPlan(2);
-        StudyPlanView smallPlan = planFor(small);
-        Account large = studentReadyToPlan(40);
-        StudyPlanView largePlan = planFor(large);
+        Account small = student();
+        StudyPlanView smallPlan = planWithDueSessions(small, topic().id(), 1, 1);
+        Account large = student();
+        StudyPlanView largePlan = planWithDueSessions(large, topic().id(), 20, 20);
 
         Measured<?> forSmall = queries.measure(() -> summaries.of(small.id(), smallPlan.id()));
         Measured<?> forLarge = queries.measure(() -> summaries.of(large.id(), largePlan.id()));
 
+        assertThat(forLarge.queries())
+                .as("forty sessions cost what two do")
+                .isEqualTo(forSmall.queries());
         assertThat(forSmall.queries()).isEqualTo(PLAN_SUMMARY_QUERIES);
-        assertThat(forLarge.queries()).isEqualTo(forSmall.queries());
     }
 
     @Test

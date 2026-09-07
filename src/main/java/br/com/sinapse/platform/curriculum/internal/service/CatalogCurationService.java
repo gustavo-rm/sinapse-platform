@@ -4,13 +4,16 @@ import br.com.sinapse.platform.curriculum.api.CatalogCuration;
 import br.com.sinapse.platform.curriculum.api.EdgeProvenance;
 import br.com.sinapse.platform.curriculum.api.EdgeStrength;
 import br.com.sinapse.platform.curriculum.api.PrerequisiteEdgeView;
+import br.com.sinapse.platform.curriculum.api.TopicStillReferencedException;
 import br.com.sinapse.platform.curriculum.api.SubjectView;
 import br.com.sinapse.platform.curriculum.api.TopicView;
+import br.com.sinapse.platform.curriculum.internal.domain.CatalogImport;
 import br.com.sinapse.platform.curriculum.internal.domain.Subject;
 import br.com.sinapse.platform.curriculum.internal.domain.Topic;
 import br.com.sinapse.platform.curriculum.internal.domain.TopicPrerequisite;
 import br.com.sinapse.platform.curriculum.internal.error.InvalidReorderException;
 import br.com.sinapse.platform.curriculum.internal.error.UnknownTopicException;
+import br.com.sinapse.platform.curriculum.internal.persistence.CatalogImportRepository;
 import br.com.sinapse.platform.curriculum.internal.persistence.SubjectRepository;
 import br.com.sinapse.platform.curriculum.internal.persistence.TopicPrerequisiteRepository;
 import br.com.sinapse.platform.curriculum.internal.persistence.TopicRepository;
@@ -23,6 +26,7 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -48,19 +52,22 @@ public class CatalogCurationService implements CatalogCuration {
     private final SubjectRepository subjects;
     private final TopicRepository topics;
     private final TopicPrerequisiteRepository edges;
+    private final CatalogImportRepository imports;
     private final Clock clock;
 
     /**
      * @param subjects subjects
      * @param topics   topics
      * @param edges    prerequisite edges
+     * @param imports  the record of applied catalogue states
      * @param clock    application clock
      */
     public CatalogCurationService(SubjectRepository subjects, TopicRepository topics,
-            TopicPrerequisiteRepository edges, Clock clock) {
+            TopicPrerequisiteRepository edges, CatalogImportRepository imports, Clock clock) {
         this.subjects = subjects;
         this.topics = topics;
         this.edges = edges;
+        this.imports = imports;
         this.clock = clock;
     }
 
@@ -214,5 +221,41 @@ public class CatalogCurationService implements CatalogCuration {
         } catch (RuntimeException failure) {
             throw CycleTranslation.rethrow(failure);
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * <p>The edges go first, explicitly, because they are this module's own and an edge to a
+     * topic that no longer exists is not something to leave lying about. What is deliberately
+     * <em>not</em> done first is any check for references from elsewhere: this module does not
+     * know what a study session is (rule R3), so it attempts the delete and reads the answer
+     * off the foreign keys.
+     */
+    @Override
+    @Transactional
+    public void removeTopic(UUID topicId) {
+        Topic topic = topics.findById(topicId).orElseThrow(UnknownTopicException::new);
+        edges.deleteAll(edges.findTouching(List.of(topic.id())));
+        try {
+            topics.delete(topic);
+            topics.flush();
+        } catch (DataIntegrityViolationException stillReferenced) {
+            // A study session or a planned session names it. The whole transaction is going
+            // back, which is what makes an import all-or-nothing.
+            throw new TopicStillReferencedException(stillReferenced);
+        }
+    }
+
+    @Override
+    @Transactional
+    public UUID recordImport(ImportRecord record) {
+        CatalogImport applied = imports.save(new CatalogImport(UUID.randomUUID(),
+                record.sourceRevision(), clock.instant(),
+                new CatalogImport.Counts(record.subjectsAffected(), record.topicsAdded(),
+                        record.topicsUpdated(), record.edgesAdded(), record.edgesUpdated(),
+                        record.edgesRemoved()),
+                record.notes()));
+        return applied.id();
     }
 }

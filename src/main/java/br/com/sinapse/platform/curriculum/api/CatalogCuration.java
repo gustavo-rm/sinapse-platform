@@ -18,8 +18,13 @@ import java.util.UUID;
  *
  * <p><strong>Edges are not append-only.</strong> Unlike a consent record or an enrollment,
  * they are curated data and being able to correct them is the point; {@code createdBy} and
- * {@code createdAt} keep the audit trail. Topics are a different matter: something else may
- * already reference one, so removal is not offered here.
+ * {@code createdAt} keep the audit trail.
+ *
+ * <p><strong>Topics are a different matter.</strong> {@link #removeTopic} exists because a
+ * declarative import has to be able to express a topic that is gone, but it is never the
+ * default: the importer reports a topic missing from the file and leaves it alone unless it is
+ * told otherwise. When it is told otherwise, the foreign keys from downstream modules are what
+ * refuse — see {@link TopicStillReferencedException}.
  */
 public interface CatalogCuration {
 
@@ -159,5 +164,59 @@ public interface CatalogCuration {
      * @param kept    consecutive pairs that already had an edge and were left untouched
      */
     record SeedingResult(int created, int kept) {
+    }
+
+    /**
+     * Removes a topic.
+     *
+     * <p>Only ever reached through an explicit instruction: a topic simply absent from an
+     * imported file is reported and kept, because study sessions may reference it and evidence
+     * does not disappear as a side effect of curation (ADR 0014).
+     *
+     * <p>Its edges go with it. They are curated data whose whole meaning was the topic at
+     * either end, so leaving them would be leaving edges to nothing.
+     *
+     * @param topicId topic to remove
+     * @throws TopicStillReferencedException if anything outside this module still points at it
+     */
+    void removeTopic(UUID topicId);
+
+    /**
+     * Records that a state of the catalogue was applied.
+     *
+     * <p>This is the row that makes ADR 0014's provenance argument real: the curated graph and
+     * the effort tiers are inputs to the ablation experiment, and without knowing which
+     * revision of the CSV files was in force, a result cannot be attributed to a state of the
+     * catalogue. A generation job points at the import that was current when it ran.
+     *
+     * @param record what was applied, and from which revision of the files
+     * @return identifier of the recorded import
+     */
+    UUID recordImport(ImportRecord record);
+
+    /**
+     * One applied import.
+     *
+     * @param sourceRevision  git revision of the CSV files this state came from. Carries a
+     *                        {@code -dirty} suffix when the working tree had uncommitted
+     *                        changes, because a revision that does not describe what was
+     *                        applied is worse than an obviously untrustworthy one
+     * @param subjectsAffected subjects the import touched
+     * @param topicsAdded     topics created
+     * @param topicsUpdated   topics whose name, position or effort band changed
+     * @param edgesAdded      edges created
+     * @param edgesUpdated    edges corrected
+     * @param edgesRemoved    edges removed
+     * @param notes           anything a curator should be able to read back, or {@code null}
+     */
+    record ImportRecord(
+            String sourceRevision,
+            int subjectsAffected,
+            int topicsAdded,
+            int topicsUpdated,
+            int edgesAdded,
+            int edgesUpdated,
+            int edgesRemoved,
+            String notes) {
     }
 }

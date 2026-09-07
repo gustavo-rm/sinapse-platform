@@ -1,0 +1,14 @@
+# Profile of the catalogue importer (ADR 0014).
+#
+# It is a command-line tool that happens to live in this application, so it starts without a
+# web server and exits when the command finishes. The datasource still comes from the
+# environment: the tool writes to the same database the platform reads.
+
+spring:
+  main:
+    # No listener, no port. The runner does its work and the context closes.
+    web-application-type: none
+
+sinapse:
+  catalog:
+    directory: catalog

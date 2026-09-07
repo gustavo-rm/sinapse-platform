@@ -1,0 +1,36 @@
+prerequisite,dependent,strength,provenance,source_reference
+MED-ANAT:osteologia-geral,MED-ANAT:cranio,HARD,CURATED,"Moore, Anatomia Orientada para a Clínica, cap. 7"
+MED-ANAT:osteologia-geral,MED-ANAT:coluna,HARD,CURATED,"Moore, cap. 4"
+MED-ANAT:osteologia-geral,MED-ANAT:membro-superior-osseo,HARD,CURATED,"Moore, cap. 6"
+MED-ANAT:osteologia-geral,MED-ANAT:membro-inferior-osseo,HARD,CURATED,"Moore, cap. 5"
+MED-ANAT:artrologia-geral,MED-ANAT:artic-membro-superior,HARD,CURATED,"Moore, cap. 6"
+MED-ANAT:artrologia-geral,MED-ANAT:artic-membro-inferior,HARD,CURATED,"Moore, cap. 5"
+MED-ANAT:membro-superior-osseo,MED-ANAT:artic-membro-superior,HARD,CURATED,uma articulação exige seus ossos
+MED-ANAT:membro-inferior-osseo,MED-ANAT:artic-membro-inferior,HARD,CURATED,uma articulação exige seus ossos
+MED-ANAT:artic-membro-superior,MED-ANAT:musculos-membro-superior,HARD,CURATED,a ação muscular é definida sobre a articulação
+MED-ANAT:artic-membro-inferior,MED-ANAT:musculos-membro-inferior,HARD,CURATED,a ação muscular é definida sobre a articulação
+MED-ANAT:miologia-geral,MED-ANAT:musculos-dorso,HARD,CURATED,"Moore, cap. 4"
+MED-ANAT:miologia-geral,MED-ANAT:musculos-torax,HARD,CURATED,"Moore, cap. 1"
+MED-ANAT:coluna,MED-ANAT:musculos-dorso,SOFT,CURATED,a inserção é descrita por vértebra
+MED-ANAT:toraco-osseo,MED-ANAT:musculos-torax,HARD,CURATED,a inserção é descrita por costela
+MED-ANAT:sist-circulatorio-geral,MED-ANAT:coracao,HARD,CURATED,"Moore, cap. 1"
+MED-ANAT:coracao,MED-ANAT:grandes-vasos,HARD,CURATED,os grandes vasos são descritos a partir das câmaras
+MED-ANAT:sist-circulatorio-geral,MED-ANAT:arterias-membros,SOFT,CURATED,
+MED-ANAT:arterias-membros,MED-ANAT:veias-membros,SOFT,CURATED,a drenagem é ensinada contra o trajeto arterial
+MED-ANAT:sist-circulatorio-geral,MED-ANAT:linfatico,SOFT,CURATED,
+MED-ANAT:respiratorio-superior,MED-ANAT:pulmoes,HARD,CURATED,"Moore, cap. 1"
+MED-ANAT:toraco-osseo,MED-ANAT:pulmoes,SOFT,CURATED,a projeção pleural é dada por costela
+MED-ANAT:digestorio-superior,MED-ANAT:digestorio-inferior,HARD,CURATED,"Moore, cap. 2"
+MED-ANAT:digestorio-inferior,MED-ANAT:figado-vias-biliares,SOFT,CURATED,
+MED-ANAT:neuro-geral,MED-ANAT:medula-espinal,HARD,CURATED,"Moore, cap. 4"
+MED-ANAT:neuro-geral,MED-ANAT:tronco-encefalico,HARD,CURATED,"Moore, cap. 8"
+MED-ANAT:tronco-encefalico,MED-ANAT:nervos-cranianos,HARD,CURATED,os núcleos são localizados no tronco
+MED-ANAT:tronco-encefalico,MED-ANAT:cerebro,SOFT,CURATED,
+MED-ANAT:medula-espinal,MED-ANAT:musculos-membro-superior,SOFT,CURATED,a inervação segmentar explica a ação
+MED-ANAT:medula-espinal,MED-ANAT:musculos-membro-inferior,SOFT,CURATED,a inervação segmentar explica a ação
+MED-ANAT:cranio,MED-ANAT:nervos-cranianos,HARD,CURATED,os forames de saída são acidentes do crânio
+MED-ANAT:terminologia,MED-ANAT:osteologia-geral,HARD,CURATED,nenhuma descrição é possível sem os planos
+MED-ANAT:terminologia,MED-ANAT:artrologia-geral,HARD,CURATED,nenhuma descrição é possível sem os planos
+MED-ANAT:terminologia,MED-ANAT:miologia-geral,HARD,CURATED,nenhuma descrição é possível sem os planos
+MED-ANAT:urinario,MED-ANAT:genital-masculino,SOFT,CURATED,a via é compartilhada
+MED-ANAT:urinario,MED-ANAT:genital-feminino,SOFT,CURATED,
