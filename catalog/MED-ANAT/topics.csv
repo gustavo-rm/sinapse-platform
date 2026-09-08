@@ -1,0 +1,36 @@
+code,name,position,effort_tier
+terminologia,Terminologia anatômica e planos de referência,1,SHORT
+osteologia-geral,Osteologia geral: tipos e estrutura óssea,2,STANDARD
+cranio,Osteologia do crânio,3,LONG
+coluna,Osteologia da coluna vertebral,4,LONG
+toraco-osseo,Osteologia do tórax,5,STANDARD
+membro-superior-osseo,Osteologia do membro superior,6,STANDARD
+membro-inferior-osseo,Osteologia do membro inferior,7,STANDARD
+artrologia-geral,Artrologia geral: classificação das articulações,8,SHORT
+artic-membro-superior,Articulações do membro superior,9,STANDARD
+artic-membro-inferior,Articulações do membro inferior,10,STANDARD
+miologia-geral,Miologia geral: tipos de músculo e ação,11,STANDARD
+musculos-dorso,Músculos do dorso,12,STANDARD
+musculos-torax,Músculos do tórax e diafragma,13,STANDARD
+musculos-abdome,Músculos da parede abdominal,14,STANDARD
+musculos-membro-superior,Músculos do membro superior,15,LONG
+musculos-membro-inferior,Músculos do membro inferior,16,LONG
+sist-circulatorio-geral,Sistema circulatório: organização geral,17,STANDARD
+coracao,Coração: morfologia e câmaras,18,LONG
+grandes-vasos,Grandes vasos da base,19,STANDARD
+arterias-membros,Artérias dos membros,20,STANDARD
+veias-membros,Veias dos membros e drenagem,21,STANDARD
+linfatico,Sistema linfático,22,SHORT
+respiratorio-superior,Vias aéreas superiores,23,STANDARD
+pulmoes,Pulmões e pleura,24,LONG
+digestorio-superior,Trato digestório superior,25,STANDARD
+digestorio-inferior,Trato digestório inferior,26,STANDARD
+figado-vias-biliares,Fígado e vias biliares,27,STANDARD
+urinario,Sistema urinário,28,STANDARD
+genital-masculino,Sistema genital masculino,29,SHORT
+genital-feminino,Sistema genital feminino,30,STANDARD
+neuro-geral,Sistema nervoso: organização geral,31,STANDARD
+medula-espinal,Medula espinal e nervos espinais,32,LONG
+tronco-encefalico,Tronco encefálico,33,LONG
+cerebro,Cérebro: lobos e áreas funcionais,34,EXTENDED
+nervos-cranianos,Nervos cranianos,35,EXTENDED

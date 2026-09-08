@@ -44,13 +44,16 @@ class PlanSummaryReadModelIntegrationTest extends ReadModelIntegrationTest {
     /**
      * The detail the prompt singles out: a session in the future is not a missed one.
      *
-     * <p>Every session of a freshly generated plan is ahead of now, so nothing has fallen due and
-     * the ratio is absent — not zero, which would read as a student who followed none of it.
+     * <p>The plan is written with explicit instants rather than generated. A generated one is
+     * placed into the student's declared availability, which the fixture puts at seven in the
+     * evening — so between roughly ten to eight and nine, in the fixture's own zone, the first
+     * slot of "today" has already fallen due and this assertion would fail on the hour the
+     * suite happened to run. A test about what is in the future has to say which future.
      */
     @Test
     void aPlanThatHasNotStartedReportsNoAdherenceRatherThanZero() {
-        Account student = studentReadyToPlan(3);
-        StudyPlanView plan = planFor(student);
+        Account student = student();
+        StudyPlanView plan = planWithDueSessions(student, topic().id(), 0, 3);
 
         PlanSummaryView.Adherence adherence = summaries.of(student.id(), plan.id()).adherence();
 
