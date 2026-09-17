@@ -29,6 +29,7 @@ serão detalhados em documentos subsequentes.
 | 14 | Esforço por tópico é faixa ordinal; horizonte fixo de 4 semanas; replanejamento manual | [0012](adr/0012-decisoes-de-produto.md) |
 | 15 | Escrita segue o agregado, leitura segue a tela; `readmodel` compõe sem materializar | [0013](adr/0013-servico-de-leitura.md) |
 | 16 | Catálogo curado é artefato versionado em CSV, aplicado por importador de linha de comando | [0014](adr/0014-curadoria-do-catalogo.md) |
+| 17 | Contrato do Core duplicado nos dois repositórios contra JSON de referência; adaptador do lado do Core; Core em rede privada | [0015](adr/0015-ponte-de-contrato-com-o-core.md) |
 
 ---
 

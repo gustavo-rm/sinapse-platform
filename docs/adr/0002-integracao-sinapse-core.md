@@ -1,7 +1,20 @@
 # ADR 0002 — Integração com o Sinapse Core
 
 **Data:** 04 de setembro de 2026
-**Status:** aceita
+**Status:** aceita, com a premissa do contexto emendada pela ADR 0015
+**Emendada por:** ADR 0015, que corrige a premissa de que o Core já seria consumível.
+
+## Emenda de 17 de setembro de 2026
+
+A segunda frase do contexto abaixo — "Já existe como repositório separado e funcional" — não
+se sustenta contra o código e permanece no texto porque ADR aceita não se reescreve. O Core
+executa, mas não é consumível por esta plataforma: não expõe `POST /plans` nem conhece
+`contractVersion`, `randomSeed` ou tópico em UUID, e por isso todo job de geração termina em
+`FAILED`. Leia a frase como "existe como repositório separado, ainda não integrável".
+
+A decisão registrada aqui — processo separado, geração assíncrona por job, snapshot
+persistido — não depende dessa premissa e continua valendo integralmente. O que a ADR 0015
+decide é como os dois lados passam a falar o mesmo protocolo.
 
 ## Contexto
 
