@@ -1,0 +1,52 @@
+{
+  "contractVersion": "1.0",
+  "sessions": [
+    {
+      "topicId": "a0000001-0000-4000-8000-000000000001",
+      "kind": "STUDY",
+      "scheduledStart": "2026-09-01T19:00:00Z",
+      "durationMinutes": 30,
+      "sequenceIndex": 0
+    },
+    {
+      "topicId": "a0000002-0000-4000-8000-000000000002",
+      "kind": "STUDY",
+      "scheduledStart": "2026-09-01T19:30:00Z",
+      "durationMinutes": 60,
+      "sequenceIndex": 1
+    },
+    {
+      "topicId": "a0000001-0000-4000-8000-000000000001",
+      "kind": "REVISION",
+      "scheduledStart": "2026-09-03T19:00:00Z",
+      "durationMinutes": 25,
+      "sequenceIndex": 2
+    },
+    {
+      "topicId": "a0000003-0000-4000-8000-000000000003",
+      "kind": "STUDY",
+      "scheduledStart": "2026-09-05T09:00:00Z",
+      "durationMinutes": 108,
+      "sequenceIndex": 3
+    },
+    {
+      "topicId": "a0000004-0000-4000-8000-000000000004",
+      "kind": "STUDY",
+      "scheduledStart": "2026-09-05T10:50:00Z",
+      "durationMinutes": 60,
+      "sequenceIndex": 4
+    }
+  ],
+  "fitness": {
+    "weighted-score": 0.79,
+    "coverage": 0.86,
+    "overload-penalty": 0.12,
+    "hard-violations": 0
+  },
+  "metadata": {
+    "coreVersion": "1.4.2",
+    "randomSeed": 7362819450172837461,
+    "generations": 400,
+    "elapsedMillis": 41537
+  }
+}

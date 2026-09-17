@@ -1,0 +1,111 @@
+{
+  "contractVersion": "1.0",
+  "horizon": {
+    "start": "2026-09-01",
+    "end": "2026-09-28"
+  },
+  "availability": [
+    {
+      "start": "2026-09-01T19:00:00Z",
+      "end": "2026-09-01T21:00:00Z"
+    },
+    {
+      "start": "2026-09-03T19:00:00Z",
+      "end": "2026-09-03T21:00:00Z"
+    },
+    {
+      "start": "2026-09-05T09:00:00Z",
+      "end": "2026-09-05T12:00:00Z"
+    }
+  ],
+  "goals": [
+    {
+      "subjectId": "11111111-1111-4111-8111-111111111111",
+      "targetDate": "2026-09-20",
+      "priority": 5
+    },
+    {
+      "subjectId": "22222222-2222-4222-8222-222222222222",
+      "targetDate": "2026-10-15",
+      "priority": 3
+    }
+  ],
+  "topics": [
+    {
+      "id": "a0000001-0000-4000-8000-000000000001",
+      "subjectId": "11111111-1111-4111-8111-111111111111",
+      "position": 1,
+      "effortTier": "SHORT",
+      "estimatedMinutes": 30
+    },
+    {
+      "id": "a0000002-0000-4000-8000-000000000002",
+      "subjectId": "11111111-1111-4111-8111-111111111111",
+      "position": 2,
+      "effortTier": "STANDARD",
+      "estimatedMinutes": 60
+    },
+    {
+      "id": "a0000003-0000-4000-8000-000000000003",
+      "subjectId": "22222222-2222-4222-8222-222222222222",
+      "position": 1,
+      "effortTier": "LONG",
+      "estimatedMinutes": 108
+    },
+    {
+      "id": "a0000004-0000-4000-8000-000000000004",
+      "subjectId": "22222222-2222-4222-8222-222222222222",
+      "position": 2,
+      "effortTier": "EXTENDED",
+      "estimatedMinutes": 180
+    }
+  ],
+  "prerequisites": [
+    {
+      "prerequisiteTopicId": "a0000001-0000-4000-8000-000000000001",
+      "dependentTopicId": "a0000002-0000-4000-8000-000000000002",
+      "strength": "HARD",
+      "provenance": "CURATED"
+    },
+    {
+      "prerequisiteTopicId": "a0000002-0000-4000-8000-000000000002",
+      "dependentTopicId": "a0000003-0000-4000-8000-000000000003",
+      "strength": "SOFT",
+      "provenance": "TEXTBOOK_ORDER"
+    },
+    {
+      "prerequisiteTopicId": "a0000003-0000-4000-8000-000000000003",
+      "dependentTopicId": "a0000004-0000-4000-8000-000000000004",
+      "strength": "SOFT",
+      "provenance": "DERIVED"
+    }
+  ],
+  "history": [
+    {
+      "topicId": "a0000001-0000-4000-8000-000000000001",
+      "sessionCount": 4,
+      "totalMinutes": 95,
+      "lastStudiedAt": "2026-08-30T20:45:00Z",
+      "recallRatings": ["AGAIN", "HARD", "GOOD"]
+    },
+    {
+      "topicId": "a0000002-0000-4000-8000-000000000002",
+      "sessionCount": 2,
+      "totalMinutes": 140,
+      "lastStudiedAt": "2026-08-31T21:00:00Z",
+      "recallRatings": ["GOOD", "EASY"]
+    },
+    {
+      "topicId": "a0000003-0000-4000-8000-000000000003",
+      "sessionCount": 0,
+      "totalMinutes": 0,
+      "recallRatings": []
+    }
+  ],
+  "algorithmParams": {
+    "population-size": 120,
+    "generations": 400,
+    "mutation-rate": 0.05
+  },
+  "randomSeed": 7362819450172837461
+}
