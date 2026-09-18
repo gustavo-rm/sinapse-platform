@@ -1,7 +1,29 @@
 # ADR 0001 — Stack e estilo arquitetural do backend da plataforma
 
 **Data:** 04 de setembro de 2026
-**Status:** aceita
+**Status:** aceita, com a premissa do contexto emendada pela ADR 0015
+**Emendada por:** ADR 0015, que corrige a premissa de que o Core já seria consumível e
+descarta o módulo compartilhado.
+
+## Emenda de 17 de setembro de 2026
+
+Duas passagens abaixo não se sustentam contra o código e permanecem no texto porque ADR
+aceita não se reescreve.
+
+O contexto diz que o Core "já existe como repositório separado e funcional em Java". Ele
+executa, mas não é consumível por esta plataforma: não expõe `POST /plans` nem conhece
+`contractVersion`, `randomSeed` ou tópico em UUID. Leia como "existe como repositório
+separado, em Java, ainda não integrável".
+
+A justificativa "Contrato com o Core" diz que, com Java dos dois lados, o contrato "pode
+viver em módulo compartilhado versionado". Podia; não vive, e não vai viver. A ADR 0015
+descarta o módulo compartilhado em favor de *records* duplicados validados contra JSON de
+referência, e com isso a classe de defeitos de integração que esta justificativa dizia
+eliminar volta a existir, detectada no build em vez de impedida na compilação.
+
+A decisão — Java, Spring Boot, PostgreSQL, Flyway, monólito modular — não depende de nenhuma
+das duas passagens e continua valendo. A condição de reversão registrada no fim também
+continua válida: o Core é Java, e é nisso que a escolha está ancorada.
 
 ## Contexto
 
