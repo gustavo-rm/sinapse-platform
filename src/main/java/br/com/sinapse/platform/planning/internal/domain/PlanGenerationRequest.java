@@ -75,6 +75,19 @@ public class PlanGenerationRequest {
     private Long randomSeed;
 
     /**
+     * How many generations the run took, as the core reported it.
+     *
+     * <p>With {@link #elapsedMillis} this is the cost of the run, which is half of the
+     * comparison between the genetic algorithm and the greedy scheduler. Recorded when the
+     * run finishes, because it is not recoverable afterwards.
+     */
+    @Column(name = "generations")
+    private Integer generations;
+
+    @Column(name = "elapsed_millis")
+    private Long elapsedMillis;
+
+    /**
      * Which curated state of the catalogue produced this plan.
      *
      * <p>Held as an identifier: the import is curriculum's, and no association crosses a
@@ -173,6 +186,16 @@ public class PlanGenerationRequest {
         return randomSeed;
     }
 
+    /** Generations the core ran, or {@code null} until the job succeeds. */
+    public Integer generations() {
+        return generations;
+    }
+
+    /** How long the core took, in milliseconds, or {@code null} until the job succeeds. */
+    public Long elapsedMillis() {
+        return elapsedMillis;
+    }
+
     /** Curated catalogue state used, or {@code null}. */
     public UUID catalogImportId() {
         return catalogImportId;
@@ -246,16 +269,21 @@ public class PlanGenerationRequest {
      * Closes the job as finished, with the version that produced the plan.
      *
      * <p>The fourth of the four fields that make a plan reproducible, and the only one that
-     * could not be known before the call.
+     * could not be known before the call. The cost of the run is recorded with it, for the same
+     * reason: it exists only in the response.
      *
-     * @param at          instant it finished
-     * @param coreVersion version of the optimiser that ran
+     * @param at            instant it finished
+     * @param coreVersion   version of the optimiser that ran
+     * @param generations   how many generations it ran, as it reported
+     * @param elapsedMillis how long it took, as it reported
      */
-    public void succeed(Instant at, String coreVersion) {
+    public void succeed(Instant at, String coreVersion, int generations, long elapsedMillis) {
         requireRunning();
         this.status = GenerationRequestStatus.READY;
         this.finishedAt = at;
         this.coreVersion = coreVersion;
+        this.generations = generations;
+        this.elapsedMillis = elapsedMillis;
     }
 
     /**

@@ -19,6 +19,10 @@ import org.springframework.transaction.annotation.Transactional;
  * the plan they had — a half-written plan would be immutable by trigger and would sit there
  * forever, and a plan with no finished job would be a plan nobody asked for.
  *
+ * <p>Everything the core answered is kept. The fitness map goes to the plan whole, whatever
+ * terms it declares; the generations and the elapsed time go to the job, because they are the
+ * cost of the run and nothing else records them.
+ *
  * <p>It is a component of its own so that the transaction is real. The orchestrator that calls
  * it spends minutes waiting on HTTP and must not be inside a transaction; a method annotated on
  * the same bean and called from within it would be neither.
@@ -53,7 +57,8 @@ public class GeneratedPlanWriter {
 
         StudyPlanView plan = plans.store(job.accountId(), job.id(), job.horizonStart(),
                 job.horizonEnd(), response.fitness(), sessions);
-        requests.succeed(job.id(), response.metadata().coreVersion());
+        PlanResponse.ExecutionMetadata run = response.metadata();
+        requests.succeed(job.id(), run.coreVersion(), run.generations(), run.elapsedMillis());
         return plan;
     }
 
