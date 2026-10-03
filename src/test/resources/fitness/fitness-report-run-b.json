@@ -1,0 +1,9 @@
+{
+  "engine": "greedy",
+  "importanceStrategy": "uniform",
+  "aggregate": 0.64,
+  "terms": [
+    { "name": "retention", "value": 0.61, "weight": 0.5 },
+    { "name": "prerequisite-order", "value": 1.0, "weight": 0.5 }
+  ]
+}

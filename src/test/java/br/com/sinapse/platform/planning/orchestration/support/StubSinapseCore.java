@@ -32,6 +32,10 @@ import java.util.stream.Collectors;
  *
  * <p>{@code elapsedMillis} is fixed rather than measured, so that two runs of the same input are
  * comparable in full and not merely in the parts that happen not to move.
+ *
+ * <p>The fitness report and the cost of the run can be set by a test. Neither depends on the
+ * request in a real core in any way this side may assume, and the tests that need them are
+ * about what the platform does with whatever the core reports.
  */
 public class StubSinapseCore implements SinapseCore {
 
@@ -44,6 +48,10 @@ public class StubSinapseCore implements SinapseCore {
 
     private volatile int failuresRemaining;
 
+    private volatile Map<String, Object> reportedFitness;
+
+    private volatile Long reportedElapsedMillis;
+
     @Override
     public PlanResponse generate(PlanRequest request) {
         calls.incrementAndGet();
@@ -54,7 +62,36 @@ public class StubSinapseCore implements SinapseCore {
             }
             throw configured.get();
         }
-        return plan(request);
+        PlanResponse planned = plan(request);
+        Map<String, Object> fitness = reportedFitness;
+        Long elapsedMillis = reportedElapsedMillis;
+        if (fitness == null && elapsedMillis == null) {
+            return planned;
+        }
+        PlanResponse.ExecutionMetadata metadata = planned.metadata();
+        return new PlanResponse(planned.contractVersion(), planned.sessions(),
+                fitness == null ? planned.fitness() : fitness,
+                new PlanResponse.ExecutionMetadata(metadata.coreVersion(), metadata.randomSeed(),
+                        metadata.generations(),
+                        elapsedMillis == null ? metadata.elapsedMillis() : elapsedMillis));
+    }
+
+    /**
+     * Makes every following answer carry this fitness report instead of the stub's own.
+     *
+     * @param fitness the report, of whatever shape the test needs
+     */
+    public void reportFitness(Map<String, Object> fitness) {
+        this.reportedFitness = fitness;
+    }
+
+    /**
+     * Makes every following answer report this run time instead of zero.
+     *
+     * @param elapsedMillis how long the run claims to have taken
+     */
+    public void reportElapsedMillis(long elapsedMillis) {
+        this.reportedElapsedMillis = elapsedMillis;
     }
 
     /**
@@ -89,10 +126,12 @@ public class StubSinapseCore implements SinapseCore {
         return calls.get();
     }
 
-    /** Forgets the call count and any configured failure. */
+    /** Forgets the call count, any configured failure and any configured report. */
     public void reset() {
         calls.set(0);
         succeed();
+        reportedFitness = null;
+        reportedElapsedMillis = null;
     }
 
     private static PlanResponse plan(PlanRequest request) {

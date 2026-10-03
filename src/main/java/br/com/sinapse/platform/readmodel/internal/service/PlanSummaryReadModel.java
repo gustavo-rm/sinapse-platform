@@ -33,6 +33,11 @@ import org.springframework.transaction.annotation.Transactional;
  * schedule is known — which is what keeps "a session still in the future is not a missed one"
  * a rule rather than a date comparison guessed at in the wrong module.
  *
+ * <p>The core's fitness report travels with the summary as it was stored, because this is the
+ * screen that presents a plan whole and the report is what lets a plan say why it is shaped the
+ * way it is. It is not read here: the terms are the core's, and this side neither names them
+ * nor turns their values into anything.
+ *
  * <p>Due means the scheduled <em>end</em> has passed. A session under way is not yet late, and
  * counting it would make a plan read worse at exactly the moment a student is most likely to
  * open it.
@@ -99,7 +104,8 @@ public class PlanSummaryReadModel {
                 plan.supersededByPlanId(),
                 sessions.stream().mapToInt(PlannedSessionView::durationMinutes).sum(),
                 bySubject(sessions, resolved),
-                adherenceOf(adherence));
+                adherenceOf(adherence),
+                plan.fitness());
     }
 
     /**

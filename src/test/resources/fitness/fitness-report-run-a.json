@@ -1,0 +1,16 @@
+{
+  "engine": "genetic",
+  "importanceStrategy": "goal-priority",
+  "aggregate": 0.7135,
+  "terms": [
+    { "name": "retention", "value": 0.72, "weight": 0.4 },
+    { "name": "goal-coverage", "value": 0.86, "weight": 0.35 },
+    { "name": "load-balance", "value": 0.55, "weight": 0.25, "unit": "ratio" }
+  ],
+  "diagnostics": {
+    "hardViolations": 0,
+    "softViolations": [ "evening-overrun" ],
+    "note": null
+  },
+  "keyNoVersionOfThePlatformHasSeen": { "nested": { "deeper": [ 1, 2.5, true, null ] } }
+}

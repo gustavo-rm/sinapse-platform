@@ -1,6 +1,8 @@
 package br.com.sinapse.platform.coreclient.contract;
 
 import java.time.Instant;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -17,7 +19,9 @@ import java.util.UUID;
  * @param fitness         the metrics the core judged the plan by, as it reported them. Not
  *                        interpreted by the backend: what they mean belongs to the core, and
  *                        normalising them here would create a second copy of a model this
- *                        side does not own
+ *                        side does not own. Which terms exist, what they are called and how
+ *                        they are weighted is the core's to declare, so no key is known here
+ *                        and none is dropped — a {@code null} value included
  * @param metadata        what ran, with what seed, for how long
  */
 public record PlanResponse(
@@ -26,10 +30,18 @@ public record PlanResponse(
         Map<String, Object> fitness,
         ExecutionMetadata metadata) {
 
-    /** Defensive copies. */
+    /**
+     * Defensive copies.
+     *
+     * <p>{@code fitness} is not copied with {@code Map.copyOf}, which refuses a {@code null}
+     * value: a key the core reports as {@code null} would make the whole response unreadable,
+     * and the plan would be lost over a metric this side does not even interpret.
+     */
     public PlanResponse {
         sessions = sessions == null ? List.of() : List.copyOf(sessions);
-        fitness = fitness == null ? Map.of() : Map.copyOf(fitness);
+        fitness = fitness == null
+                ? Map.of()
+                : Collections.unmodifiableMap(new LinkedHashMap<>(fitness));
     }
 
     /**
@@ -55,8 +67,9 @@ public record PlanResponse(
      * @param coreVersion   version of the optimiser that produced the plan
      * @param randomSeed    seed it ran with, echoed back so that the record can be checked
      *                      against what was sent rather than assumed
-     * @param generations   how many generations the algorithm ran
-     * @param elapsedMillis how long it took
+     * @param generations   how many generations the algorithm ran. Stored on the job: with
+     *                      {@code elapsedMillis} it is the cost side of every run
+     * @param elapsedMillis how long it took, as the core measured it
      */
     public record ExecutionMetadata(
             String coreVersion,

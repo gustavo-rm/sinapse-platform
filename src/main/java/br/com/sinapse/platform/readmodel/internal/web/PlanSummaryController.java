@@ -48,7 +48,8 @@ public class PlanSummaryController {
             description = "Total scheduled time, the breakdown by subject, and adherence over "
                     + "the part of the plan that has already fallen due. A session still in the "
                     + "future is not counted as missed, and the ratio is absent rather than zero "
-                    + "when nothing has fallen due yet.")
+                    + "when nothing has fallen due yet. Carries the optimisation core's fitness "
+                    + "report as the core produced it.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "The summary"),
             @ApiResponse(responseCode = "401", description = "No usable session on the request",

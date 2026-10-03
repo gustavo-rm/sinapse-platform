@@ -1,10 +1,12 @@
 package br.com.sinapse.platform.readmodel.api;
 
 import br.com.sinapse.platform.planning.api.PlanStatus;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -22,6 +24,11 @@ import java.util.UUID;
  * @param bySubject          the same total broken down, ordered by planned time descending. A
  *                           subject the plan does not touch is absent
  * @param adherence          how much of what has already fallen due was done
+ * @param fitness            how the core judged the plan, exactly as it reported it, or
+ *                           {@code null} when it reported nothing. Passed through untouched:
+ *                           the core declares its terms, their names and their weights, and a
+ *                           term it did not report is absent here rather than zero. Nothing on
+ *                           this side knows a term by name, so a new one needs no change here
  */
 @Schema(description = "A study plan summarised: scheduled time, its breakdown, and adherence")
 public record PlanSummaryView(
@@ -33,7 +40,13 @@ public record PlanSummaryView(
         UUID supersededByPlanId,
         int totalPlannedMinutes,
         List<SubjectPlan> bySubject,
-        Adherence adherence) {
+        Adherence adherence,
+        @Schema(description = "How the optimisation core judged the plan, as it reported it: "
+                + "the terms it declared, with their values and weights, and whatever else it "
+                + "reported about the run. Not interpreted by this API; a term the core did not "
+                + "report is absent, not zero")
+        @JsonInclude(content = JsonInclude.Include.ALWAYS)
+        Map<String, Object> fitness) {
 
     /** Copies the breakdown, so a summary cannot change after it was produced. */
     public PlanSummaryView {
