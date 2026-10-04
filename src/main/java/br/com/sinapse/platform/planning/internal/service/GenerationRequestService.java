@@ -138,12 +138,14 @@ public class GenerationRequestService {
      * <p>Called inside the transaction that writes the plan, so that a plan without a finished
      * job, or a finished job without a plan, cannot exist.
      *
-     * @param requestId   job
-     * @param coreVersion version of the optimiser that ran
+     * @param requestId     job
+     * @param coreVersion   version of the optimiser that ran
+     * @param generations   how many generations it ran
+     * @param elapsedMillis how long it took
      */
     @Transactional
-    public void succeed(UUID requestId, String coreVersion) {
-        require(requestId).succeed(clock.instant(), coreVersion);
+    public void succeed(UUID requestId, String coreVersion, int generations, long elapsedMillis) {
+        require(requestId).succeed(clock.instant(), coreVersion, generations, elapsedMillis);
     }
 
     /**

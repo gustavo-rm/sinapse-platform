@@ -17,6 +17,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -39,7 +40,8 @@ import org.hibernate.type.SqlTypes;
  *
  * <p>{@code fitness} is stored as the core reported it and is not normalised. Normalising it
  * would create a second copy of a model this module does not own, to be kept in sync with the
- * first for no gain.
+ * first for no gain. That includes the names of its terms: the core declares them, and a term
+ * added there is stored here without a change to this side.
  */
 @Entity
 @Table(name = "study_plan")
@@ -112,7 +114,7 @@ public class StudyPlan {
         this.horizonStart = horizonStart;
         this.horizonEnd = horizonEnd;
         this.status = PlanStatus.ACTIVE;
-        this.fitness = fitness == null ? null : Map.copyOf(fitness);
+        this.fitness = fitness == null ? null : new LinkedHashMap<>(fitness);
         this.createdAt = createdAt;
     }
 

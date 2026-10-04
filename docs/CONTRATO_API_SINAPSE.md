@@ -115,10 +115,17 @@ supersededByPlanId | null
 totalPlannedMinutes
 bySubject[]      subjectId, subjectName, plannedMinutes, sessionCount
 adherence        plannedElapsed, executed, ratio
+fitness | null   objeto opaco, exatamente como o Core o devolveu
 ```
 
 `adherence` considera apenas sessões planejadas já vencidas. Sessão futura não conta como
 descumprida.
+
+`fitness` é o relatório do Core sobre o plano: os termos que ele declarou, com valor e peso,
+e o que mais ele informar sobre a execução. A plataforma não conhece nenhum termo pelo nome,
+não traduz nem reinterpreta valores e não preenche lacunas: termo que o Core não informou
+simplesmente não aparece — não vira zero. Termo novo no Core chega ao cliente sem deploy da
+plataforma. O mesmo objeto sai em `GET /api/v1/study-plans/current`.
 
 Compõe: `planning`, `curriculum`, `learningrecord`.
 

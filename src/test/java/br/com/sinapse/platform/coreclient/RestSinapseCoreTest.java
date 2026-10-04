@@ -17,6 +17,7 @@ import br.com.sinapse.platform.coreclient.contract.PlanRequest;
 import br.com.sinapse.platform.coreclient.contract.PlanResponse;
 import br.com.sinapse.platform.coreclient.internal.CoreProperties;
 import br.com.sinapse.platform.coreclient.internal.RestSinapseCore;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.io.IOException;
@@ -87,6 +88,34 @@ class RestSinapseCoreTest {
         assertThat(response.sessions()).hasSize(1);
         assertThat(response.metadata().coreVersion()).isEqualTo("core-test-1.0");
         server.verify();
+    }
+
+    /**
+     * The fitness report reaches the caller as the core wrote it.
+     *
+     * <p>Sent as raw JSON rather than through the record, so that what is checked is what the
+     * adapter does with an answer and not what the record does with its own output. The keys
+     * are ones nothing in the adapter knows, one of them is {@code null}, and the structure is
+     * nested — every way a copy that "tidies" the map could lose something.
+     */
+    @Test
+    void aFitnessReportOfAnyShapeComesBackWhole() throws Exception {
+        String fitness = """
+                {"engine":"some-engine","terms":[{"name":"t1","value":0.5,"weight":1}],
+                 "absentOnPurpose":null,"nested":{"deeper":[1,2.5,true,null]}}""";
+        String answer = json(response(session(0))).replace("{\"coverage\":1.0}", fitness);
+        server.expect(requestTo("http://core.invalid/plans"))
+                .andRespond(withSuccess(answer, MediaType.APPLICATION_JSON));
+
+        PlanResponse response = core.generate(request());
+
+        assertThat((JsonNode) objectMapper.valueToTree(response.fitness()))
+                .isEqualTo(objectMapper.readTree(fitness));
+        assertThat(response.fitness())
+                .as("a null value is a value the core reported, not a reason to refuse the plan")
+                .containsEntry("absentOnPurpose", null);
+        assertThat(response.metadata().generations()).isEqualTo(10);
+        assertThat(response.metadata().elapsedMillis()).isEqualTo(5);
     }
 
     @Test

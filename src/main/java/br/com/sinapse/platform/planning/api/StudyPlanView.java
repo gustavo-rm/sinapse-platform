@@ -2,6 +2,8 @@ package br.com.sinapse.platform.planning.api;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -40,9 +42,16 @@ public record StudyPlanView(
         Instant supersededAt,
         UUID supersededByPlanId) {
 
-    /** Defensive copy, so that the metrics cannot change under a caller reading them. */
+    /**
+     * Defensive copy, so that the metrics cannot change under a caller reading them.
+     *
+     * <p>Not {@code Map.copyOf}: it refuses a {@code null} value, and a plan whose core reported
+     * one key as {@code null} would become unreadable.
+     */
     public StudyPlanView {
-        fitness = fitness == null ? null : Map.copyOf(fitness);
+        fitness = fitness == null
+                ? null
+                : Collections.unmodifiableMap(new LinkedHashMap<>(fitness));
     }
 
     /** Whether this is the plan in force. */
