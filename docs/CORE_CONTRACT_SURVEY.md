@@ -41,11 +41,13 @@ Enum values as declared:
 - **Client:** `src/main/java/br/com/sinapse/platform/coreclient/internal/RestSinapseCore.java`
   — confirmed at the expected path. Implements
   `coreclient/api/SinapseCore.java` (single method `PlanResponse generate(PlanRequest)`).
-- **Validation method:** `validated` — confirmed. `RestSinapseCore.java:96`,
+- **Validation method:** `validated` — confirmed. `RestSinapseCore.java:113`,
   `private static PlanResponse validated(PlanRequest request, PlanResponse response)`.
-  Called from `generate` at `RestSinapseCore.java:74`, after the HTTP exchange returns.
-  It delegates to two private helpers: `validateMetadata` (line 116) and `validateSessions`
-  (line 126).
+  Called from `generate` at `RestSinapseCore.java:80`, after the HTTP exchange returns.
+  It delegates to six private helpers: `validateMetadata` (line 137), `validateSessions`
+  (line 147), `validateTopics` (line 166), `validateWindows` (line 185), `validateNoOverlap`
+  (line 201) and `validateContiguousSequence` (line 222). Line numbers as of 2026-10-05; the
+  full list of checks is in section 3.
 - **HTTP status handling** is *not* in `validated`; it is in `read`
   (`RestSinapseCore.java:77-94`): 4xx → `CoreProtocolException`, other non-2xx →
   `CoreUnavailableException`, unreadable body → `CoreProtocolException`.
@@ -324,11 +326,11 @@ Compact constructor: lines 30-33. Unlike `PlanRequest`, it accepts null for `ses
 
 | Component | Type | Nullable |
 |---|---|---|
-| `topicId` | `java.util.UUID` | structurally yes; rejected by `validated` |
+| `topicId` | `java.util.UUID` | structurally yes; rejected by `validated` if null or not among the topics sent |
 | `kind` | `SessionKind` (`STUDY` / `REVISION`) | structurally yes; rejected by `validated` |
 | `scheduledStart` | `java.time.Instant` | structurally yes; rejected by `validated` |
 | `durationMinutes` | `int` | n/a (primitive); must be `> 0` per `validated` |
-| `sequenceIndex` | `int` | n/a (primitive); must be unique within the plan per `validated` |
+| `sequenceIndex` | `int` | n/a (primitive); must be unique and contiguous within the plan per `validated` (no base required) |
 
 **Nested: `PlanResponse.ExecutionMetadata`** (line 61)
 
@@ -347,25 +349,53 @@ in `GeneratedPlanWriter` stores them.
 
 ## 3. Invariants `validated` enforces on the Core's response
 
-Eight checks, in execution order. All failures raise `CoreProtocolException` (never
-`CoreUnavailableException`): per the class Javadoc at `RestSinapseCore.java:22-30`, an answer
-the contract cannot read is not retryable. All file references are `RestSinapseCore.java`.
+Twelve checks, in execution order. All failures raise `CoreProtocolException` (never
+`CoreUnavailableException`), so the job ends `FAILED` with `CORE_REJECTED` after one attempt:
+per the class Javadoc at `RestSinapseCore.java:22-30`, an answer the contract cannot read is not
+retryable. All file references are `RestSinapseCore.java`. Updated on 2026-10-05 (branch
+`fix/1.0/core-response-validation`): checks 1-8 are unchanged; 9-12 are new.
 
-1. **The body is not empty.** — `line 97`: `if (response == null)` → `"the core answered with an empty body"` (line 98).
-2. **The response's contract version equals this backend's.** — `line 100`: `if (!PlanRequest.VERSION.equals(response.contractVersion()))` → message naming both versions (lines 101-103).
-3. **At least one session was produced.** — `line 105`: `if (response.sessions().isEmpty())` → `"the core produced no sessions"` (line 109).
-4. **Execution metadata exists and names a core version.** — `line 118`: `if (metadata == null || metadata.coreVersion() == null || metadata.coreVersion().isBlank())` → `"the core did not say which version produced the plan"` (line 119).
-5. **The seed echoed back is the seed that was sent.** — `line 121`: `if (metadata.randomSeed() != request.randomSeed())` → `"the core ran with a seed other than the one sent"` (line 122).
-6. **Every session has a topic, a kind and a start instant.** — `lines 129-130`: `if (session.topicId() == null || session.kind() == null || session.scheduledStart() == null)` → `"the core returned an incomplete session"` (line 131).
-7. **Every session has a positive duration.** — `line 133`: `if (session.durationMinutes() <= 0)` → `"the core returned a session of no length"` (line 134).
-8. **No sequence index repeats within the plan.** — `line 136`: `if (!sequences.add(session.sequenceIndex()))` → `"the core repeated a sequence index"` (line 139).
+1. **The body is not empty.** — `line 114`: `if (response == null)` → `"the core answered with an empty body"`.
+2. **The response's contract version equals this backend's.** — `line 117`: `if (!PlanRequest.VERSION.equals(response.contractVersion()))` → message naming both versions.
+3. **At least one session was produced.** — `line 122`: `if (response.sessions().isEmpty())` → `"the core produced no sessions"`.
+4. **Execution metadata exists and names a core version.** — `line 139`: `if (metadata == null || metadata.coreVersion() == null || metadata.coreVersion().isBlank())` → `"the core did not say which version produced the plan"`.
+5. **The seed echoed back is the seed that was sent.** — `line 142`: `if (metadata.randomSeed() != request.randomSeed())` → `"the core ran with a seed other than the one sent"`.
+6. **Every session has a topic, a kind and a start instant.** — `lines 150-151` → `"the core returned an incomplete session"`.
+7. **Every session has a positive duration.** — `line 154`: `if (session.durationMinutes() <= 0)` → `"the core returned a session of no length"`.
+8. **No sequence index repeats within the plan.** — `line 157`: `if (!sequences.add(session.sequenceIndex()))` → `"the core repeated a sequence index"`.
+9. **Every session's topic is one of the topics sent** (`request.topics[].id`). — `validateTopics`, `line 171`.
+10. **Every session fits, start to end, inside one availability window.** — `validateWindows`, `lines 185-192`: some window `w` with `w.start <= scheduledStart` and `scheduledStart + durationMinutes <= w.end`. This is the Core's own definition (`PlanOutputInvariants.fitsAWindow`).
+11. **No two sessions overlap.** — `validateNoOverlap`, `lines 201-210`: a copy sorted by `scheduledStart` (ties by `sequenceIndex`), requiring `previous.end <= next.start`. Half-open intervals `[start, end)`: sessions that touch do not overlap; two sessions with the same start do.
+12. **`sequenceIndex` values have no gap.** — `validateContiguousSequence`, `lines 222-230`: sorted by index, each is the previous plus one. No base is required (see below).
+
+Checks 9-12 fail with one message shape, which names the session and the reason:
+`the core returned session <sequenceIndex> (topic <topicId>) that breaks an invariant: <reason>`.
+The message reaches the internal log through the orchestrator; the student polling the job sees
+only `failureReason: CORE_REJECTED`. Neither carries the response body, the core's address or a
+stack trace to the client. All comparisons are between `Instant` values; no time zone is involved.
+
+**Decision: adjacent windows are not merged.** A session that runs across the boundary between
+two windows that touch (one ends at the instant the other starts) fits neither and is refused.
+The student declared two intervals, and merging them would be the platform deciding they meant
+one. This matches the Core.
 
 **What `validated` does not check**, and a bridge should not assume it does:
 
-- That `scheduledStart` falls inside the horizon, or inside any declared availability slot.
-- That sessions do not overlap one another.
-- That `topicId` is one of the topics that were sent.
-- That `sequenceIndex` values are contiguous, zero-based, or ordered — only that they are distinct.
+- **The horizon.** `PlanRequest.horizon` is two `LocalDate`s (first day, last day), while
+  sessions and windows are `Instant`s. Comparing them requires a time zone the contract does not
+  name: the Core reads the horizon in UTC, and the platform expands availability over the
+  horizon's days in the account's zone. The check was left out rather than assume either. In
+  practice every window the platform sends was expanded from a horizon day, so check 10 keeps a
+  session inside the horizon as the platform means it.
+- **That `sequenceIndex` starts at 0.** The contract documents no base. The reference document
+  `contract/plan-response-v1.0.json` starts at 0, and the Core checks `0..n-1`; the platform
+  requires contiguity only.
+- **That `sequenceIndex` order matches chronological order.** It does in the reference document
+  (indices 0-4 are in start order), but it is not required.
+- **That a `HARD` prerequisite is scheduled before its dependent.** The Core checks it; the
+  platform does not.
+- **That a session is not in the past.** Nothing compares a session with the instant of
+  generation, and the request can include windows earlier that day.
 - That the response's `contractVersion` field is echoed by the request's, rather than simply equal to the constant.
 - Anything at all about `fitness`, `generations` or `elapsedMillis`.
 
