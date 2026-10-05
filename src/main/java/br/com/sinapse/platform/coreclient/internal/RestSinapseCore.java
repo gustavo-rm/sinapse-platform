@@ -5,8 +5,14 @@ import br.com.sinapse.platform.coreclient.api.CoreUnavailableException;
 import br.com.sinapse.platform.coreclient.api.SinapseCore;
 import br.com.sinapse.platform.coreclient.contract.PlanRequest;
 import br.com.sinapse.platform.coreclient.contract.PlanResponse;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Comparator;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -93,6 +99,17 @@ public class RestSinapseCore implements SinapseCore {
         }
     }
 
+    /**
+     * Refuses an answer that cannot be stored as this request's plan.
+     *
+     * <p>Twelve invariants, in this order: a body; this contract version; at least one session;
+     * a core version; the seed sent; every session with topic, kind and start; every duration
+     * positive; no sequence index repeated; every topic one that was sent; every session inside
+     * one window; no two sessions overlapping; no gap in the sequence. The horizon is not checked
+     * here: it travels as two dates and the windows as instants, and comparing them would mean
+     * choosing a time zone the contract does not name. The windows the backend sends lie inside
+     * the horizon, so a session inside a window is inside the horizon as the backend means it.
+     */
     private static PlanResponse validated(PlanRequest request, PlanResponse response) {
         if (response == null) {
             throw new CoreProtocolException("the core answered with an empty body");
@@ -110,6 +127,10 @@ public class RestSinapseCore implements SinapseCore {
         }
         validateMetadata(request, response);
         validateSessions(response);
+        validateTopics(request, response);
+        validateWindows(request, response);
+        validateNoOverlap(response);
+        validateContiguousSequence(response);
         return response;
     }
 
@@ -139,5 +160,91 @@ public class RestSinapseCore implements SinapseCore {
                 throw new CoreProtocolException("the core repeated a sequence index");
             }
         }
+    }
+
+    /** Every session is about a topic this request sent. */
+    private static void validateTopics(PlanRequest request, PlanResponse response) {
+        Set<UUID> sent = request.topics().stream()
+                .map(PlanRequest.Topic::id)
+                .collect(Collectors.toSet());
+        for (PlanResponse.ScheduledSession session : response.sessions()) {
+            if (!sent.contains(session.topicId())) {
+                throw violation(session, "its topic was not among the topics sent");
+            }
+        }
+    }
+
+    /**
+     * Every session fits, start to end, inside one availability window.
+     *
+     * <p>The core's own definition ({@code PlanOutputInvariants.fitsAWindow}): some window
+     * {@code w} with {@code w.start <= start} and {@code start + duration <= w.end}. Adjacent
+     * windows are not merged, so a session that runs across the boundary between two windows
+     * that touch is a violation: the student declared two intervals, not one.
+     */
+    private static void validateWindows(PlanRequest request, PlanResponse response) {
+        for (PlanResponse.ScheduledSession session : response.sessions()) {
+            Instant start = session.scheduledStart();
+            Instant end = endOf(session);
+            boolean fits = request.availability().stream().anyMatch(window ->
+                    !window.start().isAfter(start) && !end.isAfter(window.end()));
+            if (!fits) {
+                throw violation(session, "it does not fit inside any availability window");
+            }
+        }
+    }
+
+    /**
+     * No two sessions overlap, as half-open intervals: one that ends exactly when the next starts
+     * does not overlap it, and two that start at the same instant do.
+     */
+    private static void validateNoOverlap(PlanResponse response) {
+        List<PlanResponse.ScheduledSession> chronological = response.sessions().stream()
+                .sorted(Comparator.comparing(PlanResponse.ScheduledSession::scheduledStart)
+                        .thenComparingInt(PlanResponse.ScheduledSession::sequenceIndex))
+                .toList();
+        for (int index = 1; index < chronological.size(); index++) {
+            PlanResponse.ScheduledSession previous = chronological.get(index - 1);
+            PlanResponse.ScheduledSession next = chronological.get(index);
+            if (endOf(previous).isAfter(next.scheduledStart())) {
+                throw violation(next, "it overlaps session " + previous.sequenceIndex());
+            }
+        }
+    }
+
+    /**
+     * The sequence indices have no gap.
+     *
+     * <p>Contiguity only. The contract does not say whether the sequence starts at 0 or at 1, so
+     * no base is imposed; nor does it say the sequence follows the calendar, so that is not
+     * imposed either. Uniqueness was checked before this runs.
+     */
+    private static void validateContiguousSequence(PlanResponse response) {
+        List<PlanResponse.ScheduledSession> bySequence = response.sessions().stream()
+                .sorted(Comparator.comparingInt(PlanResponse.ScheduledSession::sequenceIndex))
+                .toList();
+        for (int index = 1; index < bySequence.size(); index++) {
+            int previous = bySequence.get(index - 1).sequenceIndex();
+            PlanResponse.ScheduledSession next = bySequence.get(index);
+            if (next.sequenceIndex() != previous + 1) {
+                throw violation(next, "the sequence jumps to it from " + previous);
+            }
+        }
+    }
+
+    private static Instant endOf(PlanResponse.ScheduledSession session) {
+        return session.scheduledStart().plus(Duration.ofMinutes(session.durationMinutes()));
+    }
+
+    /**
+     * A refusal that names the session and the reason, and nothing else.
+     *
+     * <p>The sequence index and the topic identifier are enough to find the session in the stored
+     * snapshot; neither is personal data, and nothing of the body travels with them.
+     */
+    private static CoreProtocolException violation(PlanResponse.ScheduledSession session,
+            String reason) {
+        return new CoreProtocolException("the core returned session " + session.sequenceIndex()
+                + " (topic " + session.topicId() + ") that breaks an invariant: " + reason);
     }
 }

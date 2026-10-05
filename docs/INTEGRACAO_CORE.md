@@ -37,8 +37,14 @@ Duas etapas. `RestSinapseCore` reduz todo desfecho a duas exceções, e
 | Core respondeu `5xx` (ou outro status que não é `2xx` nem `4xx`) | `CoreUnavailableException` | `CORE_UNAVAILABLE` | sim |
 | Qualquer outra `RestClientException` na chamada | `CoreUnavailableException` | `CORE_UNAVAILABLE` | sim |
 | Core respondeu `4xx` | `CoreProtocolException` | `CORE_REJECTED` | não |
-| Corpo ilegível pelo contrato (inclui campo desconhecido) | `CoreProtocolException` | `CORE_REJECTED` | não |
-| Resposta legível que viola uma das oito checagens de `validated` | `CoreProtocolException` | `CORE_REJECTED` | não |
+| Corpo ilegível pelo contrato (JSON inválido, tipo errado, corpo que não é JSON) | `CoreProtocolException` | `CORE_REJECTED` | não |
+| Resposta legível que viola uma das doze checagens de `validated` (lista em `CORE_CONTRACT_SURVEY.md` §3) | `CoreProtocolException` | `CORE_REJECTED` | não |
+
+**Campo desconhecido no corpo não é falha.** O `ObjectMapper` da aplicação deixa
+`FAIL_ON_UNKNOWN_PROPERTIES` desligado, que é o padrão do Spring Boot: a chave a mais é ignorada
+na leitura e a resposta segue para `validated`. É de propósito, porque um campo novo do Core não
+deve derrubar a plataforma. Campo **removido** do contrato é pego no *build*, pela comparação de
+`CoreContractGoldenTest` sobre a união das chaves, não pela desserialização (ADR 0016).
 
 O critério é o de `PlanGenerationFailure.isWorthRetrying`: só `CORE_UNAVAILABLE` vale outra
 tentativa. Um Core que recusou o payload vai recusar o mesmo payload de novo.
@@ -94,8 +100,9 @@ Na mesma execução, o teste:
    `elapsed_millis` estão gravados;
 4. confere as oito checagens de `validated` sobre o plano **gravado**; se uma delas falhar com
    o job em `READY`, a mensagem diz que a validação tem furo;
-5. confere as quatro garantias do Core que a plataforma não checa (tópico enviado, horizonte,
-   janela de disponibilidade, sem sobreposição) e a ordem dos pré-requisitos `HARD`;
+5. confere quatro garantias do Core (tópico enviado, horizonte, janela de disponibilidade, sem
+   sobreposição) e a ordem dos pré-requisitos `HARD`. Desde 05/10/2026, `validated` também
+   checa tópico, janela e sobreposição; horizonte e pré-requisitos continuam só no Core;
 6. pede o plano de novo com a mesma semente e exige snapshot, sessões e fitness idênticos. É a
    demonstração que o ADR 0007 exige.
 
