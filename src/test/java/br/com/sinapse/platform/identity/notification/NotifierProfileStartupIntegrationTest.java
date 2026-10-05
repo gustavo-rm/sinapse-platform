@@ -10,8 +10,11 @@ import br.com.sinapse.platform.identity.internal.notification.DevOnlyLoggingAcco
 import br.com.sinapse.platform.identity.internal.notification.LoggingAccountNotifier;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.env.Environment;
 
@@ -23,13 +26,15 @@ import org.springframework.core.env.Environment;
  * configuration started here as "production": no test profile, no stubbed notifier, the same
  * jar contents an operator gets.
  */
+@ExtendWith(OutputCaptureExtension.class)
 class NotifierProfileStartupIntegrationTest extends IntegrationTest {
 
     @Autowired
     private Environment environment;
 
     @Test
-    void inProductionTheDevOnlyNotifierDoesNotExistAndNothingAboutDeliveryChanges() {
+    void inProductionTheDevOnlyNotifierDoesNotExistAndNothingAboutDeliveryChanges(
+            CapturedOutput output) {
         try (ConfigurableApplicationContext context = start()) {
             assertThat(context.getBeansOfType(DevOnlyLoggingAccountNotifier.class)).isEmpty();
             assertThat(context.getBeansOfType(AccountNotifier.class).values())
@@ -39,14 +44,18 @@ class NotifierProfileStartupIntegrationTest extends IntegrationTest {
             assertThat(context.getBean(AccountNotifier.class))
                     .isInstanceOf(LoggingAccountNotifier.class);
         }
+        assertThat(output.getAll())
+                .as("the empty trusted-proxy list of the base configuration is warned about")
+                .contains("trusted-proxies is empty");
     }
 
     @Test
-    void underTheLocalProfileTheDevOnlyNotifierIsTheOneUsed() {
+    void underTheLocalProfileTheDevOnlyNotifierIsTheOneUsed(CapturedOutput output) {
         try (ConfigurableApplicationContext context = start("local")) {
             assertThat(context.getBean(AccountNotifier.class))
                     .isInstanceOf(DevOnlyLoggingAccountNotifier.class);
         }
+        assertThat(output.getAll()).doesNotContain("trusted-proxies is empty");
     }
 
     @Test
