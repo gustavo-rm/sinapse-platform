@@ -49,16 +49,26 @@ import org.springframework.core.io.ClassPathResource;
  * full context rather than a slice — {@code @JsonTest} would not apply
  * {@code TimeConfiguration}'s customiser.
  *
- * <p>Three mechanisms together make the check complete, because no one of them is:
+ * <p>Two mechanisms together make the check complete, because neither is alone:
  *
  * <ol>
- *   <li>the round trip catches a renamed field, a retyped field and any value drift;</li>
- *   <li>deserialisation catches a removed field, because unknown properties are rejected and a
- *       key the record no longer has fails to bind;</li>
+ *   <li>the round trip, compared over the <em>union</em> of the keys of both trees, catches a
+ *       renamed field, a retyped field, any value drift and a <em>removed</em> field: a key the
+ *       reference document has and the record no longer writes back is reported as missing;</li>
  *   <li>the component sweep catches an <em>added</em> field. Nothing else would: under
  *       {@code non_null} a new nullable component is simply absent from the output, so the
  *       round trip stays green while the two repositories have already diverged.</li>
  * </ol>
+ *
+ * <p><strong>Deserialisation does not reject an unknown property, and is not meant to.</strong>
+ * The application's mapper leaves {@code FAIL_ON_UNKNOWN_PROPERTIES} off, which is Spring Boot's
+ * default, so a key the record does not have is ignored on read. That is what lets an additive
+ * field from the core not take the platform down; a removed field is caught by the key walk
+ * above, not by the read.
+ *
+ * <p>The wire shape is configuration as well as records: {@code spring.jackson.*} (here,
+ * {@code default-property-inclusion: non_null}) changes it without touching a record, so a change
+ * there needs the same version bump and the same re-sync as a change to a record (ADR 0016).
  */
 class CoreContractGoldenTest extends IntegrationTest {
 
@@ -75,8 +85,9 @@ class CoreContractGoldenTest extends IntegrationTest {
      */
     private static final String REMINDER =
             "The Core contract's wire shape no longer matches its reference document. "
-                    + "If the change is intended: bump PlanRequest.VERSION and re-sync the "
-                    + "golden file in exam-optimizer-application, in the same logical change.";
+                    + "If the change is intended (a record, or spring.jackson.* configuration): "
+                    + "bump PlanRequest.VERSION and re-sync the golden file in "
+                    + "exam-optimizer-application, in the same logical change.";
 
     @Autowired
     private ObjectMapper objectMapper;

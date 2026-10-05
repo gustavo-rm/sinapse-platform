@@ -37,8 +37,14 @@ Duas etapas. `RestSinapseCore` reduz todo desfecho a duas exceções, e
 | Core respondeu `5xx` (ou outro status que não é `2xx` nem `4xx`) | `CoreUnavailableException` | `CORE_UNAVAILABLE` | sim |
 | Qualquer outra `RestClientException` na chamada | `CoreUnavailableException` | `CORE_UNAVAILABLE` | sim |
 | Core respondeu `4xx` | `CoreProtocolException` | `CORE_REJECTED` | não |
-| Corpo ilegível pelo contrato (inclui campo desconhecido) | `CoreProtocolException` | `CORE_REJECTED` | não |
+| Corpo ilegível pelo contrato (JSON inválido, tipo errado, corpo que não é JSON) | `CoreProtocolException` | `CORE_REJECTED` | não |
 | Resposta legível que viola uma das doze checagens de `validated` (lista em `CORE_CONTRACT_SURVEY.md` §3) | `CoreProtocolException` | `CORE_REJECTED` | não |
+
+**Campo desconhecido no corpo não é falha.** O `ObjectMapper` da aplicação deixa
+`FAIL_ON_UNKNOWN_PROPERTIES` desligado, que é o padrão do Spring Boot: a chave a mais é ignorada
+na leitura e a resposta segue para `validated`. É de propósito, porque um campo novo do Core não
+deve derrubar a plataforma. Campo **removido** do contrato é pego no *build*, pela comparação de
+`CoreContractGoldenTest` sobre a união das chaves, não pela desserialização (ADR 0016).
 
 O critério é o de `PlanGenerationFailure.isWorthRetrying`: só `CORE_UNAVAILABLE` vale outra
 tentativa. Um Core que recusou o payload vai recusar o mesmo payload de novo.
