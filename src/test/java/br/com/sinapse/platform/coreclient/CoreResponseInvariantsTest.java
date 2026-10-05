@@ -87,6 +87,93 @@ class CoreResponseInvariantsTest {
                 .hasMessageContaining("window");
     }
 
+    /** V2: the session starts, and ends, outside every window. */
+    @Test
+    void v2ASessionOutsideEveryWindowIsRefused() throws Exception {
+        assertRefused(request(window(WINDOW_START, WINDOW_END)),
+                "session 0", TOPIC_A, "window",
+                session(0, TOPIC_A, "2026-10-06T10:00:00Z", 30));
+    }
+
+    /** V4: two sessions inside the window, the second starting before the first ends. */
+    @Test
+    void v4OverlappingSessionsAreRefused() throws Exception {
+        assertRefused(request(window(WINDOW_START, WINDOW_END)),
+                "session 1", TOPIC_B, "overlaps session 0",
+                session(0, TOPIC_A, "2026-10-05T22:00:00Z", 60),
+                session(1, TOPIC_B, "2026-10-05T22:30:00Z", 30));
+    }
+
+    /** Same instant, different sessions: half-open intervals that share a start overlap. */
+    @Test
+    void twoSessionsStartingAtTheSameInstantOverlap() throws Exception {
+        assertRefused(request(window(WINDOW_START, WINDOW_END)),
+                "session 1", TOPIC_B, "overlaps session 0",
+                session(0, TOPIC_A, "2026-10-05T22:00:00Z", 30),
+                session(1, TOPIC_B, "2026-10-05T22:00:00Z", 30));
+    }
+
+    /** V5: a topic the request never sent. */
+    @Test
+    void v5ASessionAboutATopicThatWasNotSentIsRefused() throws Exception {
+        UUID unknown = UUID.fromString("a0000009-0000-4000-8000-000000000009");
+
+        assertRefused(request(window(WINDOW_START, WINDOW_END)),
+                "session 0", unknown, "not among the topics sent",
+                session(0, unknown, "2026-10-05T22:00:00Z", 30));
+    }
+
+    /** V6: indices 0 and 2, with nothing at 1. */
+    @Test
+    void v6ASequenceWithAGapIsRefused() throws Exception {
+        assertRefused(request(window(WINDOW_START, WINDOW_END)),
+                "session 2", TOPIC_B, "jumps to it from 0",
+                session(0, TOPIC_A, "2026-10-05T22:00:00Z", 30),
+                session(2, TOPIC_B, "2026-10-05T23:00:00Z", 30));
+    }
+
+    @Test
+    void aSessionEndingExactlyAtTheEndOfItsWindowIsAccepted() throws Exception {
+        assertThat(answer(request(window(WINDOW_START, WINDOW_END)),
+                session(0, TOPIC_A, "2026-10-05T23:30:00Z", 30)).sessions()).hasSize(1);
+    }
+
+    @Test
+    void aSessionStartingExactlyAtTheStartOfItsWindowIsAccepted() throws Exception {
+        assertThat(answer(request(window(WINDOW_START, WINDOW_END)),
+                session(0, TOPIC_A, "2026-10-05T22:00:00Z", 30)).sessions()).hasSize(1);
+    }
+
+    @Test
+    void twoSessionsThatTouchDoNotOverlap() throws Exception {
+        assertThat(answer(request(window(WINDOW_START, WINDOW_END)),
+                session(0, TOPIC_A, "2026-10-05T22:00:00Z", 30),
+                session(1, TOPIC_B, "2026-10-05T22:30:00Z", 30)).sessions()).hasSize(2);
+    }
+
+    /**
+     * Two windows that touch are two windows. A session across the boundary fits neither, and
+     * merging them would be the platform deciding the student meant one interval.
+     */
+    @Test
+    void aSessionAcrossTheBoundaryOfTwoAdjacentWindowsIsRefused() throws Exception {
+        Instant boundary = Instant.parse("2026-10-05T23:00:00Z");
+
+        assertRefused(request(window(WINDOW_START, boundary), window(boundary, WINDOW_END)),
+                "session 0", TOPIC_A, "window",
+                session(0, TOPIC_A, "2026-10-05T22:45:00Z", 30));
+    }
+
+    private void assertRefused(PlanRequest request, String session, UUID topic, String reason,
+            PlanResponse.ScheduledSession... sessions) throws Exception {
+        expect(response(sessions));
+
+        assertThatThrownBy(() -> core.generate(request))
+                .isInstanceOf(CoreProtocolException.class)
+                .hasMessageContaining(session + " (topic " + topic + ")")
+                .hasMessageContaining(reason);
+    }
+
     private PlanResponse answer(PlanRequest request, PlanResponse.ScheduledSession... sessions)
             throws Exception {
         expect(response(sessions));
