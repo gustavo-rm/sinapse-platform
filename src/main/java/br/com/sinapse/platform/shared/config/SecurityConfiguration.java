@@ -9,6 +9,7 @@ import br.com.sinapse.platform.shared.web.ClientAddressResolver;
 import br.com.sinapse.platform.shared.web.problem.ApiErrorType;
 import br.com.sinapse.platform.shared.web.problem.ProblemDetailWriter;
 import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -49,8 +50,14 @@ import org.springframework.security.web.header.HeaderWriterFilter;
  *
  * <p>{@code FilterOrderIntegrationTest} asserts these positions against the chain that is
  * actually built.
+ *
+ * <p><strong>Only in a web application.</strong> The catalogue importer runs this same
+ * application under the {@code catalog} profile with no web server, and there the API chain
+ * has nothing to filter and no MVC infrastructure to build its CORS configuration from;
+ * building it anyway is what kept {@code catalog apply} from starting.
  */
 @Configuration(proxyBeanMethods = false)
+@ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 @EnableWebSecurity
 public class SecurityConfiguration {
 

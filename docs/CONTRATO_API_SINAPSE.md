@@ -230,7 +230,7 @@ depois é baixo, e o de manter algo que ninguém usa é permanente.
 Duas rotas de leitura sobre o currículo curado, no módulo `curriculum`. Exigem sessão
 autenticada, como as demais; não há papel exigido nem política de acesso a consultar, porque
 o catálogo é currículo e não dado de pessoa. Somente leitura: o catálogo só é escrito pelo
-importador (ver `catalog/README.md`).
+importador (ver `CARGA_DO_CATALOGO.md`).
 
 **Os ids vêm daqui, e os nomes de tópico em planos se resolvem aqui.** O id de disciplina
 usado para criar uma meta (`POST /api/v1/goals`) é o que estas rotas devolvem. Quem só tem o

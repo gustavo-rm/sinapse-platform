@@ -6,6 +6,7 @@ import br.com.sinapse.platform.curriculum.api.TopicStillReferencedException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.function.Consumer;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.ExitCodeGenerator;
@@ -55,6 +56,7 @@ public class CatalogRunner implements ApplicationRunner, ExitCodeGenerator {
      * @param applier    the one thing here that writes
      * @param properties where the catalogue lives
      */
+    @Autowired
     public CatalogRunner(CatalogDiffer differ, CatalogApplier applier, CatalogProperties properties) {
         this(differ, applier, Path.of(properties.directory()), System.out::println);
     }
