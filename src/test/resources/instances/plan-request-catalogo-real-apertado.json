@@ -1,0 +1,530 @@
+{
+  "contractVersion": "1.0",
+  "horizon": {
+    "start": "2026-10-12",
+    "end": "2026-11-09"
+  },
+  "availability": [
+    {
+      "start": "2026-10-13T22:30:00Z",
+      "end": "2026-10-13T23:30:00Z"
+    },
+    {
+      "start": "2026-10-15T22:30:00Z",
+      "end": "2026-10-15T23:30:00Z"
+    },
+    {
+      "start": "2026-10-17T12:00:00Z",
+      "end": "2026-10-17T13:10:00Z"
+    },
+    {
+      "start": "2026-10-20T22:30:00Z",
+      "end": "2026-10-20T23:30:00Z"
+    },
+    {
+      "start": "2026-10-22T22:30:00Z",
+      "end": "2026-10-22T23:30:00Z"
+    },
+    {
+      "start": "2026-10-24T12:00:00Z",
+      "end": "2026-10-24T13:10:00Z"
+    },
+    {
+      "start": "2026-10-27T22:30:00Z",
+      "end": "2026-10-27T23:30:00Z"
+    },
+    {
+      "start": "2026-10-29T22:30:00Z",
+      "end": "2026-10-29T23:30:00Z"
+    },
+    {
+      "start": "2026-10-31T12:00:00Z",
+      "end": "2026-10-31T13:10:00Z"
+    },
+    {
+      "start": "2026-11-03T22:30:00Z",
+      "end": "2026-11-03T23:30:00Z"
+    },
+    {
+      "start": "2026-11-05T22:30:00Z",
+      "end": "2026-11-05T23:30:00Z"
+    },
+    {
+      "start": "2026-11-07T12:00:00Z",
+      "end": "2026-11-07T13:10:00Z"
+    }
+  ],
+  "goals": [
+    {
+      "subjectId": "cc7047ff-0c43-3b4f-b10c-9052261e970a",
+      "targetDate": "2026-11-09",
+      "priority": 2
+    }
+  ],
+  "topics": [
+    {
+      "id": "04a8100d-f60f-31ee-90df-2d7991f7e31c",
+      "subjectId": "cc7047ff-0c43-3b4f-b10c-9052261e970a",
+      "position": 1,
+      "effortTier": "SHORT",
+      "estimatedMinutes": 25
+    },
+    {
+      "id": "af8adcd3-952c-382d-a02a-1ec613d44b25",
+      "subjectId": "cc7047ff-0c43-3b4f-b10c-9052261e970a",
+      "position": 2,
+      "effortTier": "STANDARD",
+      "estimatedMinutes": 50
+    },
+    {
+      "id": "92bf5b96-e60b-3601-a037-554c04fce6df",
+      "subjectId": "cc7047ff-0c43-3b4f-b10c-9052261e970a",
+      "position": 3,
+      "effortTier": "LONG",
+      "estimatedMinutes": 90
+    },
+    {
+      "id": "79517f9e-f296-3e0d-ab42-8a89afa3466f",
+      "subjectId": "cc7047ff-0c43-3b4f-b10c-9052261e970a",
+      "position": 4,
+      "effortTier": "LONG",
+      "estimatedMinutes": 90
+    },
+    {
+      "id": "abf8bc7e-1e35-3215-87b7-5db1c7042e12",
+      "subjectId": "cc7047ff-0c43-3b4f-b10c-9052261e970a",
+      "position": 5,
+      "effortTier": "STANDARD",
+      "estimatedMinutes": 50
+    },
+    {
+      "id": "c594163c-790c-3a5b-9108-66b119afe77a",
+      "subjectId": "cc7047ff-0c43-3b4f-b10c-9052261e970a",
+      "position": 6,
+      "effortTier": "STANDARD",
+      "estimatedMinutes": 50
+    },
+    {
+      "id": "b238766b-4f29-35a3-af35-7bc469901f6a",
+      "subjectId": "cc7047ff-0c43-3b4f-b10c-9052261e970a",
+      "position": 7,
+      "effortTier": "STANDARD",
+      "estimatedMinutes": 50
+    },
+    {
+      "id": "20afa9cd-aff1-3001-9914-60765a22d7aa",
+      "subjectId": "cc7047ff-0c43-3b4f-b10c-9052261e970a",
+      "position": 8,
+      "effortTier": "SHORT",
+      "estimatedMinutes": 25
+    },
+    {
+      "id": "67aad17c-d541-3729-a3cf-c58b4f2eb12d",
+      "subjectId": "cc7047ff-0c43-3b4f-b10c-9052261e970a",
+      "position": 9,
+      "effortTier": "STANDARD",
+      "estimatedMinutes": 50
+    },
+    {
+      "id": "b644fec3-e095-3d21-90ce-1ce3994617ee",
+      "subjectId": "cc7047ff-0c43-3b4f-b10c-9052261e970a",
+      "position": 10,
+      "effortTier": "STANDARD",
+      "estimatedMinutes": 50
+    },
+    {
+      "id": "237f4a60-a90d-343e-8bc8-8627e0300ab5",
+      "subjectId": "cc7047ff-0c43-3b4f-b10c-9052261e970a",
+      "position": 11,
+      "effortTier": "STANDARD",
+      "estimatedMinutes": 50
+    },
+    {
+      "id": "4ee4a5c6-c124-3073-a4a6-2b94a64cb188",
+      "subjectId": "cc7047ff-0c43-3b4f-b10c-9052261e970a",
+      "position": 12,
+      "effortTier": "STANDARD",
+      "estimatedMinutes": 50
+    },
+    {
+      "id": "61cb5f50-4ca5-3a87-851f-f63a843bd1cf",
+      "subjectId": "cc7047ff-0c43-3b4f-b10c-9052261e970a",
+      "position": 13,
+      "effortTier": "STANDARD",
+      "estimatedMinutes": 50
+    },
+    {
+      "id": "b8742d49-1c4f-3a3f-a842-73cb545321fe",
+      "subjectId": "cc7047ff-0c43-3b4f-b10c-9052261e970a",
+      "position": 14,
+      "effortTier": "STANDARD",
+      "estimatedMinutes": 50
+    },
+    {
+      "id": "10b239d4-53a4-38e2-8b46-d4f027602fad",
+      "subjectId": "cc7047ff-0c43-3b4f-b10c-9052261e970a",
+      "position": 15,
+      "effortTier": "LONG",
+      "estimatedMinutes": 90
+    },
+    {
+      "id": "3f085e5e-64c8-3917-95c2-6651ec0db48a",
+      "subjectId": "cc7047ff-0c43-3b4f-b10c-9052261e970a",
+      "position": 16,
+      "effortTier": "LONG",
+      "estimatedMinutes": 90
+    },
+    {
+      "id": "7ca0335a-31a1-32b2-8c78-6282ae258024",
+      "subjectId": "cc7047ff-0c43-3b4f-b10c-9052261e970a",
+      "position": 17,
+      "effortTier": "STANDARD",
+      "estimatedMinutes": 50
+    },
+    {
+      "id": "ef34687f-57cb-3ffd-9e93-f851363b097f",
+      "subjectId": "cc7047ff-0c43-3b4f-b10c-9052261e970a",
+      "position": 18,
+      "effortTier": "LONG",
+      "estimatedMinutes": 90
+    },
+    {
+      "id": "93b07699-098a-38b5-82b7-4a6ea4e323a2",
+      "subjectId": "cc7047ff-0c43-3b4f-b10c-9052261e970a",
+      "position": 19,
+      "effortTier": "STANDARD",
+      "estimatedMinutes": 50
+    },
+    {
+      "id": "c2a21d8e-90b3-332f-95fe-0ad8ff833300",
+      "subjectId": "cc7047ff-0c43-3b4f-b10c-9052261e970a",
+      "position": 20,
+      "effortTier": "STANDARD",
+      "estimatedMinutes": 50
+    },
+    {
+      "id": "af4583ab-81f3-3696-883f-70698bd0cee7",
+      "subjectId": "cc7047ff-0c43-3b4f-b10c-9052261e970a",
+      "position": 21,
+      "effortTier": "STANDARD",
+      "estimatedMinutes": 50
+    },
+    {
+      "id": "e060d19a-00bf-3277-b218-4324ee3811c4",
+      "subjectId": "cc7047ff-0c43-3b4f-b10c-9052261e970a",
+      "position": 22,
+      "effortTier": "SHORT",
+      "estimatedMinutes": 25
+    },
+    {
+      "id": "286a8cb5-6f74-34ce-bc31-5e0c07cc768f",
+      "subjectId": "cc7047ff-0c43-3b4f-b10c-9052261e970a",
+      "position": 23,
+      "effortTier": "STANDARD",
+      "estimatedMinutes": 50
+    },
+    {
+      "id": "f1509bac-c783-3b0c-9d64-f28f18073e92",
+      "subjectId": "cc7047ff-0c43-3b4f-b10c-9052261e970a",
+      "position": 24,
+      "effortTier": "LONG",
+      "estimatedMinutes": 90
+    },
+    {
+      "id": "c1bfb9ab-0ccf-3c02-90f3-eb061e0b6bbb",
+      "subjectId": "cc7047ff-0c43-3b4f-b10c-9052261e970a",
+      "position": 25,
+      "effortTier": "STANDARD",
+      "estimatedMinutes": 50
+    },
+    {
+      "id": "f5d7d78f-58c1-3ab9-8bcb-6ce3f0aaf648",
+      "subjectId": "cc7047ff-0c43-3b4f-b10c-9052261e970a",
+      "position": 26,
+      "effortTier": "STANDARD",
+      "estimatedMinutes": 50
+    },
+    {
+      "id": "78ea8ff9-e587-3342-8bc5-67baff20f09f",
+      "subjectId": "cc7047ff-0c43-3b4f-b10c-9052261e970a",
+      "position": 27,
+      "effortTier": "STANDARD",
+      "estimatedMinutes": 50
+    },
+    {
+      "id": "52974294-50d3-30db-882b-9e8f17b66360",
+      "subjectId": "cc7047ff-0c43-3b4f-b10c-9052261e970a",
+      "position": 28,
+      "effortTier": "STANDARD",
+      "estimatedMinutes": 50
+    },
+    {
+      "id": "f64b44a3-d3af-3c32-a9d2-373586fcff36",
+      "subjectId": "cc7047ff-0c43-3b4f-b10c-9052261e970a",
+      "position": 29,
+      "effortTier": "SHORT",
+      "estimatedMinutes": 25
+    },
+    {
+      "id": "3b0fa870-a808-3fff-a4d7-1373c77fd099",
+      "subjectId": "cc7047ff-0c43-3b4f-b10c-9052261e970a",
+      "position": 30,
+      "effortTier": "STANDARD",
+      "estimatedMinutes": 50
+    },
+    {
+      "id": "303030b9-7738-3905-b9ee-eb82c107fa05",
+      "subjectId": "cc7047ff-0c43-3b4f-b10c-9052261e970a",
+      "position": 31,
+      "effortTier": "STANDARD",
+      "estimatedMinutes": 50
+    },
+    {
+      "id": "a136fbe7-b5db-3868-ad10-fdb98d9341b6",
+      "subjectId": "cc7047ff-0c43-3b4f-b10c-9052261e970a",
+      "position": 32,
+      "effortTier": "LONG",
+      "estimatedMinutes": 90
+    },
+    {
+      "id": "2acc1c22-3ab5-3332-a053-4f1fc39386f3",
+      "subjectId": "cc7047ff-0c43-3b4f-b10c-9052261e970a",
+      "position": 33,
+      "effortTier": "LONG",
+      "estimatedMinutes": 90
+    },
+    {
+      "id": "4298f2ec-eb78-36d5-b7e6-1eb7ad0e0669",
+      "subjectId": "cc7047ff-0c43-3b4f-b10c-9052261e970a",
+      "position": 34,
+      "effortTier": "EXTENDED",
+      "estimatedMinutes": 150
+    },
+    {
+      "id": "33e33cf9-3bb2-3890-8fff-b98a7c2cf972",
+      "subjectId": "cc7047ff-0c43-3b4f-b10c-9052261e970a",
+      "position": 35,
+      "effortTier": "EXTENDED",
+      "estimatedMinutes": 150
+    }
+  ],
+  "prerequisites": [
+    {
+      "prerequisiteTopicId": "04a8100d-f60f-31ee-90df-2d7991f7e31c",
+      "dependentTopicId": "af8adcd3-952c-382d-a02a-1ec613d44b25",
+      "strength": "HARD",
+      "provenance": "CURATED"
+    },
+    {
+      "prerequisiteTopicId": "04a8100d-f60f-31ee-90df-2d7991f7e31c",
+      "dependentTopicId": "20afa9cd-aff1-3001-9914-60765a22d7aa",
+      "strength": "HARD",
+      "provenance": "CURATED"
+    },
+    {
+      "prerequisiteTopicId": "04a8100d-f60f-31ee-90df-2d7991f7e31c",
+      "dependentTopicId": "237f4a60-a90d-343e-8bc8-8627e0300ab5",
+      "strength": "HARD",
+      "provenance": "CURATED"
+    },
+    {
+      "prerequisiteTopicId": "af8adcd3-952c-382d-a02a-1ec613d44b25",
+      "dependentTopicId": "92bf5b96-e60b-3601-a037-554c04fce6df",
+      "strength": "HARD",
+      "provenance": "CURATED"
+    },
+    {
+      "prerequisiteTopicId": "af8adcd3-952c-382d-a02a-1ec613d44b25",
+      "dependentTopicId": "79517f9e-f296-3e0d-ab42-8a89afa3466f",
+      "strength": "HARD",
+      "provenance": "CURATED"
+    },
+    {
+      "prerequisiteTopicId": "af8adcd3-952c-382d-a02a-1ec613d44b25",
+      "dependentTopicId": "c594163c-790c-3a5b-9108-66b119afe77a",
+      "strength": "HARD",
+      "provenance": "CURATED"
+    },
+    {
+      "prerequisiteTopicId": "af8adcd3-952c-382d-a02a-1ec613d44b25",
+      "dependentTopicId": "b238766b-4f29-35a3-af35-7bc469901f6a",
+      "strength": "HARD",
+      "provenance": "CURATED"
+    },
+    {
+      "prerequisiteTopicId": "92bf5b96-e60b-3601-a037-554c04fce6df",
+      "dependentTopicId": "33e33cf9-3bb2-3890-8fff-b98a7c2cf972",
+      "strength": "HARD",
+      "provenance": "CURATED"
+    },
+    {
+      "prerequisiteTopicId": "79517f9e-f296-3e0d-ab42-8a89afa3466f",
+      "dependentTopicId": "4ee4a5c6-c124-3073-a4a6-2b94a64cb188",
+      "strength": "SOFT",
+      "provenance": "CURATED"
+    },
+    {
+      "prerequisiteTopicId": "abf8bc7e-1e35-3215-87b7-5db1c7042e12",
+      "dependentTopicId": "61cb5f50-4ca5-3a87-851f-f63a843bd1cf",
+      "strength": "HARD",
+      "provenance": "CURATED"
+    },
+    {
+      "prerequisiteTopicId": "abf8bc7e-1e35-3215-87b7-5db1c7042e12",
+      "dependentTopicId": "f1509bac-c783-3b0c-9d64-f28f18073e92",
+      "strength": "SOFT",
+      "provenance": "CURATED"
+    },
+    {
+      "prerequisiteTopicId": "c594163c-790c-3a5b-9108-66b119afe77a",
+      "dependentTopicId": "67aad17c-d541-3729-a3cf-c58b4f2eb12d",
+      "strength": "HARD",
+      "provenance": "CURATED"
+    },
+    {
+      "prerequisiteTopicId": "b238766b-4f29-35a3-af35-7bc469901f6a",
+      "dependentTopicId": "b644fec3-e095-3d21-90ce-1ce3994617ee",
+      "strength": "HARD",
+      "provenance": "CURATED"
+    },
+    {
+      "prerequisiteTopicId": "20afa9cd-aff1-3001-9914-60765a22d7aa",
+      "dependentTopicId": "67aad17c-d541-3729-a3cf-c58b4f2eb12d",
+      "strength": "HARD",
+      "provenance": "CURATED"
+    },
+    {
+      "prerequisiteTopicId": "20afa9cd-aff1-3001-9914-60765a22d7aa",
+      "dependentTopicId": "b644fec3-e095-3d21-90ce-1ce3994617ee",
+      "strength": "HARD",
+      "provenance": "CURATED"
+    },
+    {
+      "prerequisiteTopicId": "67aad17c-d541-3729-a3cf-c58b4f2eb12d",
+      "dependentTopicId": "10b239d4-53a4-38e2-8b46-d4f027602fad",
+      "strength": "HARD",
+      "provenance": "CURATED"
+    },
+    {
+      "prerequisiteTopicId": "b644fec3-e095-3d21-90ce-1ce3994617ee",
+      "dependentTopicId": "3f085e5e-64c8-3917-95c2-6651ec0db48a",
+      "strength": "HARD",
+      "provenance": "CURATED"
+    },
+    {
+      "prerequisiteTopicId": "237f4a60-a90d-343e-8bc8-8627e0300ab5",
+      "dependentTopicId": "4ee4a5c6-c124-3073-a4a6-2b94a64cb188",
+      "strength": "HARD",
+      "provenance": "CURATED"
+    },
+    {
+      "prerequisiteTopicId": "237f4a60-a90d-343e-8bc8-8627e0300ab5",
+      "dependentTopicId": "61cb5f50-4ca5-3a87-851f-f63a843bd1cf",
+      "strength": "HARD",
+      "provenance": "CURATED"
+    },
+    {
+      "prerequisiteTopicId": "7ca0335a-31a1-32b2-8c78-6282ae258024",
+      "dependentTopicId": "ef34687f-57cb-3ffd-9e93-f851363b097f",
+      "strength": "HARD",
+      "provenance": "CURATED"
+    },
+    {
+      "prerequisiteTopicId": "7ca0335a-31a1-32b2-8c78-6282ae258024",
+      "dependentTopicId": "c2a21d8e-90b3-332f-95fe-0ad8ff833300",
+      "strength": "SOFT",
+      "provenance": "CURATED"
+    },
+    {
+      "prerequisiteTopicId": "7ca0335a-31a1-32b2-8c78-6282ae258024",
+      "dependentTopicId": "e060d19a-00bf-3277-b218-4324ee3811c4",
+      "strength": "SOFT",
+      "provenance": "CURATED"
+    },
+    {
+      "prerequisiteTopicId": "ef34687f-57cb-3ffd-9e93-f851363b097f",
+      "dependentTopicId": "93b07699-098a-38b5-82b7-4a6ea4e323a2",
+      "strength": "HARD",
+      "provenance": "CURATED"
+    },
+    {
+      "prerequisiteTopicId": "c2a21d8e-90b3-332f-95fe-0ad8ff833300",
+      "dependentTopicId": "af4583ab-81f3-3696-883f-70698bd0cee7",
+      "strength": "SOFT",
+      "provenance": "CURATED"
+    },
+    {
+      "prerequisiteTopicId": "286a8cb5-6f74-34ce-bc31-5e0c07cc768f",
+      "dependentTopicId": "f1509bac-c783-3b0c-9d64-f28f18073e92",
+      "strength": "HARD",
+      "provenance": "CURATED"
+    },
+    {
+      "prerequisiteTopicId": "c1bfb9ab-0ccf-3c02-90f3-eb061e0b6bbb",
+      "dependentTopicId": "f5d7d78f-58c1-3ab9-8bcb-6ce3f0aaf648",
+      "strength": "HARD",
+      "provenance": "CURATED"
+    },
+    {
+      "prerequisiteTopicId": "f5d7d78f-58c1-3ab9-8bcb-6ce3f0aaf648",
+      "dependentTopicId": "78ea8ff9-e587-3342-8bc5-67baff20f09f",
+      "strength": "SOFT",
+      "provenance": "CURATED"
+    },
+    {
+      "prerequisiteTopicId": "52974294-50d3-30db-882b-9e8f17b66360",
+      "dependentTopicId": "f64b44a3-d3af-3c32-a9d2-373586fcff36",
+      "strength": "SOFT",
+      "provenance": "CURATED"
+    },
+    {
+      "prerequisiteTopicId": "52974294-50d3-30db-882b-9e8f17b66360",
+      "dependentTopicId": "3b0fa870-a808-3fff-a4d7-1373c77fd099",
+      "strength": "SOFT",
+      "provenance": "CURATED"
+    },
+    {
+      "prerequisiteTopicId": "303030b9-7738-3905-b9ee-eb82c107fa05",
+      "dependentTopicId": "a136fbe7-b5db-3868-ad10-fdb98d9341b6",
+      "strength": "HARD",
+      "provenance": "CURATED"
+    },
+    {
+      "prerequisiteTopicId": "303030b9-7738-3905-b9ee-eb82c107fa05",
+      "dependentTopicId": "2acc1c22-3ab5-3332-a053-4f1fc39386f3",
+      "strength": "HARD",
+      "provenance": "CURATED"
+    },
+    {
+      "prerequisiteTopicId": "a136fbe7-b5db-3868-ad10-fdb98d9341b6",
+      "dependentTopicId": "10b239d4-53a4-38e2-8b46-d4f027602fad",
+      "strength": "SOFT",
+      "provenance": "CURATED"
+    },
+    {
+      "prerequisiteTopicId": "a136fbe7-b5db-3868-ad10-fdb98d9341b6",
+      "dependentTopicId": "3f085e5e-64c8-3917-95c2-6651ec0db48a",
+      "strength": "SOFT",
+      "provenance": "CURATED"
+    },
+    {
+      "prerequisiteTopicId": "2acc1c22-3ab5-3332-a053-4f1fc39386f3",
+      "dependentTopicId": "4298f2ec-eb78-36d5-b7e6-1eb7ad0e0669",
+      "strength": "SOFT",
+      "provenance": "CURATED"
+    },
+    {
+      "prerequisiteTopicId": "2acc1c22-3ab5-3332-a053-4f1fc39386f3",
+      "dependentTopicId": "33e33cf9-3bb2-3890-8fff-b98a7c2cf972",
+      "strength": "HARD",
+      "provenance": "CURATED"
+    }
+  ],
+  "history": [ ],
+  "algorithmParams": {
+    "generations": 400,
+    "mutation-rate": 0.05,
+    "population-size": 120
+  },
+  "randomSeed": 20261012
+}
