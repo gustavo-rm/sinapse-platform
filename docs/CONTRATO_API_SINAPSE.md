@@ -222,3 +222,94 @@ painel", exportação em formatos de terceiros, notificação por evento.
 
 São exatamente os pontos onde backend sem cliente desperdiça esforço: o custo de acrescentar
 depois é baixo, e o de manter algo que ninguém usa é permanente.
+
+---
+
+## 7. Catálogo: disciplinas e tópicos
+
+Duas rotas de leitura sobre o currículo curado, no módulo `curriculum`. Exigem sessão
+autenticada, como as demais; não há papel exigido nem política de acesso a consultar, porque
+o catálogo é currículo e não dado de pessoa. Somente leitura: o catálogo só é escrito pelo
+importador (ver `CARGA_DO_CATALOGO.md`).
+
+**Os ids vêm daqui, e os nomes de tópico em planos se resolvem aqui.** O id de disciplina
+usado para criar uma meta (`POST /api/v1/goals`) é o que estas rotas devolvem. Quem só tem o
+id de um tópico — uma sessão de estudo (`/api/v1/study-sessions`), uma sessão planejada
+(`/api/v1/planned-sessions`, `/api/v1/study-plans/{id}/sessions`) — resolve o nome aqui. A
+`AgendaDoDia` já traz `topicName` e não precisa disso.
+
+### 7.1 Disciplinas
+
+`GET /api/v1/subjects`
+
+```
+[]
+  id          uuid
+  name        string     nome de exibição, como curado
+  position    int        posição na listagem, a partir de 1
+```
+
+Disciplinas não têm ordem curada própria: `position` é a posição da disciplina na ordem dos
+códigos do catálogo. É estável enquanto o catálogo não muda, e não significa mais que isso.
+
+Exemplo (catálogo de exemplo `MED-ANAT`, carregado pelo importador):
+
+```json
+[
+  {
+    "id": "ba6404e6-b645-42e1-9fc9-97f2185d16f3",
+    "name": "Anatomia Humana",
+    "position": 1
+  }
+]
+```
+
+### 7.2 Tópicos de uma disciplina
+
+`GET /api/v1/subjects/{subjectId}/topics`
+
+```
+[]
+  id          uuid
+  name        string     nome de exibição, como curado
+  position    int        posição curricular dentro da disciplina
+```
+
+Ordem: `position` e, em empate, `id`. Disciplina inexistente responde `404` com o tipo
+`urn:sinapse:problem:resource-not-found`. Disciplina sem tópicos responde lista vazia.
+
+Exemplo (primeiros três dos 35 tópicos de `MED-ANAT`):
+
+```json
+[
+  {
+    "id": "d56c1813-c380-469f-9756-5b53a4363740",
+    "name": "Terminologia anatômica e planos de referência",
+    "position": 1
+  },
+  {
+    "id": "36be3fe7-61a9-4ba4-ad05-270758215347",
+    "name": "Osteologia geral: tipos e estrutura óssea",
+    "position": 2
+  },
+  {
+    "id": "c0696b00-b603-4eea-b3e8-e8d81df129bf",
+    "name": "Osteologia do crânio",
+    "position": 3
+  }
+]
+```
+
+Os ids mudam a cada carga num banco novo: o importador os gera. O que é estável entre bancos
+é o código curado, que estas rotas não expõem.
+
+### 7.3 O que fica de fora, de propósito
+
+Cada item tem exatamente `id`, `name` e `position`. Não saem: faixa de esforço, minutos
+estimados, arestas de pré-requisito (com força e proveniência), código curado, datas. As
+estimativas são declaradamente não calibradas, e um número na tela do aluno ou do professor
+é lido como medida. Se o cliente precisar de algum desses campos, a decisão é separada.
+
+Sem paginação e sem filtro: o catálogo tem dezenas de itens (35 tópicos no exemplo). Se uma
+disciplina passar de cerca de 200 tópicos, a regra da seção 1 sobre listas pequenas deixa de
+valer e isso deve ser revisto.
