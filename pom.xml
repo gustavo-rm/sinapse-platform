@@ -22,6 +22,14 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!--
+          JUnit tags kept out of the default build. core-e2e runs plan generation against the real
+          Sinapse Core, which a build without one cannot provide; the core-e2e profile below runs
+          those tests and only those.
+        -->
+        <test.excluded-groups>core-e2e</test.excluded-groups>
+        <test.groups></test.groups>
+
+        <!--
           Version pins that are NOT managed by spring-boot-dependencies.
 
           spring-modulith 1.4.13 is built against spring-boot 3.5.16 and spring-core 6.2.19;
@@ -172,6 +180,15 @@
             </plugin>
 
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <groups>${test.groups}</groups>
+                    <excludedGroups>${test.excluded-groups}</excludedGroups>
+                </configuration>
+            </plugin>
+
+            <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>${jacoco.version}</version>
@@ -193,4 +210,22 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <!--
+          Plan generation against the real Sinapse Core. Needs Docker and a core: either
+          SINAPSE_E2E_CORE_URL pointing at a running one, or SINAPSE_E2E_CORE_JAR naming the jar of
+          exam-optimizer-application to start in a container. SINAPSE_E2E_CORE_ENGINE chooses the
+          engine (greedy-baseline by default, ga for the genetic algorithm).
+
+            ./mvnw verify -Pcore-e2e
+        -->
+        <profile>
+            <id>core-e2e</id>
+            <properties>
+                <test.excluded-groups></test.excluded-groups>
+                <test.groups>core-e2e</test.groups>
+            </properties>
+        </profile>
+    </profiles>
 </project>
