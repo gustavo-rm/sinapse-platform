@@ -20,6 +20,10 @@ import org.springframework.stereotype.Component;
  * disables it, which is what the test profile does: a worker that fires on its own in the
  * middle of a suite makes a failure depend on the second the suite ran.
  *
+ * <p>Each pass first gives back to the queue any job whose worker died mid-attempt
+ * ({@link OrphanedJobRecovery}), so that a job recovered in this pass can be claimed in the same
+ * pass. Any instance can do it for any other: the recovery is one conditional statement.
+ *
  * <p>{@link #runOnce()} holds no logic of its own and is public so that a test can drive one
  * pass at a chosen moment rather than waiting for a clock.
  */
@@ -28,15 +32,18 @@ public class PlanGenerationWorker {
 
     private final GenerationRequestService requests;
     private final PlanGenerationOrchestrator orchestrator;
+    private final OrphanedJobRecovery orphans;
 
     /**
      * @param requests     the queue
      * @param orchestrator what a claimed job is put through
+     * @param orphans      what gives back the jobs of a worker that died
      */
     public PlanGenerationWorker(GenerationRequestService requests,
-            PlanGenerationOrchestrator orchestrator) {
+            PlanGenerationOrchestrator orchestrator, OrphanedJobRecovery orphans) {
         this.requests = requests;
         this.orchestrator = orchestrator;
+        this.orphans = orphans;
     }
 
     /** Fires one pass. */
@@ -46,7 +53,7 @@ public class PlanGenerationWorker {
     }
 
     /**
-     * Claims whatever is due and runs it.
+     * Recovers orphaned jobs, then claims whatever is due and runs it.
      *
      * <p>The claim is its own short transaction and commits before anything is run: the rows it
      * takes are locked until it does, and the run that follows takes minutes.
@@ -54,6 +61,7 @@ public class PlanGenerationWorker {
      * @return how many jobs this pass took
      */
     public int runOnce() {
+        orphans.recover();
         List<ClaimedJob> claimed = requests.claimNext();
         claimed.forEach(orchestrator::run);
         return claimed.size();

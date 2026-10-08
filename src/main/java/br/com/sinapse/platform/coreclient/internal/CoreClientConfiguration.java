@@ -1,5 +1,6 @@
 package br.com.sinapse.platform.coreclient.internal;
 
+import br.com.sinapse.platform.coreclient.api.CoreCallLimits;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.ClientHttpRequestFactory;
@@ -33,6 +34,15 @@ public class CoreClientConfiguration {
                 .baseUrl(properties.baseUrl())
                 .requestFactory(requestFactory(properties))
                 .build();
+    }
+
+    /**
+     * @param properties address and timeouts
+     * @return the timeouts the client above is built with, for callers that bound time by them
+     */
+    @Bean
+    public CoreCallLimits coreCallLimits(CoreProperties properties) {
+        return new CoreCallLimits(properties.connectTimeout(), properties.readTimeout());
     }
 
     private static ClientHttpRequestFactory requestFactory(CoreProperties properties) {

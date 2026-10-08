@@ -46,6 +46,18 @@ public record PlanningProperties(
      *                                 failed
      * @param retryBackoff             base of the exponential backoff between attempts. The
      *                                 second attempt waits this long, the third twice as long
+     * @param orphanMargin             how much longer than the longest call to the core a job
+     *                                 may stay running before it is taken for orphaned: its
+     *                                 worker died and nobody will ever record an outcome. The
+     *                                 bound itself is the core adapter's connect and read
+     *                                 timeouts plus this; the margin covers what an attempt does
+     *                                 around the call (assembling and recording the snapshot,
+     *                                 writing the plan) and the clock skew between two
+     *                                 instances, one of which stamped the start of the attempt
+     *                                 and the other of which judges it. Too small, and a slow
+     *                                 legitimate attempt is put back in the queue while it is
+     *                                 still running; too large, and an orphaned student waits
+     *                                 that much longer to be able to ask again
      * @param batchSize                how many jobs one pass of the worker claims
      * @param pollCron                 when the worker looks for work. Set to {@code -} to
      *                                 disable, which is what the test profile does: a worker
@@ -78,6 +90,8 @@ public record PlanningProperties(
             @Positive @DefaultValue("3") int maxAttempts,
 
             @NotNull @DefaultValue("30s") Duration retryBackoff,
+
+            @NotNull @DefaultValue("2m") Duration orphanMargin,
 
             @Positive @DefaultValue("1") int batchSize,
 

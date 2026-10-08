@@ -316,6 +316,12 @@ sinapse:
       # and is computed in the claim query, from each job's own attempt count.
       max-attempts: 3
       retry-backoff: 30s
+      # A job still RUNNING after the longest call to the core (sinapse.core.connect-timeout plus
+      # sinapse.core.read-timeout) plus this margin has lost its worker, and the next pass of any
+      # worker puts it back in the queue or fails it. The bound is derived, never written down:
+      # raising the read timeout raises it too. The margin covers the work around the call and
+      # the clock skew between instances. A judgement, not a measurement.
+      orphan-margin: 2m
       batch-size: 1
       # How often a worker looks for work. Set to "-" to disable.
       poll-cron: '0/10 * * * * *'
