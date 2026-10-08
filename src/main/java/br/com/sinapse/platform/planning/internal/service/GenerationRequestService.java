@@ -20,6 +20,7 @@ import java.time.Period;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalLong;
 import java.util.UUID;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -138,6 +139,22 @@ public class GenerationRequestService {
         Instant now = clock.instant();
         return requests.recoverOrphans(now.minus(longestAttempt), configuration.maxAttempts(), now,
                 PlanGenerationFailure.CORE_UNAVAILABLE.name());
+    }
+
+    /**
+     * The seed recorded on a job, if an earlier attempt recorded one.
+     *
+     * <p>The seed belongs to the job, not to the attempt: every attempt sends the one the first
+     * attempt drew, so that the seed recorded is the seed that produced the plan whichever
+     * attempt succeeds.
+     *
+     * @param requestId job
+     * @return the seed, or empty before the first submission
+     */
+    @Transactional(readOnly = true)
+    public OptionalLong recordedSeed(UUID requestId) {
+        Long seed = require(requestId).randomSeed();
+        return seed == null ? OptionalLong.empty() : OptionalLong.of(seed);
     }
 
     /**

@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -44,6 +45,8 @@ public class StubSinapseCore implements SinapseCore {
 
     private final AtomicInteger calls = new AtomicInteger();
 
+    private final List<Long> seedsReceived = new CopyOnWriteArrayList<>();
+
     private volatile Supplier<RuntimeException> failure;
 
     private volatile int failuresRemaining;
@@ -55,6 +58,7 @@ public class StubSinapseCore implements SinapseCore {
     @Override
     public PlanResponse generate(PlanRequest request) {
         calls.incrementAndGet();
+        seedsReceived.add(request.randomSeed());
         Supplier<RuntimeException> configured = failure;
         if (configured != null && failuresRemaining != 0) {
             if (failuresRemaining > 0) {
@@ -126,9 +130,15 @@ public class StubSinapseCore implements SinapseCore {
         return calls.get();
     }
 
-    /** Forgets the call count, any configured failure and any configured report. */
+    /** The seed of every request received, failed calls included, in the order received. */
+    public List<Long> seedsReceived() {
+        return List.copyOf(seedsReceived);
+    }
+
+    /** Forgets the calls, any configured failure and any configured report. */
     public void reset() {
         calls.set(0);
+        seedsReceived.clear();
         succeed();
         reportedFitness = null;
         reportedElapsedMillis = null;
