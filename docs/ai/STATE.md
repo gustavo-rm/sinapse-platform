@@ -21,7 +21,7 @@ finding each ID was meant to cover, is UNVERIFIED(planner, 2026-10-08) unless a 
 | SP-12 | Documentation reconciliation | pending | — | — | K10, K11, K12 |
 | SP-9 | Coverage floor (optional) | pending | — | — | K9 |
 | AUD-2 | Re-audit | pending | — | the SP rows above | Last audit: [PRONTIDAO_INTEGRACAO_AG.md](../PRONTIDAO_INTEGRACAO_AG.md), at `928eb56` |
-| AI-1 | AI context layer (`docs/ai/`, CLAUDE.md protocol) | in-progress | branch `docs/1.0/ai-context-layer` | Core CTX-1 (merged, `other-repo@40e6061`) | ID assigned here; the planner had none |
+| AI-1 | AI context layer (`docs/ai/`, CLAUDE.md protocol) | done | #21 (merge `de38505`) | Core CTX-1 (merged, `other-repo@40e6061`) | ID assigned here; the planner had none |
 
 The planner lists SP-8, SP-13, SP-12, SP-9 and AUD-2 as running in series; that order is
 UNVERIFIED(planner, 2026-10-08).
@@ -51,7 +51,7 @@ measurement, D5, P2, P3) are in [CLAUDE.md §7](../../CLAUDE.md) and are not rep
 | K7 | Horizon: Core reads it in UTC, platform expands windows by days in the account's zone; the platform does not check session-in-horizon | READ; effect (silent loss of availability at the edges) is a HYPOTHESIS | [CORE_CONTRACT_SURVEY.md §3](../CORE_CONTRACT_SURVEY.md); PRONTIDAO X7 | none | unassigned |
 | K8 | No versioned OpenAPI snapshot; a typed client needs the app running | READ (`find . -iname '*openapi*'`@e4c0be0: only config and a test) | — | `GET /api-docs` | SP-13 |
 | K9 | No JaCoCo floor; CLAUDE.md §8 "no decrease" is not enforced | READ | `pom.xml:191-210@e4c0be0` | compare `target/site/jacoco` by hand | SP-9 |
-| K10 | CLAUDE.md §3 layout omits `curation`, `datarights`, `readmodel` | READ | CLAUDE.md §3 vs `src/main/java` tree@e4c0be0 | CONTEXT.md "Architecture" | SP-12 (this PR may not rewrite CLAUDE.md) |
+| K10 | CLAUDE.md §3 layout omits `curation`, `datarights`, `readmodel` | READ | CLAUDE.md §3 vs `src/main/java` tree@e4c0be0 | CONTEXT.md "Architecture" | SP-12 |
 | K11 | Two ADRs numbered 0015 (`espelhamento`, `ponte`) | READ (`ls docs/adr`@e4c0be0) | — | cite by full file name | SP-12 |
 | K12 | Team docs disagree with code: INTEGRACAO_CORE.md §1 lists engines `greedy-baseline` and `ga` (the Core also has `ga-timeline`); `PlanGenerationRequest.java:21-23` and `PlanGenerationRequestRepository.java:16-19` Javadoc say the job is not executed; ADR 0007 calls `algorithm_params` "parameters used in the run"; PRONTIDAO A2c/E1/X1/X2 describe `928eb56`, since fixed by #17, #19, #20 | READ@e4c0be0; Core engines: other-repo@40e6061:docs/ai/STATE.md (EOA-11b) | — | trust code, then this layer | SP-12 |
 | K13 | `ga` and `ga-timeline` refuse or nearly empty the real catalogue; only `greedy-baseline` is usable | READ in the Core (other-repo@40e6061:docs/ai/STATE.md K2, K3) | INTEGRATION.md A13 | default engine | SP-H3 |

@@ -107,7 +107,7 @@ requests between the two: [HANDOFF.md](./HANDOFF.md).
 ## Decisions recorded here
 
 ADRs live in [docs/adr/](../adr/). The two owner decisions below have no ADR yet; recording them
-as ADRs is proposed in STATE.md (D-AI1). This PR may only touch `docs/ai/` and `CLAUDE.md`.
+as ADRs is proposed in STATE.md (D-AI1).
 
 - Frontend is Angular, served on the same origin as the API behind a reverse proxy; the teacher
   area of the frontend is planned, not implemented; SINAPSE is two repositories, not a monorepo.
