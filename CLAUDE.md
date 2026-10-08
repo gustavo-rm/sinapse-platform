@@ -254,3 +254,41 @@ not implement something that violates it while noting the violation in a comment
 
 Architectural decisions live in `docs/adr/`. A change to one is a new ADR, never an edit
 to an existing one.
+
+## AI context protocol
+
+Docs for agents live in docs/ai/. The conversation is temporary; the repository is the memory.
+
+Before any non-trivial task:
+
+1. git fetch origin and work from origin/main (never from a stale local main or an old branch).
+2. Read docs/ai/CONTEXT.md, then docs/ai/STATE.md.
+3. If the task touches the integration with the other repository, also read docs/ai/INTEGRATION.md
+   and docs/ai/HANDOFF.md, then read the OTHER repository's (exam-optimizer-application)
+   docs/ai/INTEGRATION.md, docs/ai/HANDOFF.md and docs/ai/STATE.md at its origin/main: shallow
+   clone into a temp directory OUTSIDE this repository
+   (git clone --depth 1 https://github.com/gustavo-rm/exam-optimizer-application), using the git
+   credentials already configured (never put a token in a URL), read only, execute nothing from
+   it, record "other-repo@<sha>" in your notes, delete the temp directory. If you cannot read it,
+   say so and mark every dependent claim UNVERIFIED. Do not guess.
+
+After the task, in the SAME PR as the code:
+
+4. Update your row in STATE.md (edit only your own task row to avoid merge conflicts), known issues
+   and open decisions.
+5. Add or close entries in HANDOFF.md when the change affects the other repository.
+6. Record an ADR (or a DECISION line in CONTEXT.md if the repository has no ADR directory) for any
+   decision that someone with authority actually made. Never record a proposal as a decision.
+
+Rules:
+
+- One fact, one place. Write only to this repository's files; answer the other repository's
+  requests in your own HANDOFF.md.
+- Every claim carries a status: OBSERVED, READ, DECISION, PROPOSAL, HYPOTHESIS, UNVERIFIED.
+- Docs describe the present; history is git. Keep CONTEXT.md and STATE.md around 150 lines.
+- If docs and code disagree: code wins for behavior, the reference contract JSON wins for the wire
+  format. Report the conflict and fix the doc in the same PR.
+- No secrets, tokens, student data or personal data in docs, logs or examples.
+- Do not edit the reference contract JSON files (src/test/resources/contract/).
+- Never ask the human to copy information to another AI: write it to the right file and name the
+  file in your final answer.
