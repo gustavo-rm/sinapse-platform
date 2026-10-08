@@ -15,7 +15,7 @@ finding each ID was meant to cover, is UNVERIFIED(planner, 2026-10-08) unless a 
 | SP-6 | Core response validation | done | #20 (merge `e4c0be0`) | — | Topic, whole-window, overlap, contiguity enforced and tested (INTEGRATION.md "Response validation"). Horizon deliberately not checked (`RestSinapseCore.java:105-111`): whether that closes SP-6 is the owner's call. READ@e4c0be0; tests OBSERVED(e4c0be0) |
 | SP-7 | Catalogue read routes and importer from the jar | done | #17 (merge `2956e0f`) | — | `GET /api/v1/subjects`, `/subjects/{id}/topics` (`curriculum/internal/web/CatalogController.java`); `CatalogRunner` gets `@Autowired` (`CatalogRunner.java:59`). READ@e4c0be0; docs: [CONTRATO_API_SINAPSE.md §7](../CONTRATO_API_SINAPSE.md), [CARGA_DO_CATALOGO.md](../CARGA_DO_CATALOGO.md) |
 | SP-11 | Local account activation | done | #19 (merge `ef15b18`) | — | `DevOnlyLoggingAccountNotifier`, `local` profile only, fails closed. Same PR adds the empty-`trusted-proxies` startup warning. READ@e4c0be0; doc: [DESENVOLVIMENTO_LOCAL.md](../DESENVOLVIMENTO_LOCAL.md) |
-| SP-10 | Orphaned `RUNNING` job recovery (and seed per attempt) | pending | — | — | Not in the code: K1, K2. Which findings SP-10 covers: UNVERIFIED(planner, 2026-10-08) |
+| SP-10 | Orphaned `RUNNING` job recovery and one seed per job | done on merge | branch `fix/1.0/orphaned-generation-jobs` | — | Closes K1, K2. Bound = core connect + read timeout + `orphan-margin` (2m); one conditional UPDATE per worker pass; no migration, no new `failureReason`. Detail: [INTEGRACAO_CORE.md §3.1–3.2](../INTEGRACAO_CORE.md). READ@12a384e; tests OBSERVED(12a384e, `OrphanedJobRecovery*`, `OrphanBound*`, `SeedPerJob*`) |
 | SP-8 | Engine by configuration; item 3b honest `algorithmParams` | pending | — | item 3b: SP-H1, D4 (Core) | K3. Per-student engine assignment is out of scope (CONTEXT.md "Non-negotiables") |
 | SP-13 | Versioned OpenAPI snapshot | pending | — | — | K8 |
 | SP-12 | Documentation reconciliation | pending | — | — | K10, K11, K12 |
@@ -42,8 +42,8 @@ measurement, D5, P2, P3) are in [CLAUDE.md §7](../../CLAUDE.md) and are not rep
 
 | ID | Description | Status | Evidence | Workaround | Resolved by |
 |---|---|---|---|---|---|
-| K1 | A job left `RUNNING` by a dead worker stays `RUNNING` forever; the account cannot ask again (`409`) | READ: claim selects only `PENDING`, no recovery code; executed by the audit: UNVERIFIED(PRONTIDAO D5, at 928eb56) | `PlanGenerationRequestRepository.java:65-78@e4c0be0` | manual DB intervention | SP-10 |
-| K2 | Each retry draws a new seed and overwrites the previous attempt's snapshot, params and seed | READ | `PlanGenerationOrchestrator.java:85-87@e4c0be0` | stored plan stays reproducible; failed attempts are lost | SP-10 (UNVERIFIED mapping) |
+| K1 | A job left `RUNNING` by a dead worker stayed `RUNNING` forever and the account got `409` | closed by SP-10: each worker pass requeues or fails it once it is older than the longest attempt | `OrphanedJobRecovery.java`, `PlanGenerationRequestRepository.recoverOrphans`@f7d69eb; `OrphanedJobRecoveryIntegrationTest` OBSERVED(12a384e) | — | SP-10 |
+| K2 | Each retry drew a new seed and overwrote the previous attempt's seed | closed by SP-10: one seed per job. The snapshot is still reassembled and overwritten per attempt, deliberately ([INTEGRACAO_CORE.md §3.1](../INTEGRACAO_CORE.md)) | `PlanGenerationOrchestrator.seedOf`@12a384e; `SeedPerJobIntegrationTest` OBSERVED(12a384e) | — | SP-10 |
 | K3 | `algorithm_params` records `generations`/`population-size`/`mutation-rate` that the Core ignores | READ here; Core side READ, not executed (other-repo@40e6061:docs/ai/STATE.md K6) | INTEGRATION.md A9 | read `fitness`/`generations` for what ran | SP-8 item 3b, SP-H1 |
 | K4 | `elapsed_millis` is stored but always 0 | READ (`GeneratedPlanWriter.java:61@e4c0be0`); Core K5 | INTEGRATION.md A11 | `finishedAt − startedAt` on the job | SP-H2 |
 | K5 | A Core `500 plan-invariant-violation` is treated as unavailability and retried 3 times | READ | `RestSinapseCore.java:91-94@e4c0be0`; INTEGRATION.md A8 | none | unassigned |
@@ -57,6 +57,7 @@ measurement, D5, P2, P3) are in [CLAUDE.md §7](../../CLAUDE.md) and are not rep
 | K13 | `ga` and `ga-timeline` refuse or nearly empty the real catalogue; only `greedy-baseline` is usable | READ in the Core (other-repo@40e6061:docs/ai/STATE.md K2, K3) | INTEGRATION.md A13 | default engine | SP-H3 |
 | K14 | `POST …/generation-requests` answers `201` without `Location`; `progress` is always absent | READ (`GenerationRequestController.java:84`, `GenerationRequestService.java:244-245@e4c0be0`); by decision F4 | — | build the poll URL from `id` | deliberate |
 | K15 | Generation request rate limit 10/h per account; worker poll 10 s dominates time to `READY` | READ (`application.yml:199-203,321@e4c0be0`) | — | — | deliberate |
+| K16 | A legitimate attempt that outlives the orphan bound (margin too small for the environment, clock skew between instances) is requeued while still running: the Core is called twice for one job; the unique `study_plan.generation_request_id` keeps it to one plan and the losing write fails into the log | HYPOTHESIS, untested | [INTEGRACAO_CORE.md §3.2](../INTEGRACAO_CORE.md) | raise `sinapse.planning.generation.orphan-margin` | unassigned |
 
 ## Unknowns
 

@@ -15,6 +15,7 @@ against `origin/main` at `e4c0be0`; Core references are to `origin/main` at `oth
 | Client | `coreclient/internal/RestSinapseCore` (implements `coreclient/api/SinapseCore`), `RestClient` built in `CoreClientConfiguration` from the application's own builder and mapper | READ(RestSinapseCore.java:48-81; CoreClientConfiguration.java@e4c0be0) |
 | Timeouts | connect `5s`, read `10m` (`SimpleClientHttpRequestFactory`) | READ(application.yml:293,297; CoreProperties.java@e4c0be0) |
 | Retries | **none in the client.** The job retries: `max-attempts: 3`, exponential backoff from `30s`, only for `CORE_UNAVAILABLE` | READ(application.yml:317-318; PlanGenerationFailure.java:43-45; GenerationRequestService.java:163-166@e4c0be0) |
+| Orphaned attempt | A job `RUNNING` for longer than connect + read timeout + `orphan-margin` (`2m`) is requeued (same seed) or failed `CORE_UNAVAILABLE` at the start of the next worker pass; the timeouts reach `planning` through `coreclient/api/CoreCallLimits` | READ(`planning/orchestration/OrphanedJobRecovery.java`; `coreclient/internal/CoreClientConfiguration.java`@12a384e) |
 | Worker cycle | `poll-cron: '0/10 * * * * *'`, `batch-size: 1` | READ(application.yml:319-321@e4c0be0) |
 | Rate limit on asking | 10 generation requests per hour per account | READ(application.yml:199-203@e4c0be0) |
 | Credentials sent | none: body, `Content-Type`, `Accept` only | READ(RestSinapseCore.java:67-72@e4c0be0) |
@@ -93,7 +94,10 @@ order; sessions not in the past; anything about `fitness`, `generations`, `elaps
   if they ran; per A9 they do not (STATE.md K3).
 - Persisted from the response: `core_version`, `generations`, `elapsed_millis` on the job and
   `fitness` whole on the plan (`GeneratedPlanWriter.java:61`). READ@e4c0be0
-- The seed is drawn again on every attempt (`PlanGenerationOrchestrator.java:85`). READ@e4c0be0
+- The seed is drawn once per job and every attempt of the job sends it; the snapshot is
+  reassembled per attempt. READ(`PlanGenerationOrchestrator.seedOf`@12a384e); OBSERVED(12a384e,
+  `SeedPerJobIntegrationTest`). For the Core this changes nothing on the wire: a retry is a
+  request it may already have seen, which A3 makes safe.
 
 ## Reference contract JSON
 
