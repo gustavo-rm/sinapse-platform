@@ -32,12 +32,14 @@ Main flow, plan generation (READ, files under `planning/orchestration/` unless n
 
 1. `POST /api/v1/study-plans/generation-requests` queues a job and answers `201` at once
    (`GenerationRequestController.java:62-86`).
-2. `PlanGenerationWorker` polls the table queue every 10 s (`application.yml:321`) and claims
-   `PENDING` rows with `for update skip locked` (`planning/internal/persistence/PlanGenerationRequestRepository.java:65-78`).
+2. `PlanGenerationWorker` polls the table queue every 10 s (`application.yml`, `poll-cron`). Each
+   pass first requeues or fails jobs left `RUNNING` by a dead worker (`OrphanedJobRecovery`, one
+   conditional UPDATE), then claims `PENDING` rows with `for update skip locked`
+   (`planning/internal/persistence/PlanGenerationRequestRepository.java`). READ@12a384e
 3. `PlanGenerationOrchestrator.run` (`:83-105`): `SnapshotAssembler` composes four modules into a
-   `PlanRequest`; the snapshot, `algorithmParams` and seed are stored before the call; the Core is
-   called through `coreclient` (`RestSinapseCore`); `GeneratedPlanWriter` stores plan and job
-   completion in one transaction.
+   `PlanRequest`; the snapshot, `algorithmParams` and seed (drawn once per job, reused by every
+   attempt) are stored before the call; the Core is called through `coreclient`
+   (`RestSinapseCore`); `GeneratedPlanWriter` stores plan and job completion in one transaction.
 4. The client polls `GET …/generation-requests/{id}` and reads the plan from `study-plans` routes.
 
 The Core side of this flow is in [INTEGRATION.md](./INTEGRATION.md). The API surface for a
@@ -105,7 +107,7 @@ requests between the two: [HANDOFF.md](./HANDOFF.md).
 ## Decisions recorded here
 
 ADRs live in [docs/adr/](../adr/). The two owner decisions below have no ADR yet; recording them
-as ADRs is proposed in STATE.md (D-AI1). This PR may only touch `docs/ai/` and `CLAUDE.md`.
+as ADRs is proposed in STATE.md (D-AI1).
 
 - Frontend is Angular, served on the same origin as the API behind a reverse proxy; the teacher
   area of the frontend is planned, not implemented; SINAPSE is two repositories, not a monorepo.

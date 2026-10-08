@@ -13,11 +13,14 @@ import br.com.sinapse.platform.planning.internal.error.UnknownGenerationRequestE
 import br.com.sinapse.platform.planning.internal.persistence.PlanGenerationRequestRepository;
 import br.com.sinapse.platform.planning.internal.persistence.StudyPlanRepository;
 import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalLong;
 import java.util.UUID;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -116,6 +119,42 @@ public class GenerationRequestService {
                         configuration.batchSize()).stream()
                 .map(this::claim)
                 .toList();
+    }
+
+    /**
+     * Puts back in the queue, or fails, the jobs whose worker died mid-attempt.
+     *
+     * <p>A job counts as orphaned once it has been running for longer than {@code longestAttempt}.
+     * One with attempts left goes back to {@code PENDING}; one without ends {@code FAILED} with
+     * {@link PlanGenerationFailure#CORE_UNAVAILABLE}, the reason for a call to the core that
+     * never produced an answer. The decision is made by the database in a single conditional
+     * statement, so that two instances doing this at once cannot both act on the same job.
+     *
+     * @param longestAttempt how long an attempt can legitimately take. A job running for longer
+     *                       than this has nobody left waiting for its answer
+     * @return how many jobs were recovered
+     */
+    @Transactional
+    public int recoverOrphans(Duration longestAttempt) {
+        Instant now = clock.instant();
+        return requests.recoverOrphans(now.minus(longestAttempt), configuration.maxAttempts(), now,
+                PlanGenerationFailure.CORE_UNAVAILABLE.name());
+    }
+
+    /**
+     * The seed recorded on a job, if an earlier attempt recorded one.
+     *
+     * <p>The seed belongs to the job, not to the attempt: every attempt sends the one the first
+     * attempt drew, so that the seed recorded is the seed that produced the plan whichever
+     * attempt succeeds.
+     *
+     * @param requestId job
+     * @return the seed, or empty before the first submission
+     */
+    @Transactional(readOnly = true)
+    public OptionalLong recordedSeed(UUID requestId) {
+        Long seed = require(requestId).randomSeed();
+        return seed == null ? OptionalLong.empty() : OptionalLong.of(seed);
     }
 
     /**

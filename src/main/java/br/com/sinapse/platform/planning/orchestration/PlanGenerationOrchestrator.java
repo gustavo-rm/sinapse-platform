@@ -34,6 +34,14 @@ import org.springframework.stereotype.Component;
  * document, because availability and history move, and a plan explained by a document it was
  * not generated from is explained by nothing (ADR 0007).
  *
+ * <p><strong>The seed belongs to the job, not to the attempt.</strong> It is drawn once, by the
+ * first attempt that gets as far as recording a submission, and every later attempt of the same
+ * job — a retry after an unreachable core, or the attempt after a worker that died — sends that
+ * same seed. The job is the unit of reproducibility: whichever attempt produces the plan, the
+ * seed on the record is the seed that produced it, and there is one seed to reason about per
+ * job rather than one per attempt. The snapshot is still assembled afresh on each attempt and
+ * recorded again before the call, so the stored document stays the one that was last sent.
+ *
  * <p>Nothing here logs a snapshot, a payload or a response body. A failure is logged as its
  * kind and the job it belonged to.
  */
@@ -82,7 +90,7 @@ public class PlanGenerationOrchestrator {
      */
     public void run(ClaimedJob job) {
         try {
-            PlanRequest request = assembler.assemble(job, seeds.next());
+            PlanRequest request = assembler.assemble(job, seedOf(job));
             requests.recordSubmission(job.id(), objectMapper.convertValue(request, DOCUMENT),
                     request.algorithmParams(), request.randomSeed());
 
@@ -102,6 +110,11 @@ public class PlanGenerationOrchestrator {
             LOG.error("Generation job {} failed", job.id(), failure);
             requests.failOrRetry(job.id(), PlanGenerationFailure.INTERNAL);
         }
+    }
+
+    /** The seed an earlier attempt of this job recorded, or a fresh one for its first. */
+    private long seedOf(ClaimedJob job) {
+        return requests.recordedSeed(job.id()).orElseGet(seeds::next);
     }
 
     private void retryOrGiveUp(ClaimedJob job, PlanGenerationFailure reason) {

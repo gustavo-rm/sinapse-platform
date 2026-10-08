@@ -2,6 +2,7 @@ package br.com.sinapse.platform.planning.internal.persistence;
 
 import br.com.sinapse.platform.planning.api.GenerationRequestStatus;
 import br.com.sinapse.platform.planning.internal.domain.PlanGenerationRequest;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -76,6 +77,47 @@ public interface PlanGenerationRequestRepository extends JpaRepository<PlanGener
             """, nativeQuery = true)
     List<PlanGenerationRequest> claimPending(@Param("backoffSeconds") double backoffSeconds,
             @Param("batchSize") int batchSize);
+
+    /**
+     * Puts back in the queue, or fails, every job whose worker is gone.
+     *
+     * <p>A job is orphaned when it has been {@code RUNNING} since before {@code cutoff}: its
+     * attempt started longer ago than any attempt can legitimately last, so whoever claimed it
+     * died without recording an outcome. Left alone, the account's partial index would keep the
+     * student from ever asking for a plan again.
+     *
+     * <p><strong>One conditional statement, never a read followed by a write.</strong> Both the
+     * state and the age are in the {@code where} clause, so two instances sweeping at once cannot
+     * both act on a row: the second waits for the first's row lock and, re-evaluating the
+     * condition after it commits, no longer finds the row {@code RUNNING} — or finds it
+     * {@code RUNNING} with a fresh start, claimed again in between. A legitimate attempt is never
+     * touched, because its start is after the cutoff.
+     *
+     * <p>The attempt the dead worker spent is already counted: claiming counts it. So a job with
+     * attempts left goes back to {@code PENDING} and is claimable at once (its {@code started_at}
+     * is older than any backoff), and one without goes to {@code FAILED}. Snapshot, parameters
+     * and seed are not touched: the next attempt reuses the seed (see the orchestrator).
+     *
+     * @param cutoff      a job running since before this instant is orphaned
+     * @param maxAttempts how many attempts a job may have
+     * @param finishedAt  instant recorded on the jobs this fails
+     * @param reason      failure reason recorded on the jobs this fails
+     * @return how many jobs were recovered, either way
+     */
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query(value = """
+            update plan_generation_request
+               set status         = case when attempt_count < :maxAttempts
+                                         then 'PENDING' else 'FAILED' end,
+                   finished_at    = case when attempt_count < :maxAttempts
+                                         then finished_at else :finishedAt end,
+                   failure_reason = case when attempt_count < :maxAttempts
+                                         then failure_reason else :reason end
+             where status = 'RUNNING'
+               and started_at < :cutoff
+            """, nativeQuery = true)
+    int recoverOrphans(@Param("cutoff") Instant cutoff, @Param("maxAttempts") int maxAttempts,
+            @Param("finishedAt") Instant finishedAt, @Param("reason") String reason);
 
     /**
      * Removes every row of this kind belonging to an account.

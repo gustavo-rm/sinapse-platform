@@ -15,7 +15,10 @@ package br.com.sinapse.platform.planning.orchestration;
 public interface SeedSource {
 
     /**
-     * A seed for one run.
+     * A seed for one job.
+     *
+     * <p>Asked once per job, by its first attempt; later attempts reuse the seed recorded on the
+     * job instead of asking again.
      *
      * @return the seed, which is recorded on the job before the run starts
      */

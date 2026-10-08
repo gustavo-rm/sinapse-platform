@@ -75,6 +75,7 @@ Newest first, at most 20 entries; older ones leave (git keeps them).
 
 | Date | Change | Interface affected | Action required |
 |---|---|---|---|
+| 2026-10-08 | Platform SP-10 (#22): every attempt of a job sends the same `randomSeed`; a job orphaned mid-call is resent after ~12 min | none (same request shape; a resend relies on A3 determinism) | none for the Core |
 | 2026-10-08 | Core PR #35 merged: Core `docs/ai/` layer (`other-repo@40e6061`) | documentation only | platform: read it under the protocol (done in AI-1) |
 | 2026-10-08 | Core PR #33/#34 merged: engine selection pinned over HTTP; `ga-timeline` registered | `algorithmParams.engine` (documentation and tests) | platform: INTEGRACAO_CORE.md §1 engine list is stale (STATE.md K12) |
 | 2026-10-05 | Platform PR #20 merged: `validated` enforces topic, whole-window, overlap, contiguity | response validation (no shape change) | none for the Core |

@@ -67,22 +67,72 @@ porta fechada.
 
 ### 3.1 A nova tentativa é segura do ponto de vista do aluno?
 
-**Sim, mas não pelo motivo que a pergunta supõe.** A nova tentativa **não reenvia a mesma
-`PlanRequest` com a mesma semente.** O orquestrador remonta o snapshot a partir do estado atual
-e sorteia uma **semente nova** (`seeds.next()`) a cada tentativa. Em seguida, `recordSubmission`
-sobrescreve no job o snapshot, os parâmetros e a semente da tentativa anterior.
+Sim. **A semente pertence ao job, não à tentativa:** a primeira tentativa a chegar à gravação
+sorteia a semente, e todas as tentativas seguintes do mesmo job (nova tentativa depois de Core
+indisponível ou tentativa depois de um job órfão, §3.2) leem a semente gravada e enviam a mesma. O
+*snapshot* continua sendo remontado a partir do estado atual a cada tentativa e gravado de novo
+antes da chamada, então o documento gravado é sempre o último que foi enviado.
 
-Ainda assim, o efeito para o aluno é idempotente:
+O efeito para o aluno é idempotente:
 
 - o Core não guarda estado, então uma tentativa que expirou por *timeout* enquanto o Core
   ainda calculava não deixa nada para trás;
 - o plano e o encerramento do job são gravados na mesma transação, e
   `study_plan.generation_request_id` é único, de modo que um job produz no máximo um plano;
-- o registro que fica no job (snapshot, semente, parâmetros, versão do Core) é exatamente o da
-  tentativa que produziu o plano. A reprodutibilidade do plano gravado se mantém.
+- o registro que fica no job (snapshot, semente, parâmetros, versão do Core) é o da tentativa
+  que produziu o plano, e a semente é a mesma em todas as tentativas. A reprodutibilidade do
+  plano gravado se mantém.
 
-**O que se perde:** o registro do que as tentativas anteriores enviaram. Para o aluno isso não
-importa; para a análise de falhas, sim.
+**O que se perde:** o *snapshot* enviado pelas tentativas anteriores, que é sobrescrito. Para o
+aluno isso não importa; para a análise de falhas, sim.
+
+### 3.2 Job órfão
+
+Se o processo cai no meio de uma tentativa, ninguém registra o desfecho e o job fica em
+`RUNNING`. Sem tratamento, ficaria assim para sempre, e o índice parcial `ux_request_active`
+faria toda nova solicitação da conta responder `409`.
+
+O worker trata isso no mesmo ciclo em que já trabalha (`OrphanedJobRecovery`): antes de
+reivindicar trabalho, considera órfão todo job em `RUNNING` cujo `started_at` seja anterior a
+**agora − tentativa mais longa**, onde
+
+```
+tentativa mais longa = sinapse.core.connect-timeout
+                     + sinapse.core.read-timeout
+                     + sinapse.planning.generation.orphan-margin
+```
+
+Com os valores padrão, 5 s + 10 min + 2 min = 12 min 5 s. O limite é calculado, nunca
+escrito como constante: aumentar o *read timeout* aumenta o limite junto, e um job legítimo à
+espera de uma resposta de 10 minutos não é recuperado no meio. A margem cobre o trabalho em
+volta da chamada (montar e gravar o *snapshot*, gravar o plano) e a diferença de relógio entre
+duas instâncias. É um julgamento, não uma medição.
+
+O *backoff* e o número de tentativas não entram na conta. O limite mede uma tentativa a partir
+do seu próprio `started_at`, que toda reivindicação regrava; entre uma tentativa e outra o job
+está em `PENDING`, e não em `RUNNING`.
+
+A transição é uma única `UPDATE` com estado e limite na cláusula `WHERE`, sem leitura prévia:
+
+- se ainda restam tentativas (`attempt_count < max-attempts`), o job volta a `PENDING` com o
+  mesmo *snapshot*, os mesmos parâmetros e a mesma semente, e pode ser reivindicado no mesmo
+  ciclo;
+- se não restam, termina em `FAILED` com `CORE_UNAVAILABLE`, o motivo que já existe para uma
+  chamada ao Core que não produziu resposta. Nenhum valor novo de `failureReason` foi criado.
+
+A tentativa do worker que caiu já foi contada na reivindicação, então ela entra no orçamento.
+
+**Mais de uma instância.** O repositório não diz se a plataforma roda com mais de uma
+instância; o código é escrito para tolerar isso. Duas instâncias recuperando ao mesmo tempo não
+agem duas vezes sobre o mesmo job: a segunda `UPDATE` espera o bloqueio de linha da primeira e,
+ao reavaliar a condição, já não encontra o job em `RUNNING` (ou o encontra com um `started_at`
+novo). O que a margem precisa cobrir é a diferença de relógio entre a instância que gravou o
+`started_at` e a que julga o limite.
+
+**Limitação conhecida.** Se uma tentativa legítima passar do limite (margem pequena demais para
+o ambiente), o job é devolvido à fila enquanto a primeira chamada ainda corre, e o Core é
+chamado duas vezes. O aluno continua recebendo no máximo um plano, porque
+`study_plan.generation_request_id` é único; a segunda gravação falha. Esse caminho não tem teste.
 
 ---
 
@@ -145,6 +195,5 @@ Sem nenhuma das duas variáveis, o teste **falha** dizendo o que falta. Ele não
 3. **Um `500` por violação de invariante no Core é tratado como indisponibilidade.** Esse caso
    (`plan-invariant-violation`) é defeito, não instabilidade. Com o motor guloso, que é
    determinístico, as novas tentativas gastam o orçamento repetindo o mesmo erro.
-4. **Fora do escopo desta tarefa:** um job cujo worker morre fica em `RUNNING` para sempre.
-   Nada devolve à fila um job `RUNNING` abandonado, e o índice parcial impede o aluno de pedir
-   outro plano.
+4. **Resolvido:** um job cujo worker morria ficava em `RUNNING` para sempre e bloqueava a
+   conta com `409`. Hoje o worker o recupera (§3.2).
