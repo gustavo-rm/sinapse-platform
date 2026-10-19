@@ -1,5 +1,14 @@
 # Prontidão para integração do AG e para o frontend do fluxo de plano
 
+> **Relatório datado — leia como foto de 05/10/2026.** Ele descreve a plataforma no commit
+> `928eb56` (linha "HEAD da plataforma", abaixo), anterior aos PRs #17 (rotas do catálogo),
+> #19 (ativação local de conta) e #20 (validação da resposta do Core), e também aos #22, #23 e
+> #24. Vários achados daqui já foram corrigidos. O texto não é reescrito: o estado atual está em
+> [`docs/ai/STATE.md`](ai/STATE.md), e o fluxo de plano para o frontend, conferido no código
+> atual, está em [FLUXO_DE_PLANO_FRONTEND.md](FLUXO_DE_PLANO_FRONTEND.md). Onde este relatório
+> diz `0015-ponte…`, o ADR hoje é o
+> [0017](adr/0017-ponte-de-contrato-com-o-core.md) (renumerado em 19/10/2026).
+
 **Data da auditoria:** 05 de outubro de 2026
 **Natureza:** auditoria. Nada em `src/`, `pom.xml`, migrações ou configuração foi alterado. Os
 serviços foram executados só em `localhost`, com dados sintéticos, e encerrados ao final.

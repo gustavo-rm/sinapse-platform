@@ -59,7 +59,7 @@ the platform's reaction, not the Core's behaviour; only `CoreEndToEndIntegration
 
 ## Response validation
 
-`RestSinapseCore.validated` (`RestSinapseCore.java:113-135@e4c0be0`) applies **twelve** checks
+`RestSinapseCore.validated` (method at `RestSinapseCore.java:113-135`, the helpers it calls at `:137-233`; same lines at `6159a93`) applies **twelve** checks
 today; the per-check line references and messages are in
 [CORE_CONTRACT_SURVEY.md §3](../CORE_CONTRACT_SURVEY.md), which matches the code. READ@e4c0be0
 

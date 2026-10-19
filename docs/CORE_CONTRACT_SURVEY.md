@@ -338,12 +338,13 @@ Compact constructor: lines 30-33. Unlike `PlanRequest`, it accepts null for `ses
 |---|---|---|
 | `coreVersion` | `String` | structurally yes; rejected by `validated` if null or blank |
 | `randomSeed` | `long` | n/a (primitive); must echo the seed that was sent |
-| `generations` | `int` | n/a (primitive); **never validated and never persisted** |
-| `elapsedMillis` | `long` | n/a (primitive); **never validated and never persisted** |
+| `generations` | `int` | n/a (primitive); never validated; persisted in `plan_generation_request.generations` |
+| `elapsedMillis` | `long` | n/a (primitive); never validated; persisted in `plan_generation_request.elapsed_millis`, always 0 from the Core (DT-2) |
 
 There is no `planId`, no per-session identifier, and no explanation or rationale field in the
-response. `generations` and `elapsedMillis` are read from the wire and then dropped — nothing
-in `GeneratedPlanWriter` stores them.
+response. Since SP-3 (`V8__generation_cost.sql`), `generations` and `elapsedMillis` are stored on
+the job by `GeneratedPlanWriter.store` (`GeneratedPlanWriter.java:64`, checked 2026-10-19); the
+latency the platform measures itself is `core_call_millis` (`V9`, SP-8).
 
 ---
 

@@ -26,7 +26,7 @@ schema) is [ARQUITETURA_BACKEND_SINAPSE.md](../ARQUITETURA_BACKEND_SINAPSE.md). 
 Modules actually present under `src/main/java/br/com/sinapse/platform/`: `identity`,
 `curriculum`, `curation`, `educational`, `learningrecord`, `planning` (with `orchestration/`),
 `coreclient`, `datarights`, `readmodel`, `shared`. READ(`find src/main/java -maxdepth 6 -type d`@e4c0be0)
-CLAUDE.md §3 lists only seven of them (see STATE.md K10).
+CLAUDE.md §3 lists all ten, with the three that are not bounded contexts (`curation`, `datarights`, `readmodel`).
 
 Main flow, plan generation (READ, files under `planning/orchestration/` unless noted):
 
@@ -107,7 +107,7 @@ requests between the two: [HANDOFF.md](./HANDOFF.md).
 ## Decisions recorded here
 
 ADRs live in [docs/adr/](../adr/). The owner decisions below have no ADR yet; recording them
-as ADRs is proposed in STATE.md (D-AI1).
+as ADRs is proposed in STATE.md (D-AI1); draft texts in [PROPOSTAS_DE_ADR.md](../PROPOSTAS_DE_ADR.md).
 
 - Frontend is Angular, served on the same origin as the API behind a reverse proxy; the teacher
   area of the frontend is planned, not implemented; SINAPSE is two repositories, not a monorepo.
@@ -130,6 +130,8 @@ as ADRs is proposed in STATE.md (D-AI1).
 | What did we ask the Core, and what did it ask us? | [HANDOFF.md](./HANDOFF.md) |
 | Why is the architecture like this? | [ARQUITETURA_BACKEND_SINAPSE.md](../ARQUITETURA_BACKEND_SINAPSE.md), [adr/](../adr/) |
 | How does a Core failure become a job state? | [INTEGRACAO_CORE.md §2–3](../INTEGRACAO_CORE.md) |
+| What must a frontend know about asking for and showing a plan? | [FLUXO_DE_PLANO_FRONTEND.md](../FLUXO_DE_PLANO_FRONTEND.md) |
+| Which documentation claims are still unverified? | [AFIRMACOES_A_CONFIRMAR.md](../AFIRMACOES_A_CONFIRMAR.md) |
 | Which response invariants are checked? | [CORE_CONTRACT_SURVEY.md §3](../CORE_CONTRACT_SURVEY.md) |
 | Which routes does a frontend use? | [CONTRATO_API_SINAPSE.md](../CONTRATO_API_SINAPSE.md), [openapi/openapi.json](../openapi/openapi.json) (snapshot of `/api-docs`) |
 | How do I create and activate a local account? | [DESENVOLVIMENTO_LOCAL.md](../DESENVOLVIMENTO_LOCAL.md) |
