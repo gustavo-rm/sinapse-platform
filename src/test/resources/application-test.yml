@@ -2,6 +2,13 @@
 # by IntegrationTest, so nothing about it is declared here.
 
 spring:
+  datasource:
+    hikari:
+      # The suite keeps a dozen application contexts cached, each with its own pool, against
+      # one PostgreSQL whose default max_connections is 100. At Hikari's default of ten per
+      # pool that is the whole server, and one more context fails with "too many clients".
+      # No test runs more than two threads against the database at once.
+      maximum-pool-size: 5
   jpa:
     properties:
       hibernate:
