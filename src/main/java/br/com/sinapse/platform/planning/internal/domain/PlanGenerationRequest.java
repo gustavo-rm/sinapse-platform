@@ -19,11 +19,12 @@ import org.hibernate.type.SqlTypes;
 /**
  * The asynchronous job that asks the core for a plan.
  *
- * <p><strong>Mapped, not executed.</strong> Nothing in this version claims a job, calls the
- * core or assembles a snapshot; the table exists and this is the shape of a row in it. The
- * consumer, the snapshot and the client are the next step of the build.
+ * <p><strong>Executed.</strong> {@code PlanGenerationWorker} claims pending rows on its
+ * schedule, {@code PlanGenerationOrchestrator} assembles the snapshot, records it here and calls
+ * the core, and {@code GeneratedPlanWriter} stores the plan and closes the job. This class is
+ * the shape of a row and the transitions between its states.
  *
- * <p>The table is also the queue (ADR 0007). Workers will claim rows with
+ * <p>The table is also the queue (ADR 0007). Workers claim rows with
  * {@code select ... for update skip locked}; a broker would be infrastructure to operate,
  * monitor and debug without a problem at the pilot's scale that justifies it, and if scale
  * ever demands one the change is confined to the consumer.
