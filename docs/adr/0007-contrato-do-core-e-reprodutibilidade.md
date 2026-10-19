@@ -5,6 +5,19 @@
 **Complementa:** ADR 0002, que decidiu o Core como processo separado e a geração assíncrona.
 **Substituída em parte por:** ADR 0015, quanto a onde o contrato vive.
 
+## Nota de atualização de 19 de outubro de 2026
+
+Esta nota não altera a decisão; corrige a leitura de uma linha da tabela abaixo.
+`algorithm_params` registra o que a plataforma **enviou** ao Core, não o que o Core aplicou. O
+Core ignora as chaves que não lê, e até esta data a configuração padrão enviava três delas,
+`generations`, `population-size` e `mutation-rate`, que ele nunca aplicou (confirmado por
+execução no Core, EOA-13): os jobs gravados até aqui registram esses três valores como
+**solicitados**, não como usados. Por decisão do dono do projeto de 08/10/2026 (D4 do Core,
+Variante 1), os hiperparâmetros do AG pertencem ao Core e a plataforma deixará de enviá-los; a
+retirada está registrada como pendente em `docs/ai/STATE.md` (SP-8, item 3b). O que de fato
+rodou fica na resposta: o motor e o build do Core em `study_plan.fitness` (`engine`, `build`) e o
+número de gerações em `generations`. Detalhe em `docs/INTEGRACAO_CORE.md` §1.2.
+
 ## Emenda de 17 de setembro de 2026
 
 Uma frase da seção "Conteúdo do contrato" abaixo — "O contrato vive em módulo compartilhado
