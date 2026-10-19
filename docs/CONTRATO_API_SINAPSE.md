@@ -14,7 +14,14 @@ partir do código, e um snapshot versionado dela fica em
 
 ## 1. Convenções
 
-**Prefixo.** Toda rota sob `/api/v1`. Sem exceção.
+**Prefixo.** Toda rota da API sob `/api/v1`. As únicas rotas fora dele são as da
+documentação gerada pelo springdoc, `/api-docs` e `/swagger-ui.html` (`application.yml`, seção
+`springdoc`), que não são API.
+
+**Fonte de verdade das rotas.** O snapshot versionado [`openapi/openapi.json`](openapi/openapi.json)
+(SP-13). Este documento especifica o que o snapshot não diz por si: convenções e intenção.
+Onde os dois divergirem sobre nome de rota, parâmetro ou campo, vale o snapshot. As formas
+abaixo foram conferidas contra ele em 19/10/2026.
 
 **Erros.** RFC 7807 `application/problem+json`. `detail` nunca contém dado pessoal,
 identificador interno, nome de entidade ou de coluna. Ver ADR 0009.
@@ -108,7 +115,7 @@ Compõe: `planning`, `curriculum`, `learningrecord`.
 
 ### 3.3 `PlanoResumido`
 
-`GET /api/v1/study-plans/{id}/summary`
+`GET /api/v1/study-plans/{planId}/summary`
 
 ```
 planId, status, horizonStart, horizonEnd, createdAt
@@ -135,11 +142,20 @@ Compõe: `planning`, `curriculum`, `learningrecord`.
 `GET /api/v1/invites/{code}/preview`
 
 ```
-classroomName, teacherName, subjectNames[]
-visibilityScope     descrição do que o professor passará a ver
+classroomId, classroomName, teacherName
+institutionName | null
+subjectNames[]
+visibility          o que o professor passará a ver
+  scope             nome do escopo, no qual o cliente pode se basear
+  subjectIds[]      disciplinas a que o escopo se limita; vazio quando não se limita
+  description       frase legível pelo aluno (em inglês, como todo texto da API)
 requiresConsent     purpose = INSTITUTION_SHARING
 expiresAt
 ```
+
+(Conferido contra `InvitePreviewResponse` no snapshot e em
+`educational/internal/web/InvitePreviewResponse.java:18-47`. A versão anterior deste documento
+chamava o campo de `visibilityScope` e não listava `classroomId` nem `institutionName`.)
 
 `visibilityScope` é requisito, não cortesia: sustenta o consentimento informado, dado que o
 escopo adotado é integral. Ver ADR 0005.
@@ -150,15 +166,26 @@ Compõe: `educational`, `curriculum`, `identity`.
 
 ### 3.5 `PainelDoAluno` (visão do professor)
 
-`GET /api/v1/classrooms/{id}/students/{accountId}/panel?from=&to=`
+`GET /api/v1/classrooms/{classroomId}/students/{accountId}/panel?from=&to=`
 
 ```
-studentName
-adherence            ratio, planned, executed
-minutesBySubject[]   subjectId, subjectName, minutes
+accountId, from, to
+adherence            plannedElapsed, executed, ratio
+minutesBySubject[]   subjectId, subjectName, minutes, sessionCount
 recallTrajectory[]   topicId, topicName, points[{ at, rating }]
-recentSessions[]     janela limitada
+recentSessions[]     janela limitada, mais recente primeiro
+  sessionId, topicId, topicName, subjectId, subjectName, kind, source, status,
+  startedAt, actualDurationMinutes, durationSource, recallRating
 ```
+
+**Não há nome do aluno.** A versão anterior deste documento previa `studentName`; a plataforma
+não coleta nome no cadastro, e o painel devolve o `accountId`
+(`readmodel/api/StudentPanelView.java:29-33`). Os campos de `recentSessions` acima são os do
+código (`StudentPanelView.java:125-138`). **O snapshot OpenAPI os descreve errado:** ele aponta
+`recentSessions` para o esquema `SessionSummary` das sessões de login (`id`, `userAgent`,
+`lastSeenAt`…), porque dois *records* com o mesmo nome simples viram um único componente no
+springdoc. É defeito da especificação gerada, registrado em `docs/ai/STATE.md` (K23) e ainda não
+corrigido; até lá, para esta rota, vale o que está aqui.
 
 Exige `TeacherAccessPolicy.canViewStudent`, que verifica matrícula ativa **e**
 `INSTITUTION_SHARING` vigente no momento da consulta. Revogação corta o acesso na hora, sem
@@ -168,13 +195,15 @@ Compõe: `educational`, `identity`, `learningrecord`, `curriculum`.
 
 ### 3.6 `ListaDaTurma`
 
-`GET /api/v1/classrooms/{id}/students?from=&to=`
+`GET /api/v1/classrooms/{classroomId}/students?from=&to=`
 
 ```
-students[]   accountId, name, adherenceRatio, totalMinutes
+classroomId
+students[]   accountId, adherenceRatio, totalMinutes
 ```
 
-Três campos por decisão F7. É a consulta mais pesada do sistema: agrega histórico de N
+Três campos por decisão F7. Sem `name`, pela mesma razão do painel
+(`readmodel/api/ClassroomRosterView.java:22-23`); a versão anterior deste documento o listava. É a consulta mais pesada do sistema: agrega histórico de N
 alunos. Precisa ser medida antes de ser otimizada, e otimizada apenas se a medição
 justificar.
 
@@ -236,7 +265,7 @@ importador (ver `CARGA_DO_CATALOGO.md`).
 **Os ids vêm daqui, e os nomes de tópico em planos se resolvem aqui.** O id de disciplina
 usado para criar uma meta (`POST /api/v1/goals`) é o que estas rotas devolvem. Quem só tem o
 id de um tópico — uma sessão de estudo (`/api/v1/study-sessions`), uma sessão planejada
-(`/api/v1/planned-sessions`, `/api/v1/study-plans/{id}/sessions`) — resolve o nome aqui. A
+(`/api/v1/planned-sessions`, `/api/v1/study-plans/{planId}/sessions`) — resolve o nome aqui. A
 `AgendaDoDia` já traz `topicName` e não precisa disso.
 
 ### 7.1 Disciplinas
