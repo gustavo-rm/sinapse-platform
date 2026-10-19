@@ -77,15 +77,35 @@ public class PlanGenerationRequest {
     /**
      * How many generations the run took, as the core reported it.
      *
-     * <p>With {@link #elapsedMillis} this is the cost of the run, which is half of the
-     * comparison between the genetic algorithm and the greedy scheduler. Recorded when the
-     * run finishes, because it is not recoverable afterwards.
+     * <p>Part of the cost of the run, which is half of the comparison between the genetic
+     * algorithm and the greedy scheduler. Recorded when the run finishes, because it is not
+     * recoverable afterwards. The other part, time, is not recorded here: the core reports none
+     * (see {@link #elapsedMillis}) and the call latency this side measures is not the engine's.
      */
     @Column(name = "generations")
     private Integer generations;
 
+    /**
+     * What the core reported as its run time, kept as reported.
+     *
+     * <p>The core reports a reserved constant 0 here, on purpose, so that its answer stays
+     * reproducible (decision DT-2). This column is therefore always 0 for a finished job and
+     * measures nothing; it is kept because it is what the core said. The time this side
+     * measured is {@link #coreCallMillis}.
+     */
     @Column(name = "elapsed_millis")
     private Long elapsedMillis;
+
+    /**
+     * How long the call to the core took, measured by this side.
+     *
+     * <p>Wall-clock latency of the call that produced the plan: network, serialisation and the
+     * core's own queue included. It is not the cost of the engine and must not be used to
+     * compare engines. {@code null} for a job that has not succeeded, and for every job that
+     * finished before it was measured.
+     */
+    @Column(name = "core_call_millis")
+    private Long coreCallMillis;
 
     /**
      * Which curated state of the catalogue produced this plan.
@@ -191,9 +211,20 @@ public class PlanGenerationRequest {
         return generations;
     }
 
-    /** How long the core took, in milliseconds, or {@code null} until the job succeeds. */
+    /**
+     * The run time the core reported, or {@code null} until the job succeeds. Always 0 from the
+     * core by design: it does not measure time.
+     */
     public Long elapsedMillis() {
         return elapsedMillis;
+    }
+
+    /**
+     * How long the successful call to the core took, measured here, or {@code null} until the
+     * job succeeds and for jobs that finished before it was measured.
+     */
+    public Long coreCallMillis() {
+        return coreCallMillis;
     }
 
     /** Curated catalogue state used, or {@code null}. */
@@ -272,18 +303,21 @@ public class PlanGenerationRequest {
      * could not be known before the call. The cost of the run is recorded with it, for the same
      * reason: it exists only in the response.
      *
-     * @param at            instant it finished
-     * @param coreVersion   version of the optimiser that ran
-     * @param generations   how many generations it ran, as it reported
-     * @param elapsedMillis how long it took, as it reported
+     * @param at             instant it finished
+     * @param coreVersion    version of the optimiser that ran
+     * @param generations    how many generations it ran, as it reported
+     * @param elapsedMillis  how long it took, as it reported
+     * @param coreCallMillis how long the call that produced the plan took, as measured here
      */
-    public void succeed(Instant at, String coreVersion, int generations, long elapsedMillis) {
+    public void succeed(Instant at, String coreVersion, int generations, long elapsedMillis,
+            long coreCallMillis) {
         requireRunning();
         this.status = GenerationRequestStatus.READY;
         this.finishedAt = at;
         this.coreVersion = coreVersion;
         this.generations = generations;
         this.elapsedMillis = elapsedMillis;
+        this.coreCallMillis = coreCallMillis;
     }
 
     /**

@@ -10,6 +10,9 @@ import br.com.sinapse.platform.planning.internal.service.GenerationRequestServic
 import br.com.sinapse.platform.planning.internal.service.GenerationRequestService.ClaimedJob;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,6 +45,15 @@ import org.springframework.stereotype.Component;
  * job rather than one per attempt. The snapshot is still assembled afresh on each attempt and
  * recorded again before the call, so the stored document stays the one that was last sent.
  *
+ * <p><strong>The call is timed here.</strong> The core reports no run time (its
+ * {@code elapsedMillis} is a reserved 0, decision DT-2), so this side measures the wall-clock
+ * latency of the call: from just before the request is handed to the adapter until its
+ * answer has been read and checked. That includes the network, both serialisations and any
+ * wait in the core, and it is not the engine's cost. Each attempt times its own call, and only
+ * the one that produced the plan is recorded, with the plan. The application clock is a wall
+ * clock, so a step backwards between the two readings would give a negative duration; it is
+ * recorded as zero instead.
+ *
  * <p>Nothing here logs a snapshot, a payload or a response body. A failure is logged as its
  * kind and the job it belonged to.
  */
@@ -58,6 +70,7 @@ public class PlanGenerationOrchestrator {
     private final GeneratedPlanWriter writer;
     private final SeedSource seeds;
     private final ObjectMapper objectMapper;
+    private final Clock clock;
 
     /**
      * @param assembler    builds the snapshot
@@ -67,16 +80,18 @@ public class PlanGenerationOrchestrator {
      * @param seeds        where the seed comes from
      * @param objectMapper the application's mapper, which is also the one the client writes the
      *                     request body with
+     * @param clock        application clock, which times the call to the core
      */
     public PlanGenerationOrchestrator(SnapshotAssembler assembler, SinapseCore core,
             GenerationRequestService requests, GeneratedPlanWriter writer, SeedSource seeds,
-            ObjectMapper objectMapper) {
+            ObjectMapper objectMapper, Clock clock) {
         this.assembler = assembler;
         this.core = core;
         this.requests = requests;
         this.writer = writer;
         this.seeds = seeds;
         this.objectMapper = objectMapper;
+        this.clock = clock;
     }
 
     /**
@@ -94,8 +109,10 @@ public class PlanGenerationOrchestrator {
             requests.recordSubmission(job.id(), objectMapper.convertValue(request, DOCUMENT),
                     request.algorithmParams(), request.randomSeed());
 
+            Instant callStarted = clock.instant();
             PlanResponse response = core.generate(request);
-            writer.store(job, response);
+            long coreCallMillis = millisSince(callStarted);
+            writer.store(job, response, coreCallMillis);
         } catch (NothingToPlanException nothingToPlan) {
             LOG.info("Generation job {} had nothing to plan", job.id());
             requests.failOrRetry(job.id(), PlanGenerationFailure.NOTHING_TO_PLAN);
@@ -110,6 +127,11 @@ public class PlanGenerationOrchestrator {
             LOG.error("Generation job {} failed", job.id(), failure);
             requests.failOrRetry(job.id(), PlanGenerationFailure.INTERNAL);
         }
+    }
+
+    /** Milliseconds from {@code start} to now, never negative: the clock is a wall clock. */
+    private long millisSince(Instant start) {
+        return Math.max(0, Duration.between(start, clock.instant()).toMillis());
     }
 
     /** The seed an earlier attempt of this job recorded, or a fresh one for its first. */
