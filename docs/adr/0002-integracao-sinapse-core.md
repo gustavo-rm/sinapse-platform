@@ -1,8 +1,20 @@
 # ADR 0002 — Integração com o Sinapse Core
 
 **Data:** 04 de setembro de 2026
-**Status:** aceita, com a premissa do contexto emendada pela ADR 0015
-**Emendada por:** ADR 0015, que corrige a premissa de que o Core já seria consumível.
+**Status:** aceita, com a premissa do contexto emendada pela ADR 0017
+**Emendada por:** ADR 0017, que corrige a premissa de que o Core já seria consumível.
+
+## Atualização de 2026-10-05: o Core expõe `POST /plans`
+
+Esta nota não altera a decisão; registra que a afirmação da emenda de 17/09/2026 de que o Core "não expõe `POST /plans`" e de que "todo job de geração termina em `FAILED`" deixou de ser verdade. O Core passou a expor
+`POST /plans`, só com o perfil Spring `baseline-core` (`plan/PlanController.java:52-54,74` e
+`plan/PlanProtocol.java:20,30` em `exam-optimizer-application@3b54ba4`, lidos, não executados
+nesta revisão), e fala o contrato 1.0 desta plataforma: `contractVersion` `"1.0"`, `randomSeed`
+e tópicos por UUID (`coreapi/contract/PlanRequest.java:75,78,147`, mesmo commit, lido). A
+auditoria de 05/10/2026 gerou planos de ponta a ponta contra ele
+([PRONTIDAO_INTEGRACAO_AG.md](../PRONTIDAO_INTEGRACAO_AG.md), item A2e; execução da auditoria,
+não repetida aqui). O texto abaixo continua como foi aceito; o estado atual da integração está
+em [`docs/ai/INTEGRATION.md`](../ai/INTEGRATION.md).
 
 ## Emenda de 17 de setembro de 2026
 
@@ -13,7 +25,7 @@ executa, mas não é consumível por esta plataforma: não expõe `POST /plans` 
 `FAILED`. Leia a frase como "existe como repositório separado, ainda não integrável".
 
 A decisão registrada aqui — processo separado, geração assíncrona por job, snapshot
-persistido — não depende dessa premissa e continua valendo integralmente. O que a ADR 0015
+persistido — não depende dessa premissa e continua valendo integralmente. O que a ADR 0017
 decide é como os dois lados passam a falar o mesmo protocolo.
 
 ## Contexto

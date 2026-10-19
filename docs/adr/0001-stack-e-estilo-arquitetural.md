@@ -1,9 +1,21 @@
 # ADR 0001 — Stack e estilo arquitetural do backend da plataforma
 
 **Data:** 04 de setembro de 2026
-**Status:** aceita, com a premissa do contexto emendada pela ADR 0015
-**Emendada por:** ADR 0015, que corrige a premissa de que o Core já seria consumível e
+**Status:** aceita, com a premissa do contexto emendada pela ADR 0017
+**Emendada por:** ADR 0017, que corrige a premissa de que o Core já seria consumível e
 descarta o módulo compartilhado.
+
+## Atualização de 2026-10-05: o Core expõe `POST /plans`
+
+Esta nota não altera a decisão; registra que a afirmação da emenda de 17/09/2026 de que o Core "não expõe `POST /plans`" deixou de ser verdade. O Core passou a expor
+`POST /plans`, só com o perfil Spring `baseline-core` (`plan/PlanController.java:52-54,74` e
+`plan/PlanProtocol.java:20,30` em `exam-optimizer-application@3b54ba4`, lidos, não executados
+nesta revisão), e fala o contrato 1.0 desta plataforma: `contractVersion` `"1.0"`, `randomSeed`
+e tópicos por UUID (`coreapi/contract/PlanRequest.java:75,78,147`, mesmo commit, lido). A
+auditoria de 05/10/2026 gerou planos de ponta a ponta contra ele
+([PRONTIDAO_INTEGRACAO_AG.md](../PRONTIDAO_INTEGRACAO_AG.md), item A2e; execução da auditoria,
+não repetida aqui). O texto abaixo continua como foi aceito; o estado atual da integração está
+em [`docs/ai/INTEGRATION.md`](../ai/INTEGRATION.md).
 
 ## Emenda de 17 de setembro de 2026
 
@@ -16,7 +28,7 @@ executa, mas não é consumível por esta plataforma: não expõe `POST /plans` 
 separado, em Java, ainda não integrável".
 
 A justificativa "Contrato com o Core" diz que, com Java dos dois lados, o contrato "pode
-viver em módulo compartilhado versionado". Podia; não vive, e não vai viver. A ADR 0015
+viver em módulo compartilhado versionado". Podia; não vive, e não vai viver. A ADR 0017
 descarta o módulo compartilhado em favor de *records* duplicados validados contra JSON de
 referência, e com isso a classe de defeitos de integração que esta justificativa dizia
 eliminar volta a existir, detectada no build em vez de impedida na compilação.

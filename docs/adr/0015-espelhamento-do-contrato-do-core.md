@@ -5,6 +5,18 @@
 **Complementa:** ADR 0007, que exigiu que o contrato do Core fosse artefato versionado
 compartilhado pelos dois repositórios.
 
+## Atualização de 2026-10-05: o Core expõe `POST /plans`
+
+Esta nota não altera a decisão; registra que a afirmação do contexto de que o Core "hoje sequer expõe `POST /plans`" deixou de ser verdade. O Core passou a expor
+`POST /plans`, só com o perfil Spring `baseline-core` (`plan/PlanController.java:52-54,74` e
+`plan/PlanProtocol.java:20,30` em `exam-optimizer-application@3b54ba4`, lidos, não executados
+nesta revisão), e fala o contrato 1.0 desta plataforma: `contractVersion` `"1.0"`, `randomSeed`
+e tópicos por UUID (`coreapi/contract/PlanRequest.java:75,78,147`, mesmo commit, lido). A
+auditoria de 05/10/2026 gerou planos de ponta a ponta contra ele
+([PRONTIDAO_INTEGRACAO_AG.md](../PRONTIDAO_INTEGRACAO_AG.md), item A2e; execução da auditoria,
+não repetida aqui). O texto abaixo continua como foi aceito; o estado atual da integração está
+em [`docs/ai/INTEGRATION.md`](../ai/INTEGRATION.md).
+
 ## Contexto
 
 A ADR 0007 determinou que o contrato do Core vivesse em módulo compartilhado e versionado,

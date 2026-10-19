@@ -38,12 +38,12 @@ three keys, SP-8 item 3b) is deferred: STATE.md K18.
 | Interface affected | `PlanResponse.metadata.elapsedMillis` (or a new field: that would be a contract change) |
 | What the Core must do | Decide and implement under EOA-13; announce any contract change here first |
 | Depends on this | research use of `plan_generation_request.elapsed_millis` |
-| Status | acknowledged |
+| Status | done |
 
 Core answer read at other-repo@3b54ba4 (HANDOFF.md "Responses", row SP-H2): `elapsedMillis` stays
 a reserved 0 (DT-2, Core ADR-0008). Platform side: SP-8 item 3c adds `core_call_millis`, the
 latency of the call measured here; it is call latency (network, serialisation, the Core's
-queue), not engine cost. This request becomes done once that is on `origin/main`.
+queue), not engine cost. On `origin/main` since #23 (merge `6f879a4`, 2026-10-19): done.
 
 ### SP-H3 — GA engines on the real catalogue
 
@@ -81,6 +81,7 @@ Newest first, at most 20 entries; older ones leave (git keeps them).
 
 | Date | Change | Interface affected | Action required |
 |---|---|---|---|
+| 2026-10-19 | Platform SP-12: SP-H2 closed (`core_call_millis` on `origin/main` since #23); platform ADR "0015 ponte" renumbered to 0017; dated notes in platform ADRs 0001/0002/0015/0017 that the Core serves `POST /plans` (read at other-repo@3b54ba4) | none | Core: references to the platform's "ADR 0015" for the bridge decision now mean 0017 |
 | 2026-10-19 | Platform SP-8: engine set per deployment in the `algorithm-params` map and refused at startup when empty or null; `core_call_millis` measures the call; the three GA keys are still sent (item 3b deferred, K18) | none on the wire for the default configuration | none now. If item 3b regenerates the real-catalogue instances, it will be announced here under EOA-H2 |
 | 2026-10-08 | Platform SP-10 (#22): every attempt of a job sends the same `randomSeed`; a job orphaned mid-call is resent after ~12 min | none (same request shape; a resend relies on A3 determinism) | none for the Core |
 | 2026-10-08 | Core PR #35 merged: Core `docs/ai/` layer (`other-repo@40e6061`) | documentation only | platform: read it under the protocol (done in AI-1) |

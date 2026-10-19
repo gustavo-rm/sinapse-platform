@@ -1,9 +1,9 @@
 # ADR 0007 — Contrato do Core, job de geração e reprodutibilidade
 
 **Data:** 04 de setembro de 2026
-**Status:** aceita, com a alocação do contrato substituída pela ADR 0015
+**Status:** aceita, com a alocação do contrato substituída pela ADR 0017
 **Complementa:** ADR 0002, que decidiu o Core como processo separado e a geração assíncrona.
-**Substituída em parte por:** ADR 0015, quanto a onde o contrato vive.
+**Substituída em parte por:** ADR 0017, quanto a onde o contrato vive.
 
 ## Nota de atualização de 19 de outubro de 2026
 
@@ -24,7 +24,7 @@ Uma frase da seção "Conteúdo do contrato" abaixo — "O contrato vive em mód
 versionado, consumido pelos dois repositórios" — descreve algo que nunca existiu. O contrato
 vive só em `coreclient/contract`, nesta plataforma, e o outro repositório não o conhece. A
 frase permanece no texto porque ADR aceita não se reescreve; a decisão que vale no lugar dela
-é a da ADR 0015: *records* duplicados nos dois repositórios, validados contra JSON de
+é a da ADR 0017: *records* duplicados nos dois repositórios, validados contra JSON de
 referência versionado.
 
 O restante deste ADR não é afetado. Reprodutibilidade, fila, replanejamento e o conteúdo do

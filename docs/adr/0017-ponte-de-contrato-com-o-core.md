@@ -1,9 +1,29 @@
-# ADR 0015 — Ponte de contrato com o Core: duplicação e adaptador do lado do Core
+# ADR 0017 — Ponte de contrato com o Core: duplicação e adaptador do lado do Core
+
+> **Nota de renumeração (19 de outubro de 2026).** Este ADR foi aceito e publicado como
+> **ADR 0015**, em `docs/adr/0015-ponte-de-contrato-com-o-core.md`, no mesmo dia em que outro
+> ADR recebeu o mesmo número (`0015-espelhamento-do-contrato-do-core.md`). Pelo histórico do
+> git este é o mais novo dos dois (commit `65fb558`, 17/09/2026 23:30 UTC, contra `94753a3`,
+> 22:00 UTC), e por isso foi ele que recebeu o próximo número livre, 0017. Só o número e o
+> nome do arquivo mudaram; o texto abaixo é o aceito. Toda menção a "ADR 0015" nos ADRs 0001,
+> 0002 e 0007 se referia a este ADR e passou a dizer 0017; o espelhamento continua sendo 0015.
 
 **Data:** 17 de setembro de 2026
 **Status:** aceita
 **Emenda:** ADR 0001 e ADR 0002, cuja premissa de que o Core já é consumível não se sustenta.
 **Substitui em parte:** ADR 0007, no ponto em que o contrato viveria em módulo compartilhado.
+
+## Atualização de 2026-10-05: o Core expõe `POST /plans`
+
+Esta nota não altera a decisão; registra que a afirmação do contexto de que o Core "não expõe `POST /plans`" e a das consequências de que "todo job continua terminando em `FAILED`" deixou de ser verdade. O Core passou a expor
+`POST /plans`, só com o perfil Spring `baseline-core` (`plan/PlanController.java:52-54,74` e
+`plan/PlanProtocol.java:20,30` em `exam-optimizer-application@3b54ba4`, lidos, não executados
+nesta revisão), e fala o contrato 1.0 desta plataforma: `contractVersion` `"1.0"`, `randomSeed`
+e tópicos por UUID (`coreapi/contract/PlanRequest.java:75,78,147`, mesmo commit, lido). A
+auditoria de 05/10/2026 gerou planos de ponta a ponta contra ele
+([PRONTIDAO_INTEGRACAO_AG.md](../PRONTIDAO_INTEGRACAO_AG.md), item A2e; execução da auditoria,
+não repetida aqui). O texto abaixo continua como foi aceito; o estado atual da integração está
+em [`docs/ai/INTEGRATION.md`](../ai/INTEGRATION.md).
 
 ## Contexto
 
