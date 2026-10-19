@@ -7,7 +7,8 @@
 Este documento especifica o que não é derivável do modelo de domínio: as convenções
 transversais e os modelos de leitura. As operações de escrita seguem os agregados e estão
 descritas nos prompts 01 a 07; a especificação OpenAPI delas é gerada pelo springdoc a
-partir do código.
+partir do código, e um snapshot versionado dela fica em
+[`openapi/openapi.json`](openapi/openapi.json) (fluxo em [`openapi/README.md`](openapi/README.md)).
 
 ---
 

@@ -131,7 +131,7 @@ as ADRs is proposed in STATE.md (D-AI1).
 | Why is the architecture like this? | [ARQUITETURA_BACKEND_SINAPSE.md](../ARQUITETURA_BACKEND_SINAPSE.md), [adr/](../adr/) |
 | How does a Core failure become a job state? | [INTEGRACAO_CORE.md §2–3](../INTEGRACAO_CORE.md) |
 | Which response invariants are checked? | [CORE_CONTRACT_SURVEY.md §3](../CORE_CONTRACT_SURVEY.md) |
-| Which routes does a frontend use? | [CONTRATO_API_SINAPSE.md](../CONTRATO_API_SINAPSE.md), `/api-docs` |
+| Which routes does a frontend use? | [CONTRATO_API_SINAPSE.md](../CONTRATO_API_SINAPSE.md), [openapi/openapi.json](../openapi/openapi.json) (snapshot of `/api-docs`) |
 | How do I create and activate a local account? | [DESENVOLVIMENTO_LOCAL.md](../DESENVOLVIMENTO_LOCAL.md) |
 | How is the catalogue loaded? | [CARGA_DO_CATALOGO.md](../CARGA_DO_CATALOGO.md) |
 | What must the reverse proxy configuration be? | [PROXY_REVERSO.md](../PROXY_REVERSO.md) |
