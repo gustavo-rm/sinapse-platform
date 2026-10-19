@@ -5,6 +5,18 @@
 **Emendada por:** ADR 0017, que corrige a premissa de que o Core já seria consumível e
 descarta o módulo compartilhado.
 
+## Atualização de 2026-10-05: o Core expõe `POST /plans`
+
+Esta nota não altera a decisão; registra que a afirmação da emenda de 17/09/2026 de que o Core "não expõe `POST /plans`" deixou de ser verdade. O Core passou a expor
+`POST /plans`, só com o perfil Spring `baseline-core` (`plan/PlanController.java:52-54,74` e
+`plan/PlanProtocol.java:20,30` em `exam-optimizer-application@3b54ba4`, lidos, não executados
+nesta revisão), e fala o contrato 1.0 desta plataforma: `contractVersion` `"1.0"`, `randomSeed`
+e tópicos por UUID (`coreapi/contract/PlanRequest.java:75,78,147`, mesmo commit, lido). A
+auditoria de 05/10/2026 gerou planos de ponta a ponta contra ele
+([PRONTIDAO_INTEGRACAO_AG.md](../PRONTIDAO_INTEGRACAO_AG.md), item A2e; execução da auditoria,
+não repetida aqui). O texto abaixo continua como foi aceito; o estado atual da integração está
+em [`docs/ai/INTEGRATION.md`](../ai/INTEGRATION.md).
+
 ## Emenda de 17 de setembro de 2026
 
 Duas passagens abaixo não se sustentam contra o código e permanecem no texto porque ADR

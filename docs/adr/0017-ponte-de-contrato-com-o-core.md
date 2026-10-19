@@ -13,6 +13,18 @@
 **Emenda:** ADR 0001 e ADR 0002, cuja premissa de que o Core já é consumível não se sustenta.
 **Substitui em parte:** ADR 0007, no ponto em que o contrato viveria em módulo compartilhado.
 
+## Atualização de 2026-10-05: o Core expõe `POST /plans`
+
+Esta nota não altera a decisão; registra que a afirmação do contexto de que o Core "não expõe `POST /plans`" e a das consequências de que "todo job continua terminando em `FAILED`" deixou de ser verdade. O Core passou a expor
+`POST /plans`, só com o perfil Spring `baseline-core` (`plan/PlanController.java:52-54,74` e
+`plan/PlanProtocol.java:20,30` em `exam-optimizer-application@3b54ba4`, lidos, não executados
+nesta revisão), e fala o contrato 1.0 desta plataforma: `contractVersion` `"1.0"`, `randomSeed`
+e tópicos por UUID (`coreapi/contract/PlanRequest.java:75,78,147`, mesmo commit, lido). A
+auditoria de 05/10/2026 gerou planos de ponta a ponta contra ele
+([PRONTIDAO_INTEGRACAO_AG.md](../PRONTIDAO_INTEGRACAO_AG.md), item A2e; execução da auditoria,
+não repetida aqui). O texto abaixo continua como foi aceito; o estado atual da integração está
+em [`docs/ai/INTEGRATION.md`](../ai/INTEGRATION.md).
+
 ## Contexto
 
 Os ADRs 0001, 0002 e 0007 foram escritos sobre duas afirmações que a verificação contra o
