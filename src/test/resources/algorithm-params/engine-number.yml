@@ -1,0 +1,6 @@
+# A value the core would refuse as unusable-engine.
+sinapse:
+  planning:
+    generation:
+      algorithm-params:
+        engine: 42

@@ -1,0 +1,6 @@
+# A deployment that wrote the key and forgot the value.
+sinapse:
+  planning:
+    generation:
+      algorithm-params:
+        engine:

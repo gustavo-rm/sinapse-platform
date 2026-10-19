@@ -8,6 +8,7 @@ import jakarta.validation.constraints.PositiveOrZero;
 import java.time.Duration;
 import java.util.Map;
 import java.time.Period;
+import java.util.regex.Pattern;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;
 import org.springframework.validation.annotation.Validated;
@@ -75,7 +76,12 @@ public record PlanningProperties(
      *                                 on the job alongside the snapshot and the seed: without
      *                                 all four a plan generated today cannot be regenerated
      *                                 tomorrow. What they mean belongs to the core's own
-     *                                 contract, which is why they are an opaque map here
+     *                                 contract, which is why they are an opaque map here.
+     *                                 Stored as sent, which is not as applied: the core
+     *                                 ignores keys it does not read. Only the shape is checked
+     *                                 at startup: no empty key, no missing value, and an
+     *                                 {@code engine}, if present, that is a usable name.
+     *                                 Without {@code engine} the core runs its default engine
      * @param minEffortFactor          floor on the adjustment
      * @param maxEffortFactor          ceiling on the adjustment. THE BOUNDS ARE A JUDGEMENT,
      *                                 NOT A FINDING. They exist because an unbounded ratio lets
@@ -106,5 +112,50 @@ public record PlanningProperties(
             @Positive @DefaultValue("0.5") double minEffortFactor,
 
             @Positive @DefaultValue("2.0") double maxEffortFactor) {
+
+        /** The one key of {@link #algorithmParams} this side looks at, and only to refuse it. */
+        static final String ENGINE_PARAM = "engine";
+
+        /** What an engine name may look like. Which names exist is the core's to say. */
+        private static final Pattern ENGINE_NAME = Pattern.compile("[a-z0-9-]+");
+
+        /**
+         * Refuses, at startup, a parameter map the core would refuse on every run.
+         *
+         * <p>The core answers a {@code null} value with {@code 400} and an empty engine name
+         * with {@code 422}, and neither falls back to its default: a deployment that wrote
+         * {@code engine:} with nothing after it would fail every job of every student, one at a
+         * time, as a rejection. The same holds for an empty value under any other key. Failing
+         * here turns that into one message at startup. Which engines exist and which keys the
+         * core applies are deliberately not checked: the core knows, it refuses an unknown name
+         * itself, and a list copied here would go stale.
+         */
+        public Generation {
+            requireUsable(algorithmParams);
+        }
+
+        private static void requireUsable(Map<String, Object> algorithmParams) {
+            if (algorithmParams == null) {
+                return;
+            }
+            algorithmParams.forEach((key, value) -> {
+                if (key == null || key.isBlank()) {
+                    throw new IllegalArgumentException(
+                            "sinapse.planning.generation.algorithm-params has an empty key");
+                }
+                if (value == null || value instanceof String text && text.isBlank()) {
+                    throw new IllegalArgumentException("sinapse.planning.generation."
+                            + "algorithm-params." + key + " has no value; remove the key to "
+                            + "leave it to the core's default");
+                }
+            });
+            Object engine = algorithmParams.get(ENGINE_PARAM);
+            if (engine != null && !(engine instanceof String name
+                    && ENGINE_NAME.matcher(name).matches())) {
+                throw new IllegalArgumentException("sinapse.planning.generation.algorithm-params."
+                        + ENGINE_PARAM + " must be a non-empty engine name of lowercase letters, "
+                        + "digits and hyphens; remove the key to run the core's default engine");
+            }
+        }
     }
 }

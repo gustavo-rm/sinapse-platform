@@ -1,0 +1,6 @@
+# A name outside [a-z0-9-]+.
+sinapse:
+  planning:
+    generation:
+      algorithm-params:
+        engine: GA

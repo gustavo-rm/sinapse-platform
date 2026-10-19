@@ -1,0 +1,6 @@
+# A deployment that names the engine in its own configuration file.
+sinapse:
+  planning:
+    generation:
+      algorithm-params:
+        engine: ga-timeline
