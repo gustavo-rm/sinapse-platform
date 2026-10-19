@@ -20,8 +20,10 @@ import org.springframework.transaction.annotation.Transactional;
  * forever, and a plan with no finished job would be a plan nobody asked for.
  *
  * <p>Everything the core answered is kept. The fitness map goes to the plan whole, whatever
- * terms it declares; the generations and the elapsed time go to the job, because they are the
- * cost of the run and nothing else records them.
+ * terms it declares — the engine that ran and the build of the core included, since the core
+ * reports both there; the generations and the elapsed time it reported go to the job. So does
+ * the latency of the call as this side measured it, in the same transaction, so that a call
+ * that did not produce a plan leaves no measurement behind.
  *
  * <p>It is a component of its own so that the transaction is real. The orchestrator that calls
  * it spends minutes waiting on HTTP and must not be inside a transaction; a method annotated on
@@ -45,12 +47,13 @@ public class GeneratedPlanWriter {
     /**
      * Stores the plan and closes the job.
      *
-     * @param job      the job that produced it
-     * @param response what the core answered
+     * @param job            the job that produced it
+     * @param response       what the core answered
+     * @param coreCallMillis how long the call that produced the answer took, as measured here
      * @return the stored plan
      */
     @Transactional
-    public StudyPlanView store(ClaimedJob job, PlanResponse response) {
+    public StudyPlanView store(ClaimedJob job, PlanResponse response, long coreCallMillis) {
         List<StudyPlanService.ScheduledSession> sessions = response.sessions().stream()
                 .map(GeneratedPlanWriter::sessionOf)
                 .toList();
@@ -58,7 +61,8 @@ public class GeneratedPlanWriter {
         StudyPlanView plan = plans.store(job.accountId(), job.id(), job.horizonStart(),
                 job.horizonEnd(), response.fitness(), sessions);
         PlanResponse.ExecutionMetadata run = response.metadata();
-        requests.succeed(job.id(), run.coreVersion(), run.generations(), run.elapsedMillis());
+        requests.succeed(job.id(), run.coreVersion(), run.generations(), run.elapsedMillis(),
+                coreCallMillis);
         return plan;
     }
 

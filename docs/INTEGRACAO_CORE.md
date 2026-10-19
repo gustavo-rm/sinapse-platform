@@ -18,11 +18,90 @@ tela. Tudo aqui foi lido no código; onde há um achado, ele está marcado como 
 Verificados no SP-0 e não alterados. Do lado do Core, `POST /plans` só existe com o perfil
 `baseline-core` ativo; sem ele a rota responde `404`.
 
-**Qual motor responde** é escolhido por requisição, em `algorithmParams.engine`. Do lado da
-plataforma isso é uma única chave, `sinapse.planning.generation.algorithm-params.engine`. Sem
-ela, o Core usa o próprio padrão (`plan.engine.default`, hoje `greedy-baseline`). Motores
-registrados: `greedy-baseline` e `ga`. Um nome desconhecido é recusado com `422`, nunca
-substituído pelo padrão.
+### 1.1 Qual motor responde
+
+O Core escolhe o motor por requisição, pela chave `algorithmParams.engine`. A plataforma envia
+essa chave a partir da configuração da **implantação**: é uma entrada do mapa
+`sinapse.planning.generation.algorithm-params`, e nada além disso. Nenhuma rota, nenhum corpo de
+requisição e nenhum dado do aluno chega a esse mapa.
+
+**Isto não é atribuição de condição.** Todos os alunos de uma implantação recebem o mesmo motor.
+Atribuir motores diferentes a alunos ou contas é desenho de experimento, com questões éticas e de
+LGPD (CLAUDE.md §7, J2), e é decisão de pesquisa, não de engenharia. Não existe, e não deve ser
+criado sem essa decisão.
+
+Motores registrados no Core hoje (lidos em `exam-optimizer-application@3b54ba4`, README,
+"Choosing the engine per request"): `greedy-baseline` (o padrão), `ga` e `ga-timeline`. A
+plataforma **não** guarda essa lista em código: quem sabe quais motores existem é o Core.
+
+**Como definir o motor.** As três formas abaixo funcionam; `AlgorithmParamsConfigurationTest`
+sobe uma aplicação Spring de verdade com cada uma e confere o mapa resultante:
+
+| Forma | Exemplo |
+|---|---|
+| Arquivo de configuração | `sinapse.planning.generation.algorithm-params.engine: ga-timeline` |
+| `SPRING_APPLICATION_JSON` | `{"sinapse":{"planning":{"generation":{"algorithm-params":{"engine":"ga-timeline"}}}}}` |
+| Variável de ambiente | `SINAPSE_PLANNING_GENERATION_ALGORITHMPARAMS_ENGINE=ga-timeline` |
+
+A variável de ambiente funciona porque `engine` não tem hífen. Uma chave com hífen (por exemplo
+`population-size`) **não** pode ser escrita como variável de ambiente: o hífen se perde e a chave
+chega como outra (`populationsize`). Para essas, use o arquivo ou o `SPRING_APPLICATION_JSON`.
+
+**Padrão.** Sem a chave `engine`, o corpo enviado não a contém e o Core roda o próprio padrão
+(`plan.engine.default`, hoje `greedy-baseline`, o guloso). É a configuração padrão da plataforma.
+Para usar o padrão, **omita** a chave: o Core não trata vazio nem nulo como padrão.
+
+A tabela abaixo resume o README do Core, seção "Choosing the engine per request", lida em
+`exam-optimizer-application@3b54ba4`. A fonte é aquela seção, que também documenta as outras três
+chaves que o Core aplica (`importance`, `precedence`, `provenance`); se divergirem, vale o README.
+
+| O que chegaria ao Core | Resposta do Core |
+|---|---|
+| sem a chave `engine` | `200`, motor padrão |
+| nome registrado | `200`, aquele motor |
+| `""` (texto vazio) | `422` `.../errors/unknown-engine` |
+| nome desconhecido | `422` `.../errors/unknown-engine`, nunca o padrão |
+| valor não textual, por exemplo `42` | `422` `.../errors/unusable-engine` |
+| `null` | `400` `.../errors/malformed-body`, antes de o Core escolher o motor |
+
+**O que a plataforma recusa na partida.** Para que vazio e nulo nunca cheguem ao Core, a
+aplicação não sobe quando o mapa tem chave vazia, valor nulo ou texto vazio em qualquer chave, ou
+um `engine` que não seja texto no formato `[a-z0-9-]+` (`PlanningProperties.Generation` e
+`AlgorithmParamsStartupCheck`). Atenção ao YAML: `engine:` sem valor chega ao Spring como texto
+vazio, e `"engine": null` no `SPRING_APPLICATION_JSON` simplesmente sumiria do mapa (o motor
+padrão seria usado em silêncio); os dois casos derrubam a partida. Um nome bem formado mas
+desconhecido passa pela partida e é recusado pelo Core: o job termina `FAILED` com
+`CORE_REJECTED`, sem nova tentativa e sem expor ao aluno endereço, status ou corpo do Core
+(`EngineSelectionIntegrationTest`).
+
+### 1.2 O que fica gravado de cada execução
+
+| O quê | Onde | Significado |
+|---|---|---|
+| Motor **pedido** | `plan_generation_request.algorithm_params` (`jsonb`), chave `engine` | O mapa **como a plataforma o enviou**. Registra o que foi pedido, não o que foi aplicado: o Core ignora chaves que não lê |
+| Motor **efetivo** | `study_plan.fitness` (`jsonb`), chave `engine` | O motor que o Core declara ter rodado. O `fitness` é gravado inteiro desde antes desta mudança; não houve coluna nova para o motor |
+| Build do Core | `study_plan.fitness`, chave `build` | O commit do Core que produziu o plano (Core EOA-13). Grava-se junto com o resto do `fitness`, sem código novo. `core_version` é a versão Maven e **não** identifica o build |
+| `elapsed_millis` | `plan_generation_request.elapsed_millis` (`bigint`) | O que o Core devolveu em `metadata.elapsedMillis`: **reservado pelo Core, sempre 0, não mede tempo** (decisão DT-2). Continua sendo gravado como veio |
+| `core_call_millis` | `plan_generation_request.core_call_millis` (`bigint`, anulável, `V9`) | Latência da chamada ao Core medida pela plataforma (abaixo) |
+
+**`core_call_millis` é latência de chamada, não custo do motor.** O orquestrador lê o relógio da
+aplicação logo antes de entregar a requisição ao adaptador e logo depois de a resposta ter sido
+lida e validada. O número inclui rede, serialização e desserialização dos dois lados, a validação
+da resposta e qualquer fila no Core. **Não use esta coluna para comparar motores.** O custo do
+motor, para a tese, sai do *harness* de medição do Core (EOA-M, EOA-9b), que mede a chamada ao
+motor sem rede nem fila.
+
+Regras da coluna:
+
+- cada tentativa mede a própria chamada; fica gravada só a da tentativa que produziu o plano, na
+  mesma transação que grava o plano e o `READY`. Uma chamada que falha não grava nada;
+- `NULL` quer dizer "não medido": jobs que terminaram antes da migração `V9`, jobs que falharam e
+  jobs ainda não concluídos. Nunca se confunde com `0`;
+- o relógio da aplicação é de parede (não há fonte monotônica no repositório). Se ele andar para
+  trás durante a chamada, a duração negativa é gravada como `0`. Um ajuste de relógio durante a
+  chamada distorce o valor; é uma limitação conhecida;
+- a coluna não aparece em nenhuma rota de aluno, em nenhum DTO público nem no OpenAPI
+  (`CoreCallMillisIntegrationTest`).
 
 ---
 
@@ -175,25 +254,54 @@ SINAPSE_E2E_CORE_ENGINE=ga SINAPSE_E2E_CORE_JAR=... ./mvnw verify -Pcore-e2e
 
 Sem nenhuma das duas variáveis, o teste **falha** dizendo o que falta. Ele não é pulado.
 
+### 4.1 Os três motores contra um mesmo Core
+
+`GreedyBaselineEngineEndToEndIntegrationTest`, `GaEngineEndToEndIntegrationTest` e
+`GaTimelineEngineEndToEndIntegrationTest` (mesma tag `core-e2e`, base `EngineMatrixEndToEnd`)
+são três implantações da plataforma, cada uma nomeando um motor no mapa, contra o mesmo Core.
+Cada uma cria uma conta sintética nova, usa o cenário pequeno do teste acima (quatro tópicos, três
+arestas `HARD`) e confere: job em `READY` (o plano passou por `validated`), motor efetivo gravado
+em `study_plan.fitness.engine` igual ao pedido, sessões gravadas e `core_call_millis` preenchido e
+não negativo. Não afirmam nada sobre qualidade de plano. Cada uma imprime uma linha
+`ENGINE-MATRIX` com estado, motor efetivo, número de sessões e `core_call_millis`.
+
+```bash
+SINAPSE_E2E_CORE_URL=http://localhost:8090 ./mvnw verify -Pcore-e2e
+```
+
+Se o motor efetivo for diferente do pedido, a mensagem começa com `STOP`: o Core não estaria
+honrando `algorithmParams.engine`.
+
 ---
 
 ## 5. Achados
 
-1. **`elapsedMillis` chega sempre zerado.** Os dois motores do Core enviam `0` de propósito
-   (`GreedyBaselineScheduler.ELAPSED_MILLIS` e `GeneticPlanEngine.ELAPSED_MILLIS`): medir o
-   tempo quebraria a reprodutibilidade byte a byte, e a decisão foi tomada quando a plataforma
-   ainda descartava o campo. Hoje a plataforma grava `elapsed_millis` (SP-3), mas o valor é
-   sempre `0`. **O lado do custo na comparação AG × guloso continua sem dado.** Resolver isso é
-   decisão do Core, por exemplo informar o tempo fora da parte comparada da resposta, e não da
-   plataforma.
+1. **`elapsedMillis` chega sempre zerado, por decisão.** Os três motores do Core enviam `0` de
+   propósito: medir o tempo quebraria a reprodutibilidade da resposta. O dono do projeto decidiu
+   em 08/10/2026 (DT-2) que continua assim e que a plataforma mede a chamada. A plataforma segue
+   gravando `elapsed_millis` como veio (sempre `0`) e grava a latência que ela mesma mede em
+   `core_call_millis` (§1.2). Isso **não** fecha o lado do custo da comparação AG × guloso: esse
+   número sai do *harness* do Core.
 2. **`algorithm_params` grava parâmetros que o Core não usa.** A plataforma envia e grava
    `generations: 400`, `population-size: 120` e `mutation-rate: 0.05`. O Core ignora esses três
-   e roda o AG com a própria configuração (`plan.engine.ga.generations=60`,
-   `population-size=40`). O registro do job afirma parâmetros que não rodaram, e os que rodaram
-   não ficam em lugar nenhum além de `core_version` (que identifica o build, não a
-   configuração implantada). Isso fere a reprodutibilidade do ADR 0007.
+   (confirmado por execução no Core, EOA-13) e roda o AG com a própria configuração (60
+   gerações, população 40). O dono decidiu em 08/10/2026 (D4 do Core, Variante 1) que os
+   hiperparâmetros são do Core e que a plataforma para de enviá-los. **A retirada ainda não foi
+   feita** (SP-8, item 3b adiado): as três instâncias de catálogo real em
+   `src/test/resources/instances/`, copiadas byte a byte pelo Core, carregam essas três chaves, e
+   `RealCatalogInstancesTest` exige que a configuração de produção as reproduza. Tirá-las exige
+   regenerar e anunciar as instâncias (pedido EOA-H2 do Core), o que é decisão do dono. Enquanto
+   isso, `algorithm_params` registra o que a plataforma **enviou**, não o que rodou; o que rodou
+   está em `study_plan.fitness` (motor, build e, nos motores AG, `importance-strategy` e
+   `precedence-policy`) e em `generations`.
 3. **Um `500` por violação de invariante no Core é tratado como indisponibilidade.** Esse caso
    (`plan-invariant-violation`) é defeito, não instabilidade. Com o motor guloso, que é
    determinístico, as novas tentativas gastam o orçamento repetindo o mesmo erro.
 4. **Resolvido:** um job cujo worker morria ficava em `RUNNING` para sempre e bloqueava a
    conta com `409`. Hoje o worker o recupera (§3.2).
+5. **O motor efetivo já aparece em rotas de aluno.** O `fitness` é exposto inteiro, de propósito,
+   em `GET /api/v1/study-plans/current`, `/study-plans/{id}`, no histórico e no resumo do plano
+   (`FitnessReportIntegrationTest` exige isso), e o Core põe nele `engine` e `build`. A regra de
+   não expor o motor ao aluno, portanto, não vale hoje para o `fitness`. Filtrar a chave exigiria
+   nomear um termo do `fitness` em `src/main`, o que `FitnessTermNamesAreNotCompiledTest` proíbe.
+   Mudar isso é decisão do dono (STATE.md K17).

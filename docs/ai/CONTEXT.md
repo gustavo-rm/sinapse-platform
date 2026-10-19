@@ -106,7 +106,7 @@ requests between the two: [HANDOFF.md](./HANDOFF.md).
 
 ## Decisions recorded here
 
-ADRs live in [docs/adr/](../adr/). The two owner decisions below have no ADR yet; recording them
+ADRs live in [docs/adr/](../adr/). The owner decisions below have no ADR yet; recording them
 as ADRs is proposed in STATE.md (D-AI1).
 
 - Frontend is Angular, served on the same origin as the API behind a reverse proxy; the teacher
@@ -115,6 +115,10 @@ as ADRs is proposed in STATE.md (D-AI1).
   [PROXY_REVERSO.md](../PROXY_REVERSO.md) and ADR 0009 (CSRF off, `SameSite=Strict`).
 - LGPD: no student or personal data in documents, logs or commits; test accounts are synthetic.
   DECISION(stated by project owner); the code-level rules are [CLAUDE.md §10](../../CLAUDE.md).
+- Core D4 = Variant 1: the Core owns the GA hyperparameters (`generations`, `population-size`,
+  `mutation-rate`); the platform stops sending them. DECISION(project owner, 2026-10-08)
+- DT = DT-2: the Core keeps `metadata.elapsedMillis = 0` (reserved, reproducible response); the
+  platform measures the call's wall time in `core_call_millis`. DECISION(project owner, 2026-10-08)
 
 ## Where to find what
 

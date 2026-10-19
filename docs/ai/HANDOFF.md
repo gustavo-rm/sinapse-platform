@@ -18,26 +18,32 @@ Status values: `open` | `acknowledged` | `done`.
 | Interface affected | `PlanRequest.algorithmParams` (open map; no contract version change); `PlanResponse.fitness` |
 | What the Core must do | Execute EOA-13 item 0; answer item 0b in its HANDOFF.md citing SP-H1 |
 | Depends on this | SP-8 item 3b |
-| Status | open |
+| Status | done |
 
-Partial answer already visible in the Core, by reading only: the three keys are not read in
-`src/main`, and `fitness` already carries `engine`, `prerequisite-provenance` and (GA engines only)
-`importance-strategy`, `precedence-policy`. other-repo@40e6061:docs/ai/INTEGRATION.md
-"algorithmParams — index" and "Effective values in the response". Item (a) is still unexecuted.
+Answered by the Core's EOA-13 (#36), read at other-repo@3b54ba4 (its HANDOFF.md "Responses", row
+SP-H1, and INTEGRATION.md "algorithmParams — index"): (a) executed, the three keys do not change
+the plan (`HiperparametrosDoCoreHttpTest`), deliberate since Core D4; (b) `fitness` reports the
+effective `importance-strategy` and `precedence-policy` for `ga` and `ga-timeline` and
+`prerequisite-provenance` for every engine; nothing for greedy, where they do not apply. The
+platform stores `fitness` whole, so all of it is on the plan. Platform follow-up (removing the
+three keys, SP-8 item 3b) is deferred: STATE.md K18.
 
 ### SP-H2 — `metadata.elapsedMillis` is always 0
 
 | Field | Value |
 |---|---|
 | Date | 2026-10-08 (registered here; raised by the 2026-10-05 audit) |
-| What changes or is needed | A real run duration, reported somewhere that does not break byte-for-byte reproducibility (Core EOA-13 Part A) |
+| What changes or is needed | A real run duration, reported somewhere that does not break byte-for-byte reproducibility (Core EOA-13 Part A). Decided DT-2: the Core keeps 0; the platform measures the call |
 | Why | The platform stores `elapsed_millis` for the cost side of the GA × greedy comparison; today it is always 0 (STATE.md K4) |
 | Interface affected | `PlanResponse.metadata.elapsedMillis` (or a new field: that would be a contract change) |
 | What the Core must do | Decide and implement under EOA-13; announce any contract change here first |
 | Depends on this | research use of `plan_generation_request.elapsed_millis` |
-| Status | open |
+| Status | acknowledged |
 
-The Core tracks it as other-repo@40e6061:docs/ai/STATE.md K5 and EOA-13 (blocked on its D4).
+Core answer read at other-repo@3b54ba4 (HANDOFF.md "Responses", row SP-H2): `elapsedMillis` stays
+a reserved 0 (DT-2, Core ADR-0008). Platform side: SP-8 item 3c adds `core_call_millis`, the
+latency of the call measured here; it is call latency (network, serialisation, the Core's
+queue), not engine cost. This request becomes done once that is on `origin/main`.
 
 ### SP-H3 — GA engines on the real catalogue
 
@@ -58,7 +64,7 @@ other-repo@40e6061:docs/ai/STATE.md "Work".
 
 | Their ID | Read at | Response | Status |
 |---|---|---|---|
-| EOA-H1 | other-repo@40e6061 | Agreed. When SP-8 item 3b is written, it will reference the Core README `algorithmParams` section instead of restating it; this repository's [INTEGRATION.md](./INTEGRATION.md) already points to the Core's INTEGRATION.md for the keys. SP-8 is pending (STATE.md) | acknowledged |
+| EOA-H1 | other-repo@3b54ba4 | Agreed. SP-8 cites the Core README "Choosing the engine per request" as the source; [INTEGRACAO_CORE.md §1.1](../INTEGRACAO_CORE.md) keeps only the engine-key answers a deployment needs, marked as read there, with the README winning on any difference. Item 3b, the part that touches the three ignored keys, is deferred (STATE.md K18) | acknowledged |
 | EOA-H2 | other-repo@40e6061 | Agreed: a regeneration of `src/test/resources/instances/*.json` will be announced here with the new SHA. The files have not changed since `cbb5529` (READ, `git log -- src/test/resources/instances`@e4c0be0), and all three SHA-256 values match the Core's copies. OBSERVED(e4c0be0 / other-repo@40e6061, `sha256sum` on both clones). `RealCatalogInstancesTest` checks here that they still come out of the generator (READ; needs DB, not run) | acknowledged |
 
 Answers to items the Core lists as unknown about this repository (not requests; for its next read):
@@ -75,6 +81,7 @@ Newest first, at most 20 entries; older ones leave (git keeps them).
 
 | Date | Change | Interface affected | Action required |
 |---|---|---|---|
+| 2026-10-19 | Platform SP-8: engine set per deployment in the `algorithm-params` map and refused at startup when empty or null; `core_call_millis` measures the call; the three GA keys are still sent (item 3b deferred, K18) | none on the wire for the default configuration | none now. If item 3b regenerates the real-catalogue instances, it will be announced here under EOA-H2 |
 | 2026-10-08 | Platform SP-10 (#22): every attempt of a job sends the same `randomSeed`; a job orphaned mid-call is resent after ~12 min | none (same request shape; a resend relies on A3 determinism) | none for the Core |
 | 2026-10-08 | Core PR #35 merged: Core `docs/ai/` layer (`other-repo@40e6061`) | documentation only | platform: read it under the protocol (done in AI-1) |
 | 2026-10-08 | Core PR #33/#34 merged: engine selection pinned over HTTP; `ga-timeline` registered | `algorithmParams.engine` (documentation and tests) | platform: INTEGRACAO_CORE.md §1 engine list is stale (STATE.md K12) |

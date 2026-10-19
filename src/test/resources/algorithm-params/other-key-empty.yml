@@ -1,0 +1,6 @@
+# Any key without a value, not only the engine.
+sinapse:
+  planning:
+    generation:
+      algorithm-params:
+        importance:

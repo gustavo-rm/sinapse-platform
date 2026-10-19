@@ -1,0 +1,6 @@
+# A deployment that wrote YAML's explicit null.
+sinapse:
+  planning:
+    generation:
+      algorithm-params:
+        engine: ~
