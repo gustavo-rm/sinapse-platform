@@ -1,4 +1,12 @@
-# ADR 0015 — Ponte de contrato com o Core: duplicação e adaptador do lado do Core
+# ADR 0017 — Ponte de contrato com o Core: duplicação e adaptador do lado do Core
+
+> **Nota de renumeração (19 de outubro de 2026).** Este ADR foi aceito e publicado como
+> **ADR 0015**, em `docs/adr/0015-ponte-de-contrato-com-o-core.md`, no mesmo dia em que outro
+> ADR recebeu o mesmo número (`0015-espelhamento-do-contrato-do-core.md`). Pelo histórico do
+> git este é o mais novo dos dois (commit `65fb558`, 17/09/2026 23:30 UTC, contra `94753a3`,
+> 22:00 UTC), e por isso foi ele que recebeu o próximo número livre, 0017. Só o número e o
+> nome do arquivo mudaram; o texto abaixo é o aceito. Toda menção a "ADR 0015" nos ADRs 0001,
+> 0002 e 0007 se referia a este ADR e passou a dizer 0017; o espelhamento continua sendo 0015.
 
 **Data:** 17 de setembro de 2026
 **Status:** aceita
