@@ -29,21 +29,32 @@ is a separate, already functional repository, consumed over HTTP.
 src/main/java/br/com/sinapse/platform
 ├── identity/          account, credentials, roles, guardian, consent
 ├── curriculum/        subject, topic, prerequisites
+├── curation/          command-line catalogue importer (profile catalog; no HTTP surface)
 ├── educational/       teacher, classroom, invite, enrollment
 ├── learningrecord/    executed study sessions (append-only)
 ├── planning/          availability, goals, generation job, study plan
 │   └── orchestration/ composes modules, calls the core, stores the plan
-├── coreclient/        adapter for the Sinapse Core
+├── coreclient/        adapter for the Sinapse Core (api/, contract/, internal/)
+├── datarights/        data subject rights coordinator: erasure, export, disclosure
+├── readmodel/         read models, one shape per screen, composed across modules
 └── shared/
 
 src/main/resources/db/migration/   Flyway
 docs/                              architecture and ADRs (Portuguese)
 docs/adr/                          architecture decision records
+docs/ai/                           context layer for agents (see "AI context protocol")
+docs/openapi/                      versioned OpenAPI snapshot and its regeneration flow
 docs/prompts/                      numbered implementation prompts
 ```
 
-Every module has `api/` (public interfaces and DTOs) and `internal/`.
+Every module has `api/` (public interfaces and DTOs) and `internal/`, except `curation`, which
+has only `internal/` because nothing else may call it, and `shared`, which is organised by
+concern (`config`, `security`, `web`, …).
 Nothing outside a module may import its `internal/` package.
+
+`curation`, `datarights` and `readmodel` are not bounded contexts: `curation` is an
+administrative tool (ADR 0014); `datarights` (ADR 0011) and `readmodel` (ADR 0013) are, with
+`planning.orchestration`, the only components allowed to know more than one module.
 
 ## 4. Language and Git conventions
 
@@ -275,7 +286,8 @@ Before any non-trivial task:
 After the task, in the SAME PR as the code:
 
 4. Update your row in STATE.md (edit only your own task row to avoid merge conflicts), known issues
-   and open decisions.
+   and open decisions. Write your own row as done in the PR that finishes it, adding the PR number
+   in a second commit; a row left in-progress inside its own PR is stale the moment it merges.
 5. Add or close entries in HANDOFF.md when the change affects the other repository.
 6. Record an ADR (or a DECISION line in CONTEXT.md if the repository has no ADR directory) for any
    decision that someone with authority actually made. Never record a proposal as a decision.
