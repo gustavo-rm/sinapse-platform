@@ -58,7 +58,9 @@ class RealCatalogInstancesTest extends RealCatalogInstanceSupport {
         assertThat(request.goals()).isNotEmpty().doesNotContainNull();
         assertThat(request.topics()).isNotEmpty().doesNotContainNull();
         assertThat(request.prerequisites()).doesNotContainNull();
-        assertThat(request.algorithmParams()).isNotEmpty();
+        assertThat(request.algorithmParams())
+                .as("exactly the map the default configuration produces, nothing more or less")
+                .isEqualTo(productionAlgorithmParams());
         assertThat(serialise(request))
                 .as("nothing is lost or added on the way through the record")
                 .isEqualTo(committed);

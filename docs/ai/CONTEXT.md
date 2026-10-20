@@ -119,6 +119,9 @@ as ADRs is proposed in STATE.md (D-AI1); draft texts in [PROPOSTAS_DE_ADR.md](..
   DECISION(stated by project owner); the code-level rules are [CLAUDE.md §10](../../CLAUDE.md).
 - Core D4 = Variant 1: the Core owns the GA hyperparameters (`generations`, `population-size`,
   `mutation-rate`); the platform stops sending them. DECISION(project owner, 2026-10-08)
+- SP-8-3b = option A: regenerate the real-catalogue instances without those three keys and
+  announce them to the Core; pinning them in the generator (option B) discarded. Done by SP-8b.
+  DECISION(project owner, 2026-10-20)
 - DT = DT-2: the Core keeps `metadata.elapsedMillis = 0` (reserved, reproducible response); the
   platform measures the call's wall time in `core_call_millis`. DECISION(project owner, 2026-10-08)
 

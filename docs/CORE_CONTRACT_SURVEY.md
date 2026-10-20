@@ -216,8 +216,9 @@ return new PlanRequest.Topic(topic.id(), topic.subjectId(), topic.position(),
 A second set of tuning numbers carries an equivalent disclaimer — the effort-factor guards
 at `application.yml:332-339` ("THESE ARE A JUDGEMENT, NOT A FINDING"):
 `min-calibration-sessions: 5`, `min-effort-factor: 0.5`, `max-effort-factor: 2.0`. The
-algorithm parameters sent on every run are at `application.yml:328-331`:
-`population-size: 120`, `generations: 400`, `mutation-rate: 0.05`.
+algorithm parameters sent on every run were `population-size: 120`, `generations: 400`,
+`mutation-rate: 0.05` when this survey was written; since SP-8b (2026-10-20) `application.yml`
+declares none, and the default map is sent empty (`docs/ai/INTEGRATION.md`).
 
 ---
 

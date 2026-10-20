@@ -51,6 +51,12 @@ chega como outra (`populationsize`). Para essas, use o arquivo ou o `SPRING_APPL
 (`plan.engine.default`, hoje `greedy-baseline`, o guloso). É a configuração padrão da plataforma.
 Para usar o padrão, **omita** a chave: o Core não trata vazio nem nulo como padrão.
 
+**O que vai no mapa hoje.** A configuração padrão não declara nenhuma entrada, então a plataforma
+envia `"algorithmParams": {}` mais o que a implantação acrescentar (na prática, só `engine`); não
+envia mais `generations`, `population-size` nem `mutation-rate`, que são do Core (D4 do Core,
+Variante 1). Uma implantação que as reponha não é recusada: elas vão no corpo, o Core as ignora e
+registra um aviso, e `algorithm_params` as grava como enviadas (`DefaultAlgorithmParamsIntegrationTest`).
+
 A tabela abaixo resume o README do Core, seção "Choosing the engine per request", lida em
 `exam-optimizer-application@3b54ba4`. A fonte é aquela seção, que também documenta as outras três
 chaves que o Core aplica (`importance`, `precedence`, `provenance`); se divergirem, vale o README.
@@ -78,7 +84,7 @@ desconhecido passa pela partida e é recusado pelo Core: o job termina `FAILED` 
 
 | O quê | Onde | Significado |
 |---|---|---|
-| Motor **pedido** | `plan_generation_request.algorithm_params` (`jsonb`), chave `engine` | O mapa **como a plataforma o enviou**. Registra o que foi pedido, não o que foi aplicado: o Core ignora chaves que não lê |
+| Motor **pedido** | `plan_generation_request.algorithm_params` (`jsonb`), chave `engine` | O mapa **como a plataforma o enviou**. Registra o que foi pedido, não o que foi aplicado: o Core ignora chaves que não lê. As linhas gravadas antes do SP-8b trazem `generations`, `population-size` e `mutation-rate`: valores pedidos e **não** aplicados. As novas, na configuração padrão, não trazem nenhuma das três |
 | Motor **efetivo** | `study_plan.fitness` (`jsonb`), chave `engine` | O motor que o Core declara ter rodado. O `fitness` é gravado inteiro desde antes desta mudança; não houve coluna nova para o motor |
 | Build do Core | `study_plan.fitness`, chave `build` | O commit do Core que produziu o plano (Core EOA-13). Grava-se junto com o resto do `fitness`, sem código novo. `core_version` é a versão Maven e **não** identifica o build |
 | `elapsed_millis` | `plan_generation_request.elapsed_millis` (`bigint`) | O que o Core devolveu em `metadata.elapsedMillis`: **reservado pelo Core, sempre 0, não mede tempo** (decisão DT-2). Continua sendo gravado como veio |
@@ -272,6 +278,22 @@ SINAPSE_E2E_CORE_URL=http://localhost:8090 ./mvnw verify -Pcore-e2e
 Se o motor efetivo for diferente do pedido, a mensagem começa com `STOP`: o Core não estaria
 honrando `algorithmParams.engine`.
 
+### 4.2 O mapa da configuração padrão contra o Core
+
+Os testes acima rodam no perfil de teste, cujo mapa ainda declara `population-size` e
+`generations` (reduzidos, para a suíte ser rápida). `DefaultParametersEndToEndIntegrationTest`
+(tag `core-e2e`) troca esse mapa pelo que a configuração padrão produz sob o ambiente da JVM:
+vazio quando nada está definido, só `engine` quando
+`SINAPSE_PLANNING_GENERATION_ALGORITHMPARAMS_ENGINE` está. Confere job em `READY`, o mapa gravado
+igual ao enviado, motor efetivo (`greedy-baseline` sem a variável) e imprime uma linha
+`DEFAULT-PARAMS`.
+
+```bash
+SINAPSE_E2E_CORE_URL=http://localhost:8090 ./mvnw verify -Pcore-e2e
+SINAPSE_PLANNING_GENERATION_ALGORITHMPARAMS_ENGINE=ga-timeline \
+  SINAPSE_E2E_CORE_URL=http://localhost:8090 ./mvnw verify -Pcore-e2e
+```
+
 ---
 
 ## 5. Achados
@@ -282,18 +304,14 @@ honrando `algorithmParams.engine`.
    gravando `elapsed_millis` como veio (sempre `0`) e grava a latência que ela mesma mede em
    `core_call_millis` (§1.2). Isso **não** fecha o lado do custo da comparação AG × guloso: esse
    número sai do *harness* do Core.
-2. **`algorithm_params` grava parâmetros que o Core não usa.** A plataforma envia e grava
-   `generations: 400`, `population-size: 120` e `mutation-rate: 0.05`. O Core ignora esses três
-   (confirmado por execução no Core, EOA-13) e roda o AG com a própria configuração (60
-   gerações, população 40). O dono decidiu em 08/10/2026 (D4 do Core, Variante 1) que os
-   hiperparâmetros são do Core e que a plataforma para de enviá-los. **A retirada ainda não foi
-   feita** (SP-8, item 3b adiado): as três instâncias de catálogo real em
-   `src/test/resources/instances/`, copiadas byte a byte pelo Core, carregam essas três chaves, e
-   `RealCatalogInstancesTest` exige que a configuração de produção as reproduza. Tirá-las exige
-   regenerar e anunciar as instâncias (pedido EOA-H2 do Core), o que é decisão do dono. Enquanto
-   isso, `algorithm_params` registra o que a plataforma **enviou**, não o que rodou; o que rodou
-   está em `study_plan.fitness` (motor, build e, nos motores AG, `importance-strategy` e
-   `precedence-policy`) e em `generations`.
+2. **Resolvido pelo SP-8b:** a plataforma enviava e gravava `generations: 400`,
+   `population-size: 120` e `mutation-rate: 0.05`, que o Core ignora (confirmado por execução no
+   Core, EOA-13; ele roda 60 gerações com população 40). Pela D4 do Core (Variante 1, 08/10/2026)
+   e pela decisão SP-8-3b (opção A, 20/10/2026), as três saíram da configuração padrão e as três
+   instâncias de catálogo real foram regeneradas sem elas e anunciadas ao Core. As linhas antigas
+   de `algorithm_params` continuam com as três chaves: registram o que foi **enviado**, não o que
+   rodou. O que rodou está em `study_plan.fitness` (motor, build e, nos motores AG,
+   `importance-strategy` e `precedence-policy`) e em `generations`.
 3. **Um `500` por violação de invariante no Core é tratado como indisponibilidade.** Esse caso
    (`plan-invariant-violation`) é defeito, não instabilidade. Com o motor guloso, que é
    determinístico, as novas tentativas gastam o orçamento repetindo o mesmo erro.

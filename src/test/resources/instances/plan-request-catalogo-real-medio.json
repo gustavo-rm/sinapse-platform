@@ -573,10 +573,6 @@
     }
   ],
   "history": [ ],
-  "algorithmParams": {
-    "generations": 400,
-    "mutation-rate": 0.05,
-    "population-size": 120
-  },
+  "algorithmParams": { },
   "randomSeed": 20261012
 }

@@ -82,11 +82,11 @@ rodaram.
    (`fitness`, `metadata.generations`).
 
 **Consequências.**
-- A retirada das três chaves ainda não foi feita (SP-8, item 3b, adiado). As instâncias de
-  catálogo real compartilhadas com o Core as carregam, e retirá-las exige regenerá-las e
-  anunciá-las (STATE.md K18).
-- Até lá, os jobs registram as três chaves como **solicitadas** (nota de 19/10/2026 no
-  ADR 0007).
+- A retirada das três chaves foi feita no SP-8b (20/10/2026): a configuração padrão envia
+  `algorithmParams` vazio, e as instâncias de catálogo real compartilhadas com o Core foram
+  regeneradas sem elas e anunciadas (decisão SP-8-3b, opção A).
+- Os jobs gravados antes disso registram as três chaves como **solicitadas**, não como usadas
+  (nota de 19/10/2026 no ADR 0007).
 - A escolha do motor continua sendo da implantação, pela chave `engine` do mesmo mapa
   ([INTEGRACAO_CORE.md §1.1](INTEGRACAO_CORE.md)).
 

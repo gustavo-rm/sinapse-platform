@@ -18,6 +18,9 @@ retirada está registrada como pendente em `docs/ai/STATE.md` (SP-8, item 3b). O
 rodou fica na resposta: o motor e o build do Core em `study_plan.fitness` (`engine`, `build`) e o
 número de gerações em `generations`. Detalhe em `docs/INTEGRACAO_CORE.md` §1.2.
 
+Acréscimo de 20 de outubro de 2026 (SP-8b): a partir desta mudança, `algorithm_params` não
+carrega mais `generations`, `population-size` nem `mutation-rate` na configuração padrão.
+
 ## Emenda de 17 de setembro de 2026
 
 Uma frase da seção "Conteúdo do contrato" abaixo — "O contrato vive em módulo compartilhado
