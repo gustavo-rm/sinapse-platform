@@ -50,6 +50,17 @@
         <jacoco.version>0.8.13</jacoco.version>
 
         <!--
+          Coverage floor, enforced by the jacoco "check" execution on verify. A ratchet: it only
+          goes up. Lowering it needs a recorded decision with its reason (docs/COBERTURA.md),
+          never "to make the build pass". Each value is the ratio measured by the default
+          ./mvnw verify, rounded down at the third decimal, minus 0.002 for run-to-run noise.
+          Measured 2026-10-19 at 271b30d: instructions 20399/21418 = 0.952423 -> 0.950;
+          branches 1015/1251 = 0.811351 -> 0.809.
+        -->
+        <coverage.minimum.instruction>0.950</coverage.minimum.instruction>
+        <coverage.minimum.branch>0.809</coverage.minimum.branch>
+
+        <!--
           ArchUnit already arrives transitively with spring-modulith-core. It is declared
           explicitly, at the same version, because tests compile against it: an assertion
           about the architecture should not depend on another project's transitive graph.
@@ -205,6 +216,32 @@
                         <goals>
                             <goal>report</goal>
                         </goals>
+                    </execution>
+                    <execution>
+                        <id>check</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <rule>
+                                    <element>BUNDLE</element>
+                                    <limits>
+                                        <limit>
+                                            <counter>INSTRUCTION</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${coverage.minimum.instruction}</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${coverage.minimum.branch}</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                            </rules>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>

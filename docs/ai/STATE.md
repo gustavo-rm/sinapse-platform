@@ -19,7 +19,7 @@ finding each ID was meant to cover, is UNVERIFIED(planner, 2026-10-08) unless a 
 | SP-8 | Engine by configuration; item 3b honest `algorithmParams`; item 3c `core_call_millis` | done on merge | #23 | item 3b: owner decision SP-8-3b | Engine by YAML, `SPRING_APPLICATION_JSON` or env var, validated at startup; `core_call_millis` (V9). Item 3b **deferred**: K18. Read Core at other-repo@3b54ba4. OBSERVED(`./mvnw verify` with external PostgreSQL); core-e2e not run (no Core provided). Detail: [INTEGRACAO_CORE.md §1](../INTEGRACAO_CORE.md) |
 | SP-13 | Versioned OpenAPI snapshot | done on merge | #24 | — | `docs/openapi/openapi.json`, 59 operations, no profile active; `OpenApiSnapshotIntegrationTest` compares and checks two starts. Closes K8; findings K19–K21. Flow: [docs/openapi/README.md](../openapi/README.md) |
 | SP-12 | Documentation reconciliation | done | #25 | — | ADR 0015 duplicate renumbered to 0017; dated notes in ADRs 0001/0002/0015/0017; [FLUXO_DE_PLANO_FRONTEND.md](../FLUXO_DE_PLANO_FRONTEND.md); CONTRATO_API vs snapshot; [AFIRMACOES_A_CONFIRMAR.md](../AFIRMACOES_A_CONFIRMAR.md); ADR proposals in [PROPOSTAS_DE_ADR.md](../PROPOSTAS_DE_ADR.md). Closes K10, K11, K12; opens K23, K24 |
-| SP-9 | Coverage floor (optional) | pending | — | — | K9 |
+| SP-9 | Coverage floor | done | #26 | — | jacoco `check` on `verify`: 0.950 instructions, 0.809 branches (measured 0.952423 and 0.811351 at `271b30d`, twice, delta 0.0 pp). [COBERTURA.md](../COBERTURA.md). Closes K9; opens K25 (no CI) and decision SP-9-CS |
 | AUD-2 | Re-audit | pending | — | the SP rows above | Last audit: [PRONTIDAO_INTEGRACAO_AG.md](../PRONTIDAO_INTEGRACAO_AG.md), at `928eb56` |
 | AI-1 | AI context layer (`docs/ai/`, CLAUDE.md protocol) | done | #21 (merge `de38505`) | Core CTX-1 (merged, `other-repo@40e6061`) | ID assigned here; the planner had none |
 
@@ -37,6 +37,7 @@ measurement, D5, P2, P3) are in [CLAUDE.md §7](../../CLAUDE.md) and are not rep
 | SP-8-3b | How to unblock SP-8 item 3b (Core D4 is decided, CONTEXT.md): regenerate the three real-catalogue instances without the three GA keys and announce them (Core EOA-H2), or pin the three keys in the instance generator as a historical fixture? Both edit tests | SP-8 item 3b | regenerate + announce; pin in generator | regenerate + announce — PROPOSAL |
 | K17-D | May a student route show `fitness.engine` and `fitness.build`? | nothing | keep (today); filter the keys (needs an exception to `FitnessTermNamesAreNotCompiledTest`) | none: owner's call |
 | Core D1, D2, D3 | Repair criteria, repair scope, what the student sees when topics do not fit | nothing here directly; D1/D2 gate the Core's EOA-12, which SP-H3 waits on | see other-repo@40e6061:docs/ai/STATE.md | defined there |
+| SP-9-CS | Adopt the Core's Checkstyle rules (`config/checkstyle/checkstyle.xml` at other-repo@3b54ba4)? Measured here with Checkstyle 10.21.1, not adopted: 7 violations in `src/main` (CyclomaticComplexity 2, LineLength 2, ParameterNumber 2, UnusedImports 1) and 7 in `src/test` (CyclomaticComplexity 3, UnusedImports 2, LineLength 2) | nothing | adopt as is after fixing 14; adopt with thresholds; do not adopt | none: owner's call |
 | D-AI1 | Record the four owner decisions in CONTEXT.md "Decisions recorded here" as ADRs in `docs/adr/`? | nothing | proposed texts A–D in [PROPOSTAS_DE_ADR.md](../PROPOSTAS_DE_ADR.md), next number 0018 | owner approves the wording, then a separate PR — PROPOSAL |
 
 ## Known issues and limitations
@@ -51,7 +52,8 @@ measurement, D5, P2, P3) are in [CLAUDE.md §7](../../CLAUDE.md) and are not rep
 | K6 | `trusted-proxies` is empty by default; behind the reverse proxy every anonymous limit becomes global | READ; mitigated: startup warning outside `local`/`test` | `application.yml:106`, `shared/ratelimit/TrustedProxiesStartupCheck.java@e4c0be0` | set it per deployment: [PROXY_REVERSO.md](../PROXY_REVERSO.md) | deployment configuration |
 | K7 | Horizon: Core reads it in UTC, platform expands windows by days in the account's zone; the platform does not check session-in-horizon | READ; effect (silent loss of availability at the edges) is a HYPOTHESIS | [CORE_CONTRACT_SURVEY.md §3](../CORE_CONTRACT_SURVEY.md); PRONTIDAO X7 | none | unassigned |
 | K8 | No versioned OpenAPI snapshot | closed by SP-13: `docs/openapi/openapi.json`, compared by `OpenApiSnapshotIntegrationTest` | OBSERVED(`./mvnw verify`) | — | SP-13 |
-| K9 | No JaCoCo floor; CLAUDE.md §8 "no decrease" is not enforced | READ | `pom.xml:191-210@e4c0be0` | compare `target/site/jacoco` by hand | SP-9 |
+| K9 | No JaCoCo floor | closed by SP-9: `check` execution, ratchet in [COBERTURA.md](../COBERTURA.md) | OBSERVED(`./mvnw verify` fails with the floor overridden above the measured ratio) | — | SP-9 |
+| K25 | No CI: no `.github/` or other CI file in any branch, GitHub Actions lists 0 workflows and 0 runs; the coverage floor, `ModularityTests` and the OpenAPI snapshot protect only local `./mvnw verify` runs | OBSERVED(2026-10-19, `git ls-files`, Actions API) | run `./mvnw verify` before every PR | unassigned (a CI job running `./mvnw verify`) |
 | K10 | CLAUDE.md §3 layout omitted `curation`, `datarights`, `readmodel` | closed by SP-12: §3 lists them, checked against `ls src/main/java/br/com/sinapse/platform`@6159a93 | — | — | SP-12 |
 | K11 | Two ADRs numbered 0015 | closed by SP-12: the newer (`ponte`, `65fb558`) is now `0017-ponte-de-contrato-com-o-core.md` with a renumbering note; `grep -rn 0015` over docs, README, CLAUDE.md and src shows only references to the `espelhamento` ADR and the dated audit report | OBSERVED(grep, SP-12) | — | SP-12 |
 | K12 | Team docs disagreed with code (engine list, `PlanGenerationRequest` Javadoc, ADR 0007 wording, CORE_CONTRACT_SURVEY persistence claim, PRONTIDAO as current) | closed by SP-12: engine list and ADR 0007 note were SP-8's (confirmed); entity Javadoc corrected (comment-only commit); CORE_CONTRACT_SURVEY §2.2 corrected; PRONTIDAO carries a dated-snapshot note. The repository Javadoc is K24 | READ@6159a93 | — | SP-12 |
@@ -70,9 +72,6 @@ measurement, D5, P2, P3) are in [CLAUDE.md §7](../../CLAUDE.md) and are not rep
 
 ## Unknowns
 
-- Current full-suite test count and coverage: the build was not run in full here (needs a
-  database). The audit's 609 tests and 95.1 % instruction / 80.6 % branch coverage were at
-  `928eb56`: UNVERIFIED([PRONTIDAO_INTEGRACAO_AG.md §2](../PRONTIDAO_INTEGRACAO_AG.md)).
 - Whether `CoreEndToEndIntegrationTest` still passes against the Core at `other-repo@40e6061`:
   not run.
 - Whether the three engines pass the core-e2e tests against a real Core: written in SP-8, not run

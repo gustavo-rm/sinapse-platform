@@ -62,11 +62,13 @@ frontend: [CONTRATO_API_SINAPSE.md](../CONTRATO_API_SINAPSE.md) plus the live Op
 
 Quality gates, exactly as the build has them:
 
-- JaCoCo 0.8.13 runs `prepare-agent` and `report` only: **no coverage floor**, nothing fails the
-  build on coverage. READ(pom.xml:50,191-210@e4c0be0)
+- JaCoCo 0.8.13: `prepare-agent`, `report` and `check` on `verify`, a BUNDLE floor of 0.950
+  instructions and 0.809 branches over `target/jacoco.exec` (unit and integration tests alike,
+  no failsafe). Ratchet rule: [COBERTURA.md](../COBERTURA.md). READ(pom.xml, SP-9)
 - `ModularityTests` (Spring Modulith `verify`) is the boundary gate. READ(src/test/java/br/com/sinapse/platform/ModularityTests.java@e4c0be0)
 - No Checkstyle, SpotBugs or other static-analysis plugin. READ(pom.xml@e4c0be0)
-- CLAUDE.md §8 asks for "no decrease in JaCoCo coverage"; the build does not enforce it.
+- CLAUDE.md §8 "no decrease in JaCoCo coverage" is enforced by that floor, **but only locally**:
+  the repository has no CI (no workflow, no run on GitHub Actions). OBSERVED(SP-9, 2026-10-19)
 
 ## Repository map
 
