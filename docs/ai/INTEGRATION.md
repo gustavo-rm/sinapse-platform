@@ -48,8 +48,8 @@ the platform's reaction, not the Core's behaviour; only `CoreEndToEndIntegration
 | A6 | Sessions start inside the horizon and `HARD` prerequisites come first | READ | **no guard**: the platform does not check either (see Response validation); E2E checks both on the stored plan (not run) | as A5 |
 | A7 | A 4xx is deterministic for the same payload, so not worth retrying | READ | guard: `RestSinapseCoreTest.aRejectionByTheCoreIsAProtocolFailureAndNotWorthRetrying`, OBSERVED(e4c0be0) | other-repo@40e6061:docs/ai/INTEGRATION.md "Error types" |
 | A8 | A 5xx is transient, so worth retrying | **contradicted**, READ | none; the Core's `500 plan-invariant-violation` is a defect and burns 3 attempts (STATE.md K5) | other-repo@40e6061:docs/ai/INTEGRATION.md "Error types" |
-| A9 | `generations`, `population-size`, `mutation-rate` in `algorithmParams` take effect | **contradicted**, executed in the Core (EOA-13, `HiperparametrosDoCoreHttpTest`), READ here; deliberate since Core D4 (CONTEXT.md DECISION) | none here | other-repo@3b54ba4:docs/ai/INTEGRATION.md "algorithmParams — index"; other-repo@3b54ba4:docs/ai/STATE.md K6 |
-| A10 | `algorithmParams.engine` absent → `greedy-baseline`; `""` → 422, `null` → 400, unknown → 422, never the default | READ | platform side only: `EngineSelectionIntegrationTest` (key absent from the body; unknown name 422 → `CORE_REJECTED`), `AlgorithmParamsConfigurationTest` (empty/null refused at startup), all against a stand-in; core-e2e engine matrix written, not run | other-repo@3b54ba4:README.md "Choosing the engine per request" |
+| A9 | `generations`, `population-size`, `mutation-rate` in `algorithmParams` take effect | **contradicted**, executed in the Core (EOA-13, `HiperparametrosDoCoreHttpTest`), READ here; deliberate since Core D4 (CONTEXT.md DECISION). Since SP-8b the default configuration no longer sends them, so the assumption is no longer relied on; a deployment that puts them back still sends them and records them as sent | `DefaultAlgorithmParamsIntegrationTest` (stand-in: none sent by default; sent and recorded when a deployment restores them) | other-repo@3b54ba4:docs/ai/INTEGRATION.md "algorithmParams — index"; other-repo@3b54ba4:docs/ai/STATE.md K6 |
+| A10 | `algorithmParams.engine` absent → `greedy-baseline`; `""` → 422, `null` → 400, unknown → 422, never the default | READ | platform side only: `EngineSelectionIntegrationTest` (key absent from the body; unknown name 422 → `CORE_REJECTED`), `AlgorithmParamsConfigurationTest` (empty/null refused at startup), all against a stand-in; core-e2e engine matrix and default map run against the real Core in SP-8b, OBSERVED(other-repo@3b54ba4) | other-repo@3b54ba4:README.md "Choosing the engine per request" |
 | A11 | `metadata.elapsedMillis` measures the run | **contradicted**, READ: reserved constant 0 in every engine, deliberate (DT-2, CONTEXT.md DECISION). The platform times the call itself (`core_call_millis`) | `CoreCallMillisIntegrationTest`, `CoreCallTimingTest` (platform side) | other-repo@3b54ba4:docs/ai/STATE.md K5 |
 | A12 | `metadata.coreVersion` identifies what ran (ADR 0007) | **contradicted**, READ: Maven version. The build is in `fitness.build` (commit SHA), stored with `fitness` on the plan | `EngineSelectionIntegrationTest` (stand-in) | other-repo@3b54ba4:docs/ai/STATE.md K7 |
 | A13 | The GA engines plan the real 35-topic catalogue | **contradicted for `ga`**, READ: refuses 23/30; `ga-timeline` 30/30 since Core EOA-12 | none here; the Core's diagnosis used this repository's instances | other-repo@3b54ba4:docs/ai/STATE.md K2, K3 |
@@ -78,8 +78,11 @@ order; sessions not in the past; anything about `fitness`, `generations`, `elaps
 
 ## What is sent in algorithmParams and what is persisted
 
-- Sent today: `population-size: 120`, `generations: 400`, `mutation-rate: 0.05`.
-  READ(application.yml:328-331@e4c0be0)
+- Sent today: `"algorithmParams": {}` in the default configuration, plus whatever a deployment
+  adds (in practice only `engine`); `generations`, `population-size` and `mutation-rate` are no
+  longer sent, since SP-8b (Core D4, Variant 1; owner decision SP-8-3b, option A). The base
+  `application.yml` has no `algorithm-params` entry at all, and the map binds empty, not null.
+  OBSERVED(`DefaultAlgorithmParamsConfigurationTest`, `DefaultAlgorithmParamsIntegrationTest`)
 - Path: `sinapse.planning.generation.algorithm-params` (an open `Map<String,Object>`,
   `PlanningProperties.java:88`) → `SnapshotAssembler.java:128` → `PlanRequest.algorithmParams`.
   READ@e4c0be0
@@ -87,16 +90,19 @@ order; sessions not in the past; anything about `fitness`, `generations`, `elaps
   and the Core runs `greedy-baseline`. A deployment adds it as one map entry, by configuration
   file, `SPRING_APPLICATION_JSON` or the variable `SINAPSE_PLANNING_GENERATION_ALGORITHMPARAMS_ENGINE`:
   all three OBSERVED(`AlgorithmParamsConfigurationTest`). A hyphenated key cannot be set by
-  environment variable. The E2E test does **not** use that variable: it registers the canonical
-  property `sinapse.planning.generation.algorithm-params.engine` through `@DynamicPropertySource`,
-  from `SINAPSE_E2E_CORE_ENGINE` (`CoreEndToEndIntegrationTest.realCore`, `RealCore`). READ
+  environment variable. `CoreEndToEndIntegrationTest` and the engine matrix do **not** use that
+  variable: they register the canonical property `sinapse.planning.generation.algorithm-params.engine`
+  through `@DynamicPropertySource`, from `SINAPSE_E2E_CORE_ENGINE` or a constant (`RealCore`). READ.
+  `DefaultParametersEndToEndIntegrationTest` does: it binds the base `application.yml` under the
+  JVM's own environment, so the variable creates the only entry of the empty default map.
 - Refused at startup: an empty key, a null or empty value under any key, an `engine` that is not
   text matching `[a-z0-9-]+` (`PlanningProperties.Generation`, `AlgorithmParamsStartupCheck`).
   Which engines and keys exist is not checked here. OBSERVED(`AlgorithmParamsConfigurationTest`)
 - Persisted: the same map, before the call, in `plan_generation_request.algorithm_params`
   (`V5__planning.sql:76`), with the snapshot and the seed
-  (`PlanGenerationOrchestrator.java:85-87`). READ@e4c0be0. The three GA keys are recorded as
-  if they ran; per A9 they do not (STATE.md K3).
+  (`PlanGenerationOrchestrator.java:85-87`). READ@e4c0be0. Rows written before SP-8b carry the
+  three GA keys as requested and not applied (A9, STATE.md K3); new rows of the default
+  configuration carry none of them.
 - Persisted from the response: `core_version`, `generations`, `elapsed_millis` (always 0, as
   reported) on the job and `fitness` whole on the plan, so the effective `engine` and the Core
   `build` land in `study_plan.fitness`. OBSERVED(`EngineSelectionIntegrationTest`, stand-in Core)
@@ -121,7 +127,11 @@ order; sessions not in the past; anything about `fitness`, `generations`, `elaps
 
 ## Core versions this repository was verified against
 
-- Read for this document: `other-repo@40e6061` (no execution).
+- Read for this document: `other-repo@40e6061` (no execution); SP-8b read `other-repo@3b54ba4`.
+- Executed by SP-8b (2026-10-20): jar built from `other-repo@3b54ba4`, `coreVersion` `2.0.1`,
+  profiles `dev,baseline-core`, on 127.0.0.1:8090; `./mvnw verify -Pcore-e2e` passed three times
+  (6/6 each), including the empty default map (A10: no `engine` → `greedy-baseline`) and
+  `engine` from the environment (`ga`, `ga-timeline`). OBSERVED
 - Last execution against a real Core recorded in this repository: Core `61233ad`, `coreVersion`
   `2.0.1`, by the 2026-10-05 audit. UNVERIFIED([PRONTIDAO_INTEGRACAO_AG.md §2](../PRONTIDAO_INTEGRACAO_AG.md))
 
