@@ -115,7 +115,7 @@ class DefaultParametersEndToEndIntegrationTest extends PlanningIntegrationTest {
         String state = job.get("status").asText();
         PlanGenerationRequest stored = requests.findById(jobId).orElseThrow();
         if (!"READY".equals(state)) {
-            report(state, null, 0, stored.coreCallMillis());
+            report(jobId, state, null, 0, stored.coreCallMillis());
             fail("algorithmParams " + DEPLOYMENT + " against " + RealCore.get().origin()
                     + ": the job ended " + state + " with " + job.path("failureReason")
                     .asText("none") + ". CORE_REJECTED is a 4xx from the core or an answer "
@@ -125,7 +125,7 @@ class DefaultParametersEndToEndIntegrationTest extends PlanningIntegrationTest {
         UUID planId = UUID.fromString(job.get("planId").asText());
         String effective = planColumn(planId, "fitness ->> 'engine'", String.class);
         int sessions = directory.sessionsOfPlan(planId).size();
-        report(state, effective, sessions, stored.coreCallMillis());
+        report(jobId, state, effective, sessions, stored.coreCallMillis());
 
         assertThat(stored.snapshot().get("algorithmParams"))
                 .as("the document sent carries the map, an empty object when nothing is named")
@@ -137,10 +137,11 @@ class DefaultParametersEndToEndIntegrationTest extends PlanningIntegrationTest {
     }
 
     /** One line per run, for whoever reads it. */
-    private void report(String state, String effective, int sessions, Long coreCallMillis) {
-        System.out.printf("DEFAULT-PARAMS algorithmParams=%s state=%s effective=%s sessions=%d "
-                + "core_call_millis=%s core=%s%n", DEPLOYMENT, state, effective, sessions,
-                coreCallMillis, RealCore.get().origin());
+    private void report(UUID jobId, String state, String effective, int sessions,
+            Long coreCallMillis) {
+        System.out.printf("DEFAULT-PARAMS algorithmParams=%s job=%s state=%s effective=%s "
+                + "sessions=%d core_call_millis=%s core=%s%n", DEPLOYMENT, jobId, state,
+                effective, sessions, coreCallMillis, RealCore.get().origin());
     }
 
     /** The scenario of the existing end-to-end tests: four topics, three hard edges. */
