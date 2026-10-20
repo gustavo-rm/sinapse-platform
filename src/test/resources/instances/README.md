@@ -35,7 +35,7 @@ O que é fixo:
 | Âncora do horizonte | segunda-feira `2026-10-12` |
 | Duração do horizonte | `4w`, o padrão de produção (`sinapse.planning.generation.horizon`) |
 | `randomSeed` | `20261012` |
-| `algorithmParams` | os de `application.yml` (`population-size` 120, `generations` 400, `mutation-rate` 0.05), lidos do próprio arquivo; o perfil de teste os reduz e por isso é sobrescrito |
+| `algorithmParams` | o mapa que a configuração padrão (`application.yml`, sem perfil e sem variável de ambiente) produz, ligado pelo próprio Spring: hoje **vazio** (`{ }`), porque o Core é dono dos seus parâmetros de busca (decisão D4 do Core). O perfil de teste declara parâmetros próprios e por isso o mapa dele é **substituído**, não sobreposto |
 | Minutos por faixa de esforço | os de `application.yml`: `SHORT` 25, `STANDARD` 50, `LONG` 90, `EXTENDED` 150 |
 
 ### O que é reescrito depois da montagem
@@ -103,7 +103,7 @@ Janelas semanais: terça e quinta 19h30–20h30; sábado 9h00–10h10.
 | rho | 760 / 2170 = 0,350230 |
 | Horizonte | 2026-10-12 a 2026-11-09, 29 dias |
 | Janelas (intervalos) | 12 |
-| SHA-256 | `dce673984f6597743f49ff6051982bf5e42fbad4a93495b006386a8c5f9bd65f` |
+| SHA-256 | `d9efef5f4992d7df59ac1046c8a9e72b00087a3f1944b8fe30938827c66d9f82` |
 
 ### `plan-request-catalogo-real-medio.json`
 
@@ -117,7 +117,7 @@ Janelas semanais: segunda a sexta 19h00–20h00; sábado 9h00–10h30.
 | rho | 1620 / 2170 = 0,746544 |
 | Horizonte | 2026-10-12 a 2026-11-09, 29 dias |
 | Janelas (intervalos) | 25 |
-| SHA-256 | `db27f88370605b0562da98d445a24344247af6dea4bfa27bc6a4e3b3a274f7ca` |
+| SHA-256 | `6b46cf43682c12f1fd623689fbf3e4ac690926522eecbd609e7327222f3b64aa` |
 
 ### `plan-request-catalogo-real-folgado.json`
 
@@ -131,7 +131,7 @@ Janelas semanais: segunda a sexta 18h30–20h30; sábado 9h00–11h00; domingo 1
 | rho | 3240 / 2170 = 1,493088 |
 | Horizonte | 2026-10-12 a 2026-11-09, 29 dias |
 | Janelas (intervalos) | 29 |
-| SHA-256 | `4d6dbc43bc6df47e2518b0e32ac21aea9f3806265a1bcaf1660c218c2da60341` |
+| SHA-256 | `8a0ebf3fb5e31c469366371406c7a162e6e4ce03c13b1a3ff2093cf15aec5e71` |
 
 ### Cenário da auditoria de 05/10/2026
 

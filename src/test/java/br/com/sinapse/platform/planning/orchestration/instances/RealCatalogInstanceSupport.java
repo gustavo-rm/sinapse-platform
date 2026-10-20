@@ -7,21 +7,25 @@ import br.com.sinapse.platform.curation.internal.CatalogApplier;
 import br.com.sinapse.platform.curation.internal.CatalogFiles;
 import br.com.sinapse.platform.curation.internal.model.DesiredCatalogue;
 import br.com.sinapse.platform.curriculum.api.CurriculumCatalog;
+import br.com.sinapse.platform.curriculum.api.EffortTiers;
+import br.com.sinapse.platform.curriculum.api.PrerequisiteGraph;
 import br.com.sinapse.platform.curriculum.api.SubjectView;
 import br.com.sinapse.platform.curriculum.api.TopicView;
+import br.com.sinapse.platform.identity.api.AccountDirectory;
 import br.com.sinapse.platform.identity.internal.domain.Account;
+import br.com.sinapse.platform.learningrecord.api.StudyHistory;
+import br.com.sinapse.platform.planning.api.PlanningDirectory;
 import br.com.sinapse.platform.planning.internal.config.PlanningProperties;
 import br.com.sinapse.platform.planning.internal.service.GenerationRequestService.ClaimedJob;
 import br.com.sinapse.platform.planning.orchestration.SnapshotAssembler;
 import br.com.sinapse.platform.planning.orchestration.support.OrchestrationIntegrationTest;
+import br.com.sinapse.platform.planning.support.DefaultConfiguration;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.util.DefaultIndenter;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.core.util.Separators;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.security.MessageDigest;
@@ -45,16 +49,10 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.AfterEach;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.env.YamlPropertySourceLoader;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
-import org.springframework.core.env.EnumerablePropertySource;
-import org.springframework.core.env.PropertySource;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 
 /**
  * Builds the real-catalogue instances: synthetic {@link PlanRequest}s assembled from the
@@ -69,10 +67,11 @@ import org.springframework.test.context.DynamicPropertySource;
  * left out.
  *
  * <p><strong>What is pinned.</strong> The application clock is fixed at the horizon anchor, the
- * seed is a constant, and the algorithm parameters are the ones of the base
- * {@code application.yml}, read from it rather than copied, because the test profile lowers
- * them to keep the suite fast and an instance carrying three generations would describe a run
- * nobody makes.
+ * seed is a constant, and the algorithm parameters are the map the default configuration (the
+ * base {@code application.yml}, no profile) binds to, bound rather than copied. That map replaces
+ * the test profile's instead of being laid over it: the test profile declares parameters of its
+ * own to keep the suite fast, an instance carrying them would describe a run nobody makes, and a
+ * map laid over another keeps the keys of both.
  *
  * <p><strong>What is rewritten after assembly, and why.</strong> The curriculum assigns random
  * identifiers to subjects and topics, and the edge query has no order. Byte-identical output
@@ -83,7 +82,8 @@ import org.springframework.test.context.DynamicPropertySource;
  * changes, no element is added or dropped, and an identifier that is neither a subject nor a
  * topic of the catalogue fails the generation instead of passing through.
  */
-@Import(RealCatalogInstanceSupport.FixedClockConfiguration.class)
+@Import({RealCatalogInstanceSupport.FixedClockConfiguration.class,
+        RealCatalogInstanceSupport.DefaultParametersConfiguration.class})
 abstract class RealCatalogInstanceSupport extends OrchestrationIntegrationTest {
 
     /** Monday the horizon starts on, and the instant the application clock is fixed at. */
@@ -106,9 +106,6 @@ abstract class RealCatalogInstanceSupport extends OrchestrationIntegrationTest {
 
     /** Source revision the generator records its catalogue imports under. */
     private static final String IMPORT_REVISION = "real-catalog-instances";
-
-    /** Prefix of the parameters every run asks the optimiser for. */
-    private static final String ALGORITHM_PARAMS = "sinapse.planning.generation.algorithm-params.";
 
     /** Namespace of the name-based identifiers that replace the curriculum's random ones. */
     private static final String NAMESPACE = "sinapse-real-catalog-instance";
@@ -157,36 +154,11 @@ abstract class RealCatalogInstanceSupport extends OrchestrationIntegrationTest {
     protected ObjectMapper objectMapper;
 
     /**
-     * Restores the production algorithm parameters over the test profile's lowered ones.
-     *
-     * <p>Read from the base {@code application.yml} and registered with their parsed types, so
-     * that a number stays a number on the wire exactly as it does in production.
-     */
-    @DynamicPropertySource
-    static void productionAlgorithmParams(DynamicPropertyRegistry registry) {
-        productionAlgorithmParams().forEach((name, value) -> registry.add(name, () -> value));
-    }
-
-    /**
-     * @return the algorithm parameters the base configuration declares, by full property name
+     * @return the algorithm parameters the default configuration produces, by key; empty since
+     *         the core owns its search parameters (its decision D4)
      */
     static Map<String, Object> productionAlgorithmParams() {
-        try {
-            List<PropertySource<?>> sources = new YamlPropertySourceLoader()
-                    .load("application", new ClassPathResource("application.yml"));
-            Map<String, Object> params = new LinkedHashMap<>();
-            for (PropertySource<?> source : sources) {
-                for (String name : ((EnumerablePropertySource<?>) source).getPropertyNames()) {
-                    if (name.startsWith(ALGORITHM_PARAMS)) {
-                        params.put(name, source.getProperty(name));
-                    }
-                }
-            }
-            assertThat(params).as("application.yml declares the algorithm parameters").isNotEmpty();
-            return params;
-        } catch (IOException failure) {
-            throw new UncheckedIOException(failure);
-        }
+        return DefaultConfiguration.algorithmParams();
     }
 
     /**
@@ -436,6 +408,25 @@ abstract class RealCatalogInstanceSupport extends OrchestrationIntegrationTest {
      * @param end   when it closes, local time
      */
     record Window(DayOfWeek day, LocalTime start, LocalTime end) {
+    }
+
+    /**
+     * Assembles with the default configuration's algorithm parameters in place of the test
+     * profile's. Everything else is the production assembler with the context's own settings.
+     */
+    @TestConfiguration
+    static class DefaultParametersConfiguration {
+
+        @Bean
+        @Primary
+        SnapshotAssembler defaultParametersAssembler(PlanningDirectory planning,
+                CurriculumCatalog catalog, PrerequisiteGraph graph, EffortTiers effortTiers,
+                StudyHistory history, AccountDirectory accounts, PlanningProperties bound,
+                Clock clock) {
+            return new SnapshotAssembler(planning, catalog, graph, effortTiers, history, accounts,
+                    DefaultConfiguration.withAlgorithmParams(bound, productionAlgorithmParams()),
+                    clock);
+        }
     }
 
     /** Fixes the application clock at the horizon anchor. */

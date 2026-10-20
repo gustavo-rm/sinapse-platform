@@ -328,13 +328,14 @@ sinapse:
       # How much of the student's past a run considers: the per-topic history in the snapshot
       # and the effort adjustment derived from it are the same question asked twice.
       history-window: 90d
-      # Parameters every run asks the optimiser for. Stored on the job with the snapshot and the
-      # seed, because without all four a plan generated today cannot be regenerated tomorrow.
-      # What they mean belongs to the core's own contract; this side does not interpret them.
-      algorithm-params:
-        population-size: 120
-        generations: 400
-        mutation-rate: 0.05
+      # Parameters every run asks the optimiser for (sinapse.planning.generation.algorithm-params,
+      # an open map). Stored on the job with the snapshot and the seed, because without all four
+      # a plan generated today cannot be regenerated tomorrow; stored as sent, which is not as
+      # applied. What they mean belongs to the core's own contract; this side does not interpret
+      # them. Deliberately no entry here: the core owns its search parameters (its decision D4),
+      # so the default map is empty and the core runs its default engine. A deployment that
+      # names one adds the single key it needs, e.g. the variable
+      # SINAPSE_PLANNING_GENERATION_ALGORITHMPARAMS_ENGINE (docs/INTEGRACAO_CORE.md §1.1).
       # Guards on the per-student effort adjustment (decision L1). THESE ARE A JUDGEMENT, NOT A
       # FINDING. Below the minimum there is no adjustment at all, because a ratio computed from
       # one session is not a measurement; the bounds exist because an unbounded ratio lets a
