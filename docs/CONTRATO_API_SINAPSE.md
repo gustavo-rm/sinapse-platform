@@ -181,11 +181,10 @@ recentSessions[]     janela limitada, mais recente primeiro
 **Não há nome do aluno.** A versão anterior deste documento previa `studentName`; a plataforma
 não coleta nome no cadastro, e o painel devolve o `accountId`
 (`readmodel/api/StudentPanelView.java:29-33`). Os campos de `recentSessions` acima são os do
-código (`StudentPanelView.java:125-138`). **O snapshot OpenAPI os descreve errado:** ele aponta
-`recentSessions` para o esquema `SessionSummary` das sessões de login (`id`, `userAgent`,
-`lastSeenAt`…), porque dois *records* com o mesmo nome simples viram um único componente no
-springdoc. É defeito da especificação gerada, registrado em `docs/ai/STATE.md` (K23) e ainda não
-corrigido; até lá, para esta rota, vale o que está aqui.
+código (`StudentPanelView.java:125-138`) e os do snapshot OpenAPI, onde cada item é o esquema
+`StudentPanelSessionSummary`. Não confundir com `SessionSummary`, que é a sessão de login da
+conta (`id`, `userAgent`, `lastSeenAt`…): os dois *records* têm o mesmo nome simples em Java, e
+o do painel recebeu nome de esquema próprio para não virar o mesmo componente.
 
 Exige `TeacherAccessPolicy.canViewStudent`, que verifica matrícula ativa **e**
 `INSTITUTION_SHARING` vigente no momento da consulta. Revogação corta o acesso na hora, sem
