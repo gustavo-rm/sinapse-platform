@@ -14,10 +14,10 @@ import org.springframework.data.repository.query.Param;
 /**
  * Plan generation jobs.
  *
- * <p>Only the reads a persisted structure needs. The queue operations — claiming a row with
- * {@code for update skip locked}, recording an attempt, storing the snapshot and the seed —
- * belong to the consumer, which is the next step of the build and is deliberately absent
- * here.
+ * <p>The account's reads, the two queue statements the worker runs — {@link #claimPending},
+ * which claims rows with {@code for update skip locked}, and {@link #recoverOrphans}, which
+ * requeues or fails jobs whose worker died — and the erasure. Recording an attempt and storing
+ * the snapshot and the seed are changes to the loaded entity, not statements here.
  */
 public interface PlanGenerationRequestRepository extends JpaRepository<PlanGenerationRequest, UUID> {
 
