@@ -21,8 +21,11 @@ import br.com.sinapse.platform.planning.orchestration.support.EngineAwareCore;
 import br.com.sinapse.platform.planning.orchestration.support.OrchestrationIntegrationTest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterAll;
@@ -169,13 +172,30 @@ class EngineSelectionIntegrationTest extends OrchestrationIntegrationTest {
                 .as("the student learns the kind of failure and nothing about the core")
                 .doesNotContain("127.0.0.1")
                 .doesNotContainIgnoringCase("http")
-                .doesNotContain("422")
                 .doesNotContain("unknown-engine")
                 .doesNotContain("no-such-engine")
                 .doesNotContainIgnoringCase("exception");
+        assertThat(withoutRandomAndClockFields(job, run.jobId()))
+                .as("nor the core's status code, looked for where text could carry it")
+                .doesNotContain("422");
         assertThat(requestColumn(run.jobId(), "core_call_millis", Long.class))
                 .as("a call that produced no plan records no latency")
                 .isNull();
+    }
+
+    /**
+     * The polled job without its random identifier and its three instants, which may hold any
+     * run of digits. Each is first checked to be exactly a UUID or an instant, so nothing else
+     * can travel in them; whatever the core said could only surface in what is returned.
+     */
+    private static String withoutRandomAndClockFields(JsonNode job, UUID jobId) {
+        ObjectNode rest = job.deepCopy();
+        assertThat(rest.remove("id").asText()).isEqualTo(jobId.toString());
+        for (String field : List.of("requestedAt", "startedAt", "finishedAt")) {
+            String instant = rest.remove(field).asText();
+            assertThat(Instant.parse(instant).toString()).as(field).isEqualTo(instant);
+        }
+        return rest.toString();
     }
 
     /** The configured map with an engine added, as a deployment that names one has it. */
