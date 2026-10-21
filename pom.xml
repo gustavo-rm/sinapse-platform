@@ -256,12 +256,17 @@
           engine (greedy-baseline by default, ga for the genetic algorithm).
 
             ./mvnw verify -Pcore-e2e
+
+          It measures no coverage: jacoco.skip turns off the agent, the report and the check. The
+          floor is the default build's (docs/COBERTURA.md); this profile runs only the core-e2e
+          tests, so its ratio would describe a small slice of the code and fail that floor.
         -->
         <profile>
             <id>core-e2e</id>
             <properties>
                 <test.excluded-groups></test.excluded-groups>
                 <test.groups>core-e2e</test.groups>
+                <jacoco.skip>true</jacoco.skip>
             </properties>
         </profile>
     </profiles>

@@ -17,7 +17,9 @@ O `jacoco-maven-plugin` 0.8.13 (`pom.xml`) tem três execuções:
 o surefire roda na fase `test` tanto os testes unitários quanto os de integração (as classes
 `*IntegrationTest`, que sobem o contexto contra PostgreSQL). Todos gravam no mesmo
 `target/jacoco.exec`, e é sobre ele que o piso é calculado. Os testes de tag `core-e2e` ficam
-fora do `verify` padrão (`test.excluded-groups` no `pom.xml`) e não contam para o piso.
+fora do `verify` padrão (`test.excluded-groups` no `pom.xml`) e não contam para o piso. O perfil
+`core-e2e`, que roda só esses testes, não mede cobertura (`jacoco.skip` no perfil), porque a
+fatia de código que eles exercitam reprovaria um piso que é do `verify` padrão.
 
 **Nenhuma classe é excluída da medição.** Não há `<excludes>` em nenhuma execução do JaCoCo.
 O relatório analisa as 389 classes do pacote (`Analyzed bundle 'sinapse-platform' with 389
