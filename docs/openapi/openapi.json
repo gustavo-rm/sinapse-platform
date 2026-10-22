@@ -1139,6 +1139,76 @@
         },
         "type": "object"
       },
+      "StudentPanelSessionSummary": {
+        "description": "One executed study session",
+        "properties": {
+          "actualDurationMinutes": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "durationSource": {
+            "enum": [
+              "MEASURED",
+              "SELF_REPORTED"
+            ],
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "STUDY",
+              "REVISION"
+            ],
+            "type": "string"
+          },
+          "recallRating": {
+            "enum": [
+              "AGAIN",
+              "HARD",
+              "GOOD",
+              "EASY"
+            ],
+            "type": "string"
+          },
+          "sessionId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "source": {
+            "enum": [
+              "FROM_PLAN",
+              "SELF_DIRECTED"
+            ],
+            "type": "string"
+          },
+          "startedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "IN_PROGRESS",
+              "COMPLETED",
+              "ABANDONED"
+            ],
+            "type": "string"
+          },
+          "subjectId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "subjectName": {
+            "type": "string"
+          },
+          "topicId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "topicName": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "StudentPanelView": {
         "description": "A teacher's view of one student over a window",
         "properties": {
@@ -1167,7 +1237,7 @@
           },
           "recentSessions": {
             "items": {
-              "$ref": "#/components/schemas/SessionSummary"
+              "$ref": "#/components/schemas/StudentPanelSessionSummary"
             },
             "type": "array"
           },

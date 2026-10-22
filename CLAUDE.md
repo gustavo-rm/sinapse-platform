@@ -283,6 +283,11 @@ Before any non-trivial task:
    it, record "other-repo@<sha>" in your notes, delete the temp directory. If you cannot read it,
    say so and mark every dependent claim UNVERIFIED. Do not guess.
 
+Executing the other repository's code is forbidden unless the task prompt orders it explicitly.
+When it does: shallow clone of its origin/main outside this repository; build and run it only
+there; bind to 127.0.0.1; synthetic data only; stop every process you started and delete the
+clone; cite other-repo@<sha> in the report.
+
 After the task, in the SAME PR as the code:
 
 4. Update your row in STATE.md (edit only your own task row to avoid merge conflicts), known issues

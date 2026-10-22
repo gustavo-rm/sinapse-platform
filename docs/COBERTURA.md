@@ -17,7 +17,9 @@ O `jacoco-maven-plugin` 0.8.13 (`pom.xml`) tem três execuções:
 o surefire roda na fase `test` tanto os testes unitários quanto os de integração (as classes
 `*IntegrationTest`, que sobem o contexto contra PostgreSQL). Todos gravam no mesmo
 `target/jacoco.exec`, e é sobre ele que o piso é calculado. Os testes de tag `core-e2e` ficam
-fora do `verify` padrão (`test.excluded-groups` no `pom.xml`) e não contam para o piso.
+fora do `verify` padrão (`test.excluded-groups` no `pom.xml`) e não contam para o piso. O perfil
+`core-e2e`, que roda só esses testes, não mede cobertura (`jacoco.skip` no perfil), porque a
+fatia de código que eles exercitam reprovaria um piso que é do `verify` padrão.
 
 **Nenhuma classe é excluída da medição.** Não há `<excludes>` em nenhuma execução do JaCoCo.
 O relatório analisa as 389 classes do pacote (`Analyzed bundle 'sinapse-platform' with 389
@@ -44,6 +46,30 @@ resultado nas duas (variação de 0,0 ponto percentual):
 - Ramos: 0,811 − 0,002 = 0,809.
 
 Os 0,002 são a margem de ruído entre execuções, não uma folga para piorar.
+
+**O piso é medido com banco vazio**: o PostgreSQL novo do Testcontainers ou, com
+`SINAPSE_TEST_DB_URL`, um banco recriado logo antes do `verify`. Um banco reaproveitado de
+execuções anteriores pode medir abaixo do piso sem que nenhum código tenha mudado. Em 21/10/2026
+(SP-14), no mesmo código, o banco recriado mediu 0,952423 e 0,811351 (0,952657 numa segunda
+vez, pela segunda causa abaixo), e o mesmo banco, reaproveitado, mediu 0,950462 e 0,809752 numa
+execução e 0,950696 e 0,809752 na seguinte. Há duas causas, independentes:
+
+- **Dado deixado no banco (42 instruções, 2 ramos).** Ao subir, a aplicação publica os textos de
+  consentimento configurados (`TermsService.publishConfigured`, chamado pelo `ApplicationRunner`
+  de `IdentityConfiguration`) e só insere os que ainda não existem. Num banco vazio o primeiro
+  contexto de teste os insere e cobre esse caminho (com o construtor de `TermsVersion`); num
+  banco reaproveitado eles já estão lá e o caminho não roda. Nenhum teste exercita a inserção
+  diretamente.
+- **Escalonamento de threads (5 instruções, nenhum ramo).** O `catch` de
+  `StudySessionService.persist` (índice único violado) só é alcançado por
+  `StudySessionLifecycleIntegrationTest.twoSimultaneousStartsLeaveExactlyOneSessionRunning`,
+  que dispara dois inícios de sessão ao mesmo tempo. O que perde é recusado ou pela consulta
+  feita antes do insert ou pelo índice, conforme a ordem em que as threads rodam; o teste
+  aceita as duas saídas. Rodando sozinho, cobriu o `catch` em 8 de 8 execuções; na suíte
+  completa, em 2 de 4. Isso não depende do banco, e só pode subir a medição (cerca de 0,0002)
+  em relação aos valores acima, que foram medidos sem o `catch` coberto.
+
+Para medir, recrie o banco antes do `verify`.
 
 A regra é de `BUNDLE` (o projeto inteiro), métrica `COVEREDRATIO`. Os pisos ficam nas
 propriedades `coverage.minimum.instruction` e `coverage.minimum.branch` do `pom.xml`.

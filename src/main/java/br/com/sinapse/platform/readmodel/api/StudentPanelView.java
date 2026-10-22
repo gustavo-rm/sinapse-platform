@@ -122,7 +122,7 @@ public record StudentPanelView(
      *                              if they were
      * @param recallRating          the student's own judgement, only on a completed session
      */
-    @Schema(description = "One executed study session")
+    @Schema(name = "StudentPanelSessionSummary", description = "One executed study session")
     public record SessionSummary(
             UUID sessionId,
             UUID topicId,
