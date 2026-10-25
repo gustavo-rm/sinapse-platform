@@ -5,6 +5,7 @@ import br.com.sinapse.platform.educational.api.VisibilityScope;
 import br.com.sinapse.platform.educational.internal.domain.Invite;
 import br.com.sinapse.platform.educational.internal.service.InviteService;
 import br.com.sinapse.platform.identity.api.CurrentAccount;
+import br.com.sinapse.platform.shared.web.problem.ProblemDetailsSchema;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -17,7 +18,6 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -76,10 +76,10 @@ public class InviteController {
             @ApiResponse(responseCode = "201", description = "Invite issued"),
             @ApiResponse(responseCode = "400", description = "The requested lifetime is out of range",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class))),
+                            schema = @Schema(implementation = ProblemDetailsSchema.class))),
             @ApiResponse(responseCode = "404", description = "No such classroom for this teacher",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     public ResponseEntity<InviteResponse> issue(@PathVariable UUID classroomId,
             @Valid @RequestBody(required = false) InviteRequest request) {
 
@@ -104,7 +104,7 @@ public class InviteController {
             @ApiResponse(responseCode = "200", description = "The invites"),
             @ApiResponse(responseCode = "404", description = "No such classroom for this teacher",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     public List<InviteResponse> list(@PathVariable UUID classroomId) {
         return invites.listFor(CurrentAccount.require().accountId(), classroomId).stream()
                 .map(this::responseFor)
@@ -123,7 +123,7 @@ public class InviteController {
             @ApiResponse(responseCode = "204", description = "Invite revoked"),
             @ApiResponse(responseCode = "404", description = "No such invite for this teacher",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     public ResponseEntity<Void> revoke(@PathVariable UUID inviteId) {
         invites.revoke(CurrentAccount.require().accountId(), inviteId);
         return ResponseEntity.noContent().build();
@@ -148,10 +148,10 @@ public class InviteController {
                     + "expired, revoked, exhausted, or its classroom is archived. The five answer "
                     + "identically on purpose",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class))),
+                            schema = @Schema(implementation = ProblemDetailsSchema.class))),
             @ApiResponse(responseCode = "429", description = "Rate limit exceeded",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     public InvitePreviewResponse preview(@PathVariable String code) {
         InviteService.InvitePreview preview = invites.preview(code);
         return new InvitePreviewResponse(
@@ -186,17 +186,17 @@ public class InviteController {
             @ApiResponse(responseCode = "403", description = "The account may not share its data "
                     + "with an institution",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class))),
+                            schema = @Schema(implementation = ProblemDetailsSchema.class))),
             @ApiResponse(responseCode = "404", description = "The code admits to nothing",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class))),
+                            schema = @Schema(implementation = ProblemDetailsSchema.class))),
             @ApiResponse(responseCode = "409", description = "Already enrolled, or the caller owns "
                     + "the classroom",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class))),
+                            schema = @Schema(implementation = ProblemDetailsSchema.class))),
             @ApiResponse(responseCode = "429", description = "Rate limit exceeded",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     public ResponseEntity<EnrollmentResponse> redeem(@PathVariable String code) {
         EnrollmentView enrollment = invites.redeem(CurrentAccount.require().accountId(), code);
         return ResponseEntity.status(HttpStatus.CREATED).body(new EnrollmentResponse(

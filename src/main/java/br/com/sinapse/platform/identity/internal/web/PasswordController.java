@@ -2,6 +2,7 @@ package br.com.sinapse.platform.identity.internal.web;
 
 import br.com.sinapse.platform.identity.api.CurrentAccount;
 import br.com.sinapse.platform.identity.internal.service.PasswordService;
+import br.com.sinapse.platform.shared.web.problem.ProblemDetailsSchema;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -10,7 +11,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
-import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -50,7 +50,7 @@ public class PasswordController {
             @ApiResponse(responseCode = "204", description = "Request accepted"),
             @ApiResponse(responseCode = "429", description = "Rate limit exceeded",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     public ResponseEntity<Void> requestReset(@Valid @RequestBody PasswordResetRequest request) {
         passwords.requestReset(request.email().trim());
         return ResponseEntity.noContent().build();
@@ -70,10 +70,10 @@ public class PasswordController {
             @ApiResponse(responseCode = "204", description = "Password changed and sessions ended"),
             @ApiResponse(responseCode = "404", description = "Token unknown, expired or already used",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class))),
+                            schema = @Schema(implementation = ProblemDetailsSchema.class))),
             @ApiResponse(responseCode = "429", description = "Rate limit exceeded",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     public ResponseEntity<Void> completeReset(@Valid @RequestBody PasswordResetConfirmation request) {
         passwords.completeReset(request.token(), request.newPassword());
         return ResponseEntity.noContent().build();
@@ -94,7 +94,7 @@ public class PasswordController {
             @ApiResponse(responseCode = "401", description = "No usable session, or the current "
                     + "password does not match",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     public ResponseEntity<Void> change(@Valid @RequestBody PasswordChangeRequest request) {
         passwords.change(CurrentAccount.require().accountId(),
                 request.currentPassword(), request.newPassword());

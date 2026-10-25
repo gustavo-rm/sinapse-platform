@@ -3,6 +3,7 @@ package br.com.sinapse.platform.curriculum.internal.web;
 import br.com.sinapse.platform.curriculum.api.CurriculumCatalog;
 import br.com.sinapse.platform.curriculum.api.SubjectView;
 import br.com.sinapse.platform.curriculum.internal.error.UnknownTopicException;
+import br.com.sinapse.platform.shared.web.problem.ProblemDetailsSchema;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -15,7 +16,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.IntStream;
 import org.springframework.http.MediaType;
-import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
@@ -80,7 +80,7 @@ public class CatalogController {
             @ApiResponse(responseCode = "200", description = "The topics"),
             @ApiResponse(responseCode = "404", description = "No such subject",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     public List<TopicResponse> topics(@PathVariable UUID subjectId) {
         if (catalog.subjectsByIds(Set.of(subjectId)).isEmpty()) {
             throw new UnknownTopicException();

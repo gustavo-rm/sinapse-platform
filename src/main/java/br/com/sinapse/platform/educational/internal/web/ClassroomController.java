@@ -6,6 +6,7 @@ import br.com.sinapse.platform.educational.internal.domain.Classroom;
 import br.com.sinapse.platform.educational.internal.service.ClassroomService;
 import br.com.sinapse.platform.educational.internal.service.EducationalDirectoryService;
 import br.com.sinapse.platform.identity.api.CurrentAccount;
+import br.com.sinapse.platform.shared.web.problem.ProblemDetailsSchema;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -17,7 +18,6 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -66,7 +66,7 @@ public class ClassroomController {
             @ApiResponse(responseCode = "403", description = "The caller is not a teacher, or has "
                     + "no teacher record",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     public ResponseEntity<ClassroomResponse> open(@Valid @RequestBody ClassroomRequest request) {
         ClassroomView classroom = classrooms.open(CurrentAccount.require().accountId(),
                 request.name().trim(), request.subjectIds());
@@ -105,10 +105,10 @@ public class ClassroomController {
             @ApiResponse(responseCode = "200", description = "Classroom archived"),
             @ApiResponse(responseCode = "404", description = "No such classroom for this teacher",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class))),
+                            schema = @Schema(implementation = ProblemDetailsSchema.class))),
             @ApiResponse(responseCode = "409", description = "It is already archived",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     public ClassroomResponse archive(@PathVariable UUID classroomId) {
         UUID caller = CurrentAccount.require().accountId();
         classrooms.archive(caller, classroomId);
@@ -146,7 +146,7 @@ public class ClassroomController {
             @ApiResponse(responseCode = "200", description = "The active enrollments"),
             @ApiResponse(responseCode = "404", description = "No such classroom for this teacher",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     public List<EnrollmentResponse> students(@PathVariable UUID classroomId) {
         UUID caller = CurrentAccount.require().accountId();
         Classroom classroom = classrooms.requireOwned(caller, classroomId);
@@ -171,7 +171,7 @@ public class ClassroomController {
             @ApiResponse(responseCode = "404", description = "No such classroom for this teacher, "
                     + "or the student is not in it",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     public ResponseEntity<Void> removeStudent(@PathVariable UUID classroomId,
             @PathVariable UUID accountId) {
         classrooms.remove(CurrentAccount.require().accountId(), classroomId, accountId);

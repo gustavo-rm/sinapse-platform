@@ -4,6 +4,7 @@ import br.com.sinapse.platform.identity.api.CurrentAccount;
 import br.com.sinapse.platform.planning.api.PlanningDirectory;
 import br.com.sinapse.platform.planning.internal.service.GoalService;
 import br.com.sinapse.platform.planning.internal.service.PlanningAccess;
+import br.com.sinapse.platform.shared.web.problem.ProblemDetailsSchema;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -15,7 +16,6 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -69,11 +69,11 @@ public class GoalController {
             @ApiResponse(responseCode = "201", description = "Goal set"),
             @ApiResponse(responseCode = "404", description = "No such subject",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class))),
+                            schema = @Schema(implementation = ProblemDetailsSchema.class))),
             @ApiResponse(responseCode = "409", description = "There is already an active goal for "
                     + "that subject",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     public ResponseEntity<GoalResponse> set(@Valid @RequestBody GoalRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(GoalResponse.of(
                 goals.set(callerId(), request.subjectId(), request.targetDate(),
@@ -113,10 +113,10 @@ public class GoalController {
             @ApiResponse(responseCode = "200", description = "Goal revised"),
             @ApiResponse(responseCode = "404", description = "No such goal for this account",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class))),
+                            schema = @Schema(implementation = ProblemDetailsSchema.class))),
             @ApiResponse(responseCode = "409", description = "The goal has already been closed",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     public GoalResponse revise(@PathVariable UUID goalId,
             @Valid @RequestBody GoalRevisionRequest request) {
 
@@ -137,10 +137,10 @@ public class GoalController {
             @ApiResponse(responseCode = "200", description = "Goal achieved"),
             @ApiResponse(responseCode = "404", description = "No such goal for this account",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class))),
+                            schema = @Schema(implementation = ProblemDetailsSchema.class))),
             @ApiResponse(responseCode = "409", description = "The goal has already been closed",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     public GoalResponse achieve(@PathVariable UUID goalId) {
         return GoalResponse.of(goals.achieve(callerId(), goalId));
     }
@@ -160,10 +160,10 @@ public class GoalController {
             @ApiResponse(responseCode = "200", description = "Goal abandoned"),
             @ApiResponse(responseCode = "404", description = "No such goal for this account",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class))),
+                            schema = @Schema(implementation = ProblemDetailsSchema.class))),
             @ApiResponse(responseCode = "409", description = "The goal has already been closed",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     public GoalResponse abandon(@PathVariable UUID goalId) {
         return GoalResponse.of(goals.abandon(callerId(), goalId));
     }

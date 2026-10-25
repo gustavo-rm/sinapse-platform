@@ -7,6 +7,7 @@ import br.com.sinapse.platform.planning.internal.error.UnknownPlanException;
 import br.com.sinapse.platform.planning.internal.service.PlanningAccess;
 import br.com.sinapse.platform.planning.internal.service.ScheduleWindow;
 import br.com.sinapse.platform.planning.internal.service.StudyPlanService;
+import br.com.sinapse.platform.shared.web.problem.ProblemDetailsSchema;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -17,7 +18,6 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.http.MediaType;
-import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -67,7 +67,7 @@ public class StudyPlanController {
             @ApiResponse(responseCode = "200", description = "The active plan"),
             @ApiResponse(responseCode = "404", description = "There is no active plan",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     public StudyPlanResponse current() {
         UUID accountId = callerId();
         access.requireProcessable(accountId);
@@ -109,7 +109,7 @@ public class StudyPlanController {
             @ApiResponse(responseCode = "200", description = "The plan"),
             @ApiResponse(responseCode = "404", description = "No such plan for this account",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     public StudyPlanResponse plan(@PathVariable UUID planId) {
         return StudyPlanResponse.of(plans.require(callerId(), planId));
     }
@@ -130,7 +130,7 @@ public class StudyPlanController {
             @ApiResponse(responseCode = "200", description = "The sessions"),
             @ApiResponse(responseCode = "404", description = "No such plan for this account",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     public List<PlannedSessionResponse> sessionsOfPlan(@PathVariable UUID planId) {
         StudyPlanView plan = plans.require(callerId(), planId);
         return directory.sessionsOfPlan(plan.id()).stream()
@@ -157,7 +157,7 @@ public class StudyPlanController {
             @ApiResponse(responseCode = "400", description = "The window is empty, inverted or "
                     + "wider than the accepted maximum",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     public List<PlannedSessionResponse> plannedSessions(@RequestParam Instant from,
             @RequestParam Instant to) {
 

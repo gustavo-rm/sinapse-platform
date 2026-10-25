@@ -6,6 +6,7 @@ import br.com.sinapse.platform.learningrecord.internal.error.UnknownSessionExcep
 import br.com.sinapse.platform.learningrecord.internal.service.HistoryWindow;
 import br.com.sinapse.platform.learningrecord.internal.service.LearningRecordAccess;
 import br.com.sinapse.platform.learningrecord.internal.service.StudySessionService;
+import br.com.sinapse.platform.shared.web.problem.ProblemDetailsSchema;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -18,7 +19,6 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -83,13 +83,13 @@ public class StudySessionController {
             @ApiResponse(responseCode = "403", description = "This account's learning data may "
                     + "not be processed",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class))),
+                            schema = @Schema(implementation = ProblemDetailsSchema.class))),
             @ApiResponse(responseCode = "404", description = "No such topic",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class))),
+                            schema = @Schema(implementation = ProblemDetailsSchema.class))),
             @ApiResponse(responseCode = "409", description = "A session is already running",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     public ResponseEntity<StudySessionResponse> start(
             @Valid @RequestBody StartSessionRequest request) {
 
@@ -114,11 +114,11 @@ public class StudySessionController {
             @ApiResponse(responseCode = "200", description = "Session completed"),
             @ApiResponse(responseCode = "404", description = "No such session for this account",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class))),
+                            schema = @Schema(implementation = ProblemDetailsSchema.class))),
             @ApiResponse(responseCode = "409", description = "The session is already closed. A "
                     + "correction is a new record, not an edit",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     public StudySessionResponse complete(@PathVariable UUID sessionId,
             @Valid @RequestBody CompleteSessionRequest request) {
 
@@ -142,10 +142,10 @@ public class StudySessionController {
             @ApiResponse(responseCode = "200", description = "Session abandoned"),
             @ApiResponse(responseCode = "404", description = "No such session for this account",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class))),
+                            schema = @Schema(implementation = ProblemDetailsSchema.class))),
             @ApiResponse(responseCode = "409", description = "The session is already closed",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     public StudySessionResponse abandon(@PathVariable UUID sessionId) {
         return StudySessionResponse.of(sessions.abandon(callerId(), sessionId));
     }
@@ -167,13 +167,13 @@ public class StudySessionController {
             @ApiResponse(responseCode = "400", description = "The session is in the future or "
                     + "older than the accepted limit",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class))),
+                            schema = @Schema(implementation = ProblemDetailsSchema.class))),
             @ApiResponse(responseCode = "404", description = "No such topic",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class))),
+                            schema = @Schema(implementation = ProblemDetailsSchema.class))),
             @ApiResponse(responseCode = "429", description = "Rate limit exceeded",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     public ResponseEntity<StudySessionResponse> recordRetroactively(
             @Valid @RequestBody RetroactiveSessionRequest request) {
 
@@ -200,7 +200,7 @@ public class StudySessionController {
             @ApiResponse(responseCode = "400", description = "The window is empty, inverted or "
                     + "wider than the accepted maximum",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     public List<StudySessionResponse> list(@RequestParam Instant from, @RequestParam Instant to) {
         UUID accountId = callerId();
         access.requireProcessable(accountId);
@@ -224,7 +224,7 @@ public class StudySessionController {
             @ApiResponse(responseCode = "200", description = "The running session"),
             @ApiResponse(responseCode = "404", description = "Nothing is running",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     public StudySessionResponse current() {
         UUID accountId = callerId();
         access.requireProcessable(accountId);
