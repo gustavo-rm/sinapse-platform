@@ -39,6 +39,17 @@ request, que mostra ao frontend o que mudou no contrato.
 Se o diff trouxer algo que não deveria estar no contrato, o problema está no código (uma
 anotação, um DTO), não no snapshot: corrija lá e regenere.
 
+## `operationId` faz parte da API
+
+O gerador de cliente transforma cada `operationId` no nome de um método. Mudar um
+`operationId` quebra todo cliente gerado de um snapshot anterior, mesmo que rota, parâmetros e
+corpo continuem iguais. Por isso cada operação tem um nome único, em lowerCamelCase e sem
+sufixo numérico. Quando dois handlers têm o mesmo nome de método Java, o nome da operação é
+declarado com `@Operation(operationId = ...)`: um verbo para comando (`abandonGoal`), o
+substantivo do que volta para consulta (`goals`). `OpenApiOperationIdIntegrationTest` falha o
+build se alguma dessas regras for quebrada. Renomear de propósito é mudança de contrato e vai
+no mesmo PR que o snapshot regenerado.
+
 ## Forma estável
 
 Para que o diff mostre só o que mudou no contrato, o arquivo é escrito sempre do mesmo jeito:
@@ -57,23 +68,19 @@ O mesmo teste sobe a aplicação **duas vezes** (uma pelo contexto de teste, out
 aplicação independente servindo HTTP numa porta livre) e exige o mesmo documento. Antes da
 normalização, só `servers` difere entre as duas.
 
-## O que o snapshot revelou (19/10/2026, não corrigido)
+## O que o snapshot revelou (19/10/2026)
 
-Relatado no PR do SP-13 e registrado em [`docs/ai/STATE.md`](../ai/STATE.md); nada disso foi
-alterado aqui.
+Relatado no PR do SP-13 e registrado em [`docs/ai/STATE.md`](../ai/STATE.md).
 
-- **`operationId` com sufixo numérico.** O springdoc usa o nome do método Java como
-  `operationId` e, quando dois métodos têm o mesmo nome, acrescenta `_1`, `_2`… na ordem em que
-  encontra os controllers. São 15 operações assim (por exemplo `list`, `list_1` … `list_7`).
-  Geradores de cliente usam o `operationId` como nome de método: um controller novo com um
-  método `list` pode renumerar os existentes e quebrar o cliente gerado. Entre duas partidas do
-  mesmo código o resultado é estável.
-- **Erros RFC 7807.** Todas as 90 respostas de erro declaradas usam
-  `application/problem+json` com o esquema `ProblemDetail`. Esse esquema, porém, descreve um
-  campo `properties` que não aparece no corpo real (o Spring escreve as extensões no nível de
-  cima) e não descreve a extensão `errors` das falhas de validação. Além disso, 9 operações
-  `GET` não declaram nenhuma resposta de erro, embora possam responder com erro (por exemplo
-  `401` nas que exigem sessão).
+- **`operationId` com sufixo numérico.** Corrigido pelo SP-14b (25/10/2026): as 15 operações
+  com `_1`, `_2`… têm nome declarado, e a regra está na seção acima.
+- **Erros RFC 7807.** O esquema das 90 respostas de erro era o `ProblemDetail` do springdoc,
+  que descrevia um campo `properties` ausente do corpo real e não descrevia `errors`.
+  Corrigido pelo SP-14b: as respostas de erro usam o esquema `ProblemDetails`, que descreve o
+  corpo como ele sai, e `OpenApiProblemSchemaIntegrationTest` compara com ele um corpo real de
+  cada tipo de erro. **Continua aberto:** 9 operações `GET` não declaram nenhuma resposta de
+  erro, embora 8 delas respondam `401` sem sessão; e só 11 das 53 operações que respondem `401`
+  o declaram (K30 em [`docs/ai/STATE.md`](../ai/STATE.md)).
 - **Exposição em produção.** Sem perfil ativo, `/api-docs`, `/api-docs/swagger-config` e
   `/swagger-ui/index.html` respondem `200` a qualquer um, sem autenticação, na porta HTTP da
   aplicação (a cadeia de segurança cai no `permitAll` final). `/v3/api-docs` responde `404`
