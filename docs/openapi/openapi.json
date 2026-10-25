@@ -3480,7 +3480,7 @@
     },
     "/api/v1/sessions": {
       "get": {
-        "operationId": "userSessions",
+        "operationId": "loginSessions",
         "responses": {
           "200": {
             "content": {
@@ -3513,7 +3513,7 @@
       },
       "post": {
         "description": "Answers with an opaque token, both as an HttpOnly, Secure, SameSite=Strict cookie for browsers and in the body for clients that send it back as Authorization: Bearer. Not a JWT: an account suspended by a consent revocation has to stop working on the next request, not at the next expiry.",
-        "operationId": "open",
+        "operationId": "openLoginSession",
         "requestBody": {
           "content": {
             "application/json": {
@@ -3938,7 +3938,7 @@
     "/api/v1/study-sessions": {
       "get": {
         "description": "The window is mandatory and its span is capped. A history grows without limit and there is no generic pagination in this API, so an unbounded read would be a way of asking the server for everything.",
-        "operationId": "list",
+        "operationId": "studySessions",
         "parameters": [
           {
             "in": "query",
@@ -4053,7 +4053,7 @@
     "/api/v1/study-sessions/current": {
       "get": {
         "description": "At most one exists. The initial screen reads this so that it can offer to resume rather than start a second one and be refused.",
-        "operationId": "current",
+        "operationId": "currentStudySession",
         "responses": {
           "200": {
             "content": {
@@ -4147,7 +4147,7 @@
     "/api/v1/study-sessions/{sessionId}/abandonment": {
       "post": {
         "description": "No rating and no duration. The student stopped, and the elapsed time of a session somebody walked away from measures nothing; what the record says is that it was opened and not finished.",
-        "operationId": "abandon",
+        "operationId": "abandonStudySession",
         "parameters": [
           {
             "in": "path",

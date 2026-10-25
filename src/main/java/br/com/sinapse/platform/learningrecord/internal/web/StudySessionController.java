@@ -134,7 +134,7 @@ public class StudySessionController {
      */
     @PostMapping(value = LearningRecordRoutes.SESSIONS + "/{sessionId}/abandonment",
             produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Abandons a running session",
+    @Operation(operationId = "abandonStudySession", summary = "Abandons a running session",
             description = "No rating and no duration. The student stopped, and the elapsed time "
                     + "of a session somebody walked away from measures nothing; what the record "
                     + "says is that it was opened and not finished.")
@@ -191,7 +191,8 @@ public class StudySessionController {
      * @return the sessions that started within it, most recent first
      */
     @GetMapping(value = LearningRecordRoutes.SESSIONS, produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Lists the caller's study sessions in a window",
+    @Operation(operationId = "studySessions",
+            summary = "Lists the caller's study sessions in a window",
             description = "The window is mandatory and its span is capped. A history grows "
                     + "without limit and there is no generic pagination in this API, so an "
                     + "unbounded read would be a way of asking the server for everything.")
@@ -217,7 +218,7 @@ public class StudySessionController {
      */
     @GetMapping(value = LearningRecordRoutes.CURRENT_SESSION,
             produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "The caller's running session",
+    @Operation(operationId = "currentStudySession", summary = "The caller's running session",
             description = "At most one exists. The initial screen reads this so that it can "
                     + "offer to resume rather than start a second one and be refused.")
     @ApiResponses({
