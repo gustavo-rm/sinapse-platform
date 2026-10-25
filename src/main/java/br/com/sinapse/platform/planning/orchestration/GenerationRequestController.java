@@ -61,7 +61,7 @@ public class GenerationRequestController {
      */
     @PostMapping(value = PlanningRoutes.GENERATION_REQUESTS,
             produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Asks the optimiser for a plan",
+    @Operation(operationId = "requestPlanGeneration", summary = "Asks the optimiser for a plan",
             description = "Returns immediately with a job to poll; it never waits for the core. "
                     + "The horizon is configured and is not the client's to choose. One "
                     + "unfinished job per account, and availability and at least one goal have "
@@ -93,7 +93,7 @@ public class GenerationRequestController {
      */
     @GetMapping(value = PlanningRoutes.GENERATION_REQUESTS + "/{requestId}",
             produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "The state of a generation job",
+    @Operation(operationId = "planGenerationRequest", summary = "The state of a generation job",
             description = "Polled, because there is no event notification in this version. "
                     + "Once the status is READY the response carries the identifier of the plan. "
                     + "The progress field is absent whenever it is indeterminate, which in this "

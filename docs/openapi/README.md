@@ -47,8 +47,14 @@ corpo continuem iguais. Por isso cada operação tem um nome único, em lowerCam
 sufixo numérico. Quando dois handlers têm o mesmo nome de método Java, o nome da operação é
 declarado com `@Operation(operationId = ...)`: um verbo para comando (`abandonGoal`), o
 substantivo do que volta para consulta (`goals`). `OpenApiOperationIdIntegrationTest` falha o
-build se alguma dessas regras for quebrada. Renomear de propósito é mudança de contrato e vai
-no mesmo PR que o snapshot regenerado.
+build se alguma dessas regras for quebrada. O mesmo teste recusa `operationId` que seja palavra
+reservada de ECMAScript ou TypeScript, porque o gerador a renomeia (`export` vira `_export`):
+`break`, `case`, `catch`, `class`, `const`, `continue`, `debugger`, `default`, `delete`, `do`,
+`else`, `enum`, `export`, `extends`, `false`, `finally`, `for`, `function`, `if`, `implements`,
+`import`, `in`, `instanceof`, `interface`, `let`, `new`, `null`, `package`, `private`,
+`protected`, `public`, `return`, `static`, `super`, `switch`, `this`, `throw`, `true`, `try`,
+`typeof`, `var`, `void`, `while`, `with`, `yield` e `await`. Renomear de propósito é mudança de
+contrato e vai no mesmo PR que o snapshot regenerado.
 
 ## Forma estável
 

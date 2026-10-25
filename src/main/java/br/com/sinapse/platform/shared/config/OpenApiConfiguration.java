@@ -29,6 +29,8 @@ public class OpenApiConfiguration {
                         Every route lives under /api/v1. Errors follow RFC 7807 and are \
                         served as application/problem+json. Instants are ISO-8601 with \
                         offset; local times are interpreted in the account's time zone.""")
-                .license(new License().name("MIT")));
+                // The SPDX identifier of the LICENSE file. OpenAPI 3.1 has it, and client
+                // generators that validate the document refuse a license without it or a URL.
+                .license(new License().name("MIT").identifier("MIT")));
     }
 }

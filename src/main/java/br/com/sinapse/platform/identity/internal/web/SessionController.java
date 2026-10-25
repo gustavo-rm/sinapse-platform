@@ -68,7 +68,7 @@ public class SessionController {
      */
     @PostMapping(value = IdentityRoutes.SESSIONS,
             consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Opens a session",
+    @Operation(operationId = "openLoginSession", summary = "Opens a session",
             description = "Answers with an opaque token, both as an HttpOnly, Secure, "
                     + "SameSite=Strict cookie for browsers and in the body for clients that send "
                     + "it back as Authorization: Bearer. Not a JWT: an account suspended by a "
@@ -104,7 +104,7 @@ public class SessionController {
      * @return the sessions, newest first
      */
     @GetMapping(value = IdentityRoutes.SESSIONS, produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(operationId = "userSessions", summary = "Lists the caller's own sessions")
+    @Operation(operationId = "loginSessions", summary = "Lists the caller's own sessions")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "The sessions still usable"),
             @ApiResponse(responseCode = "401", description = "No usable session on the request",
