@@ -85,9 +85,14 @@ logging:
     org.springframework.web: INFO
 
 springdoc:
+  # Off unless a profile turns it on (ADR 0018): the document and the interface describe every
+  # route of the platform, and the security chain leaves them open. The local and test profiles
+  # switch both on; a deployment runs on this file and publishes neither.
   api-docs:
+    enabled: false
     path: /api-docs
   swagger-ui:
+    enabled: false
     path: /swagger-ui.html
     operations-sorter: alpha
     tags-sorter: alpha

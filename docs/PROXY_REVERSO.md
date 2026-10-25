@@ -94,3 +94,17 @@ Depois de configurar, o aviso de partida deixa de aparecer.
 
 Frontend e plataforma na mesma origem, atrás do mesmo proxy, não mudam nada disso: o que
 importa é o endereço que a aplicação vê na conexão.
+
+## Documentação da API
+
+Desde a [ADR 0018](adr/0018-documentacao-da-api-desligada-por-padrao.md), a plataforma não publica
+a documentação da API sem perfil, que é como uma implantação sobe: `/api-docs`,
+`/api-docs/swagger-config` e `/swagger-ui` respondem `404`. Antes, respondiam `200` a qualquer
+um, e cabia ao proxy decidir se elas saíam para a internet.
+
+- O proxy **não precisa mais bloquear** esses caminhos: na implantação padrão não há nada neles.
+- O proxy **não deve publicá-los**. Se uma implantação ligar `springdoc.api-docs.enabled` ou
+  `springdoc.swagger-ui.enabled`, o documento volta a sair sem autenticação, porque a cadeia de
+  segurança não protege esses caminhos (o `permitAll` final continua existindo).
+- O Swagger UI genérico da biblioteca continua em `/webjars/swagger-ui/`, sem o documento do
+  Sinapse (K34 em [`docs/ai/STATE.md`](ai/STATE.md)).

@@ -16,6 +16,13 @@ logging:
   level:
     br.com.sinapse.platform: DEBUG
 
+springdoc:
+  # The base configuration publishes no API documentation (ADR 0018); a workstation does.
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+
 sinapse:
   rate-limit:
     # Repeated from the base configuration on purpose. A list is bound whole from the

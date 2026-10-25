@@ -15,7 +15,15 @@ daqui.
 | 4 | O Core expõe `POST /plans` (perfil `baseline-core`) e fala o contrato 1.0 | notas de atualização nos ADRs 0001, 0002, 0015 e 0017 | lido no código do Core (`PlanController.java:52-54,74`, `PlanProtocol.java:20,30`, `PlanRequest.java:75,78` em `3b54ba4`), sem execução nesta revisão; a execução que existe é a da auditoria (PRONTIDAO A2e) | `./mvnw verify -Pcore-e2e` com `SINAPSE_E2E_CORE_URL` |
 | 5 | Os três motores (`greedy-baseline`, `ga`, `ga-timeline`) rodam de ponta a ponta escolhidos pela configuração | [INTEGRACAO_CORE.md §4.1](INTEGRACAO_CORE.md) | os testes existem (SP-8), mas não foram executados: não havia Core | o mesmo comando do item 4 (cada teste imprime uma linha `ENGINE-MATRIX`) |
 | 6 | As 61 operações contadas pela auditoria correspondiam ao perfil `local` ou `test` | [openapi/README.md](openapi/README.md) e PR #24 | a auditoria não registrou o perfil; a conta (59 + 4 de probe − 2 do catálogo = 61) é inferência | repetir a contagem com o perfil usado pela auditoria, se ela for recuperável |
-| 7 | O proxy reverso publica, ou não, `/api-docs` e a interface Swagger | STATE K21; [openapi/README.md](openapi/README.md) | é configuração de implantação, fora deste repositório; [PROXY_REVERSO.md](PROXY_REVERSO.md) não fixa os caminhos | ler a configuração do proxy em produção |
+
+## Retiradas sem conferência
+
+- **O proxy publica, ou não, `/api-docs` e a interface Swagger** (antigo item 7). Retirada em
+  25/10/2026 porque perdeu a razão de ser no padrão, não porque alguém conferiu o proxy. Desde a
+  [ADR 0018](adr/0018-documentacao-da-api-desligada-por-padrao.md), a plataforma sem perfil
+  responde `404` nesses caminhos, então não há documentação para o proxy publicar. Para uma
+  implantação que ligue as propriedades `springdoc`, vale a regra de
+  [PROXY_REVERSO.md](PROXY_REVERSO.md): o proxy não deve publicá-los.
 
 ## Conferidas nesta revisão (saíram da lista)
 

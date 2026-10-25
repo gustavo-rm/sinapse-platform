@@ -43,6 +43,19 @@ O e-mail do titular não vai para o log nem aqui.
   As migrações rodam na partida, e o perfil `local` publica termos de consentimento de
   desenvolvimento.
 
+## Documentação da API
+
+A especificação OpenAPI e a interface Swagger só existem com o perfil `local` (ou `test`, nos
+testes). Com a aplicação no ar como acima, abra:
+
+- `http://localhost:8080/swagger-ui.html`, a interface, que redireciona para
+  `/swagger-ui/index.html`;
+- `http://localhost:8080/api-docs`, a especificação em JSON.
+
+A porta é a de `SINAPSE_HTTP_PORT`, `8080` por padrão. Sem perfil, como numa implantação, as duas
+respondem `404` ([ADR 0018](adr/0018-documentacao-da-api-desligada-por-padrao.md)). O contrato
+versionado continua em [`openapi/openapi.json`](openapi/openapi.json).
+
 ## Os três passos
 
 **1. Cadastrar.** Pegue o id do termo de `LEARNING_DATA_PROCESSING` e cadastre a conta:

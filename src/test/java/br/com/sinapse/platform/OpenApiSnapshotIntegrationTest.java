@@ -51,6 +51,12 @@ import org.springframework.test.web.servlet.MockMvc;
  * default of ten each would exhaust PostgreSQL's default {@code max_connections}. Nothing in the
  * document depends on the pool.
  *
+ * <p><strong>The document is switched on here, not by a profile.</strong> The base configuration
+ * does not publish {@code /api-docs} (ADR 0018); only the local and test profiles do. Switching
+ * to either profile would change the route set the snapshot describes, so this test, and the
+ * second start, turn on {@code springdoc.api-docs.enabled} as a property and nothing else. The
+ * property decides whether the document is served, not what it says.
+ *
  * <p><strong>Stable form.</strong> Object keys sorted at every level, two-space indentation,
  * {@code "key": value}, {@code \n} line ends, one trailing newline. Array order is kept as
  * generated: it carries meaning (parameter order, for one) and two starts produce the same
@@ -76,7 +82,8 @@ import org.springframework.test.web.servlet.MockMvc;
         "sinapse.data-rights.sweep-cron=-",
         "sinapse.learning-record.consistency-check-cron=-",
         "sinapse.identity.majority-sweep-cron=-",
-        "spring.datasource.hikari.maximum-pool-size=5"})
+        "spring.datasource.hikari.maximum-pool-size=5",
+        "springdoc.api-docs.enabled=true"})
 @DirtiesContext
 class OpenApiSnapshotIntegrationTest extends IntegrationTest {
 
@@ -146,6 +153,7 @@ class OpenApiSnapshotIntegrationTest extends IntegrationTest {
                         "--sinapse.learning-record.consistency-check-cron=-",
                         "--sinapse.identity.majority-sweep-cron=-",
                         "--spring.datasource.hikari.maximum-pool-size=5",
+                        "--springdoc.api-docs.enabled=true",
                         "--spring.main.banner-mode=off")) {
             String port = other.getEnvironment().getProperty("local.server.port");
             HttpResponse<String> response = HttpClient.newHttpClient().send(HttpRequest

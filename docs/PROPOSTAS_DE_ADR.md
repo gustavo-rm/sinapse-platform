@@ -4,9 +4,9 @@
 decisões que o dono do projeto **já tomou** e que hoje vivem só como linhas DECISION em
 [`docs/ai/CONTEXT.md`](ai/CONTEXT.md) ("Decisions recorded here"). O que falta aprovar é a
 **redação**. Aprovada uma redação, o ADR correspondente entra num PR à parte, com o próximo
-número livre (hoje 0018; o 0017 foi ocupado pela renumeração da ponte de contrato) e no formato
-dos demais (`Data` / `Status` / `Complementa`). Registrado como D-AI1 em
-[`docs/ai/STATE.md`](ai/STATE.md).
+número livre (hoje 0019; o 0017 foi ocupado pela renumeração da ponte de contrato e o 0018
+pela documentação da API desligada por padrão) e no formato dos demais (`Data` / `Status` /
+`Complementa`). Registrado como D-AI1 em [`docs/ai/STATE.md`](ai/STATE.md).
 
 Cada proposta diz só o que a decisão já diz, mais as consequências que o código atual mostra,
 com evidência. Onde o texto precisar de uma escolha que o dono não fez, ela está marcada
