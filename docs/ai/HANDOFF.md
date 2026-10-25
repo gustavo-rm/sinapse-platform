@@ -56,10 +56,16 @@ queue), not engine cost. On `origin/main` since #23 (merge `6f879a4`, 2026-10-19
 | Interface affected | `POST /plans` behaviour (no shape change) |
 | What the Core must do | EOA-10 (diagnosis) and EOA-12 (repair), using the instances `src/test/resources/instances/*.json` from `sinapse-platform@cbb5529` |
 | Depends on this | any use of a GA engine by the platform |
-| Status | open |
+| Status | acknowledged |
 
-The Core's EOA-10 diagnosis is merged and EOA-12 is blocked on its D1, D2:
-other-repo@40e6061:docs/ai/STATE.md "Work".
+Core answer read at other-repo@16be5b9 (its HANDOFF.md "Responses", row SP-H3, and STATE.md
+EOA-12, K2, K3), by its owner decisions D1 and D2 (Core ADR-0010, ADR-0011): **`ga-timeline`
+resolved** by EOA-12 (#37): 30/30 non-empty plans passing `PlanOutputInvariants` on the three
+instances from `cbb5529` × seeds 1–10, pinned in its `verify`; greedy and `ga` responses unchanged.
+**`ga` not yet**: still refuses 23/30; the cause is placement (the allocator), not fitness, and the
+options await the owner's decision (Core `docs/REPARO_ESCALA_REAL.md` §7, its K3 open). Not executed
+here: UNVERIFIED(other repository). Platform side: any use of `ga` still waits on that decision;
+`ga-timeline` may be used on the real catalogue (STATE.md K13).
 
 ### SP-H4 — copy the regenerated real-catalogue instances and confirm the responses do not change
 
@@ -71,7 +77,17 @@ other-repo@40e6061:docs/ai/STATE.md "Work".
 | Interface affected | test inputs only (`src/test/resources/instances/`); no contract change: `algorithmParams` is an open map in v1.0 |
 | What the Core must do | (1) Copy the three JSON files and the README from **`origin/main` of this repository**, once PR #27 is merged, byte for byte. (2) Check each file's SHA-256 against the table in that README (values above). (3) Run its harness with the old instances and with the new ones, same engines and seeds, and compare the **content** of the responses, not their bytes (K13: a response is reproducible as content), expecting equality. (4) Answer here, citing SP-H4: equal, or which response differed. The Core's own task for this is EOA-14 |
 | Depends on this | nothing on this side; the Core's diagnosis data stays valid only if (3) holds |
-| Status | open |
+| Status | done |
+
+Core answer read at other-repo@16be5b9 (its HANDOFF.md "Responses", row SP-H4, read by it at
+`3e9ce74`; STATE.md EOA-14, #38): **the responses do not change.** Checked against the request:
+(1) copied byte for byte from this repository's `origin/main` at `3e9ce74` (merge of PR #27);
+(2) the SHA-256 values it reports (`d9efef5f…9f82`, `6b46cf43…64aa`, `8a0ebf3f…5e71`) are the
+three above; (3) old vs new instances compared by content: equal in 90/90 runs (3 instances ×
+`greedy-baseline`, `ga`, `ga-timeline` × seeds 1–10) and in 3/3 HTTP requests; (4) answered citing
+SP-H4. Executed on the Core side only: UNVERIFIED(other repository). Correction from the Core,
+which wins over the "Why" row above: no Core test fails on the instances' SHA-256; the protection
+is the copy procedure (EOA-H2) and `InstanciasSemChavesIgnoradasTest`.
 
 ## Responses to requests from the other repository
 
@@ -94,6 +110,7 @@ Newest first, at most 20 entries; older ones leave (git keeps them).
 
 | Date | Change | Interface affected | Action required |
 |---|---|---|---|
+| 2026-10-25 | Platform SP-15: SP-H4 closed (Core EOA-14: responses equal in content, 90/90 runs, 3/3 HTTP requests); SP-H3 acknowledged (Core EOA-12: `ga-timeline` resolved, `ga` still refuses 23/30, awaits the owner's allocator decision). Both read at other-repo@16be5b9. The platform now has a CI workflow (`.github/workflows/ci.yml`) | none | none for the Core |
 | 2026-10-20 | Platform SP-8b: the default configuration sends `algorithmParams: {}` (plus `engine` if a deployment names one); `generations`, `population-size`, `mutation-rate` are no longer sent; the three real-catalogue instances regenerated without them (only `algorithmParams` changed) | test inputs; wire: three ignored keys no longer sent | Core: SP-H4 (copy, check SHA-256, compare response contents), its EOA-14 |
 | 2026-10-19 | Platform SP-12: SP-H2 closed (`core_call_millis` on `origin/main` since #23); platform ADR "0015 ponte" renumbered to 0017; dated notes in platform ADRs 0001/0002/0015/0017 that the Core serves `POST /plans` (read at other-repo@3b54ba4) | none | Core: references to the platform's "ADR 0015" for the bridge decision now mean 0017 |
 | 2026-10-19 | Platform SP-8: engine set per deployment in the `algorithm-params` map and refused at startup when empty or null; `core_call_millis` measures the call; the three GA keys are still sent (item 3b deferred, K18) | none on the wire for the default configuration | none now. If item 3b regenerates the real-catalogue instances, it will be announced here under EOA-H2 |
