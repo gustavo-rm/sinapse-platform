@@ -126,7 +126,8 @@ public class DataRightsController {
      * @return the assembled document, as a download
      */
     @GetMapping(value = DataRightsRoutes.DATA_EXPORT, produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Downloads everything the platform holds about the caller",
+    @Operation(operationId = "exportMyData",
+            summary = "Downloads everything the platform holds about the caller",
             description = "Assembled from each module, keyed by module. Delivered through this "
                     + "authenticated download and never by e-mail: a mailbox is not a place to "
                     + "put somebody's whole study history. Rate limited, because assembling it "

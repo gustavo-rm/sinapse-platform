@@ -118,7 +118,7 @@ public class InviteController {
      * @return no content
      */
     @DeleteMapping(EducationalRoutes.INVITES + "/{inviteId}")
-    @Operation(summary = "Revokes an invite")
+    @Operation(operationId = "revokeInvite", summary = "Revokes an invite")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Invite revoked"),
             @ApiResponse(responseCode = "404", description = "No such invite for this teacher",

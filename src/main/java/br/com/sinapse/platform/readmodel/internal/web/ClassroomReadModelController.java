@@ -60,7 +60,8 @@ public class ClassroomReadModelController {
      */
     @GetMapping(value = ReadModelRoutes.CLASSROOM_STUDENTS_TEMPLATE,
             produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Lists the students of a classroom with adherence and total time",
+    @Operation(operationId = "classroomRoster",
+            summary = "Lists the students of a classroom with adherence and total time",
             description = "Three fields per student, computed on demand over the requested "
                     + "window. Students who have withdrawn their sharing consent are absent "
                     + "rather than present with the figures blanked out. Returned whole, with a "

@@ -2135,7 +2135,7 @@
     "/api/v1/classrooms/{classroomId}/students": {
       "get": {
         "description": "Three fields per student, computed on demand over the requested window. Students who have withdrawn their sharing consent are absent rather than present with the figures blanked out. Returned whole, with a hard server-side cap: a classroom is naturally small and this API has no generic pagination.",
-        "operationId": "students",
+        "operationId": "classroomRoster",
         "parameters": [
           {
             "in": "path",
@@ -2351,7 +2351,7 @@
     "/api/v1/consents": {
       "get": {
         "description": "Includes withdrawn records: the holder is entitled to see what they consented to and when they took it back.",
-        "operationId": "history",
+        "operationId": "consentHistory",
         "responses": {
           "200": {
             "content": {
@@ -3006,7 +3006,7 @@
     },
     "/api/v1/invites/{inviteId}": {
       "delete": {
-        "operationId": "revoke",
+        "operationId": "revokeInvite",
         "parameters": [
           {
             "in": "path",
@@ -3139,7 +3139,7 @@
     "/api/v1/me/data-export": {
       "get": {
         "description": "Assembled from each module, keyed by module. Delivered through this authenticated download and never by e-mail: a mailbox is not a place to put somebody's whole study history. Rate limited, because assembling it reads every table that mentions the holder.",
-        "operationId": "export",
+        "operationId": "exportMyData",
         "responses": {
           "200": {
             "content": {

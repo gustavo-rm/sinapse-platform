@@ -95,7 +95,7 @@ public class ConsentController {
      * @return every act of consent, granted or withdrawn, most recent first
      */
     @GetMapping(value = IdentityRoutes.CONSENTS, produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Lists the caller's own consent history",
+    @Operation(operationId = "consentHistory", summary = "Lists the caller's own consent history",
             description = "Includes withdrawn records: the holder is entitled to see what they "
                     + "consented to and when they took it back.")
     @ApiResponses({
