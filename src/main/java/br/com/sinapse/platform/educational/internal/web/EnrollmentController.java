@@ -59,7 +59,8 @@ public class EnrollmentController {
      * @return the memberships
      */
     @GetMapping(value = EducationalRoutes.ENROLLMENTS, produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Lists the caller's own memberships of classrooms",
+    @Operation(operationId = "enrollments",
+            summary = "Lists the caller's own memberships of classrooms",
             description = "Ended memberships are included: they are the record of which teachers "
                     + "had access to this student's data, and when it stopped.")
     @ApiResponse(responseCode = "200", description = "The memberships")

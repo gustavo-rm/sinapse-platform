@@ -66,7 +66,7 @@ public class DataRightsController {
      */
     @PostMapping(value = DataRightsRoutes.ERASURE_REQUESTS,
             produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Asks for this account to be erased",
+    @Operation(operationId = "requestErasure", summary = "Asks for this account to be erased",
             description = "The account is suspended and its sessions revoked at once; the "
                     + "erasure itself happens after a configured window, and can be withdrawn "
                     + "until then. Signing in still works during the window, and does nothing "
@@ -88,7 +88,7 @@ public class DataRightsController {
      */
     @GetMapping(value = DataRightsRoutes.ERASURE_REQUESTS,
             produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Lists the caller's erasure requests",
+    @Operation(operationId = "erasureRequests", summary = "Lists the caller's erasure requests",
             description = "Including withdrawn and failed ones. None of them carries a copy of "
                     + "anything that was erased.")
     @ApiResponse(responseCode = "200", description = "The requests")

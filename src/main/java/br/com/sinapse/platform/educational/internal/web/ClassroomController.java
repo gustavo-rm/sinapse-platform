@@ -57,7 +57,7 @@ public class ClassroomController {
      */
     @PostMapping(value = EducationalRoutes.CLASSROOMS,
             consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Opens a classroom",
+    @Operation(operationId = "openClassroom", summary = "Opens a classroom",
             description = "The subjects declare which ones carry an institutional deadline, which "
                     + "is input for the optimisation core. They do not decide what the teacher "
                     + "will see: that is the visibility scope, and today it is everything.")
@@ -79,7 +79,7 @@ public class ClassroomController {
      * @return their classrooms, archived ones included
      */
     @GetMapping(value = EducationalRoutes.CLASSROOMS, produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Lists the classrooms the caller owns")
+    @Operation(operationId = "classrooms", summary = "Lists the classrooms the caller owns")
     @ApiResponse(responseCode = "200", description = "The classrooms, archived ones included")
     public List<ClassroomResponse> list() {
         UUID caller = CurrentAccount.require().accountId();
@@ -136,7 +136,8 @@ public class ClassroomController {
      */
     @GetMapping(value = EducationalRoutes.CLASSROOMS + "/{classroomId}/enrollments",
             produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Lists the enrollments currently open in a classroom",
+    @Operation(operationId = "classroomEnrollments",
+            summary = "Lists the enrollments currently open in a classroom",
             description = "Enrollment management, and distinct from the class list of section "
                     + "3.6 of the API contract: it shows every student who is in the classroom, "
                     + "including one who has withdrawn their sharing consent, because removing "

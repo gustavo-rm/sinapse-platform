@@ -104,7 +104,7 @@ public class SessionController {
      * @return the sessions, newest first
      */
     @GetMapping(value = IdentityRoutes.SESSIONS, produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Lists the caller's own sessions")
+    @Operation(operationId = "userSessions", summary = "Lists the caller's own sessions")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "The sessions still usable"),
             @ApiResponse(responseCode = "401", description = "No usable session on the request",

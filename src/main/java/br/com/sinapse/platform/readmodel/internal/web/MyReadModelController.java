@@ -48,7 +48,8 @@ public class MyReadModelController {
      * @return the caller's state
      */
     @GetMapping(value = ReadModelRoutes.MY_STATE, produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Everything the initial screen needs, in one call",
+    @Operation(operationId = "myState",
+            summary = "Everything the initial screen needs, in one call",
             description = "Composed from identity, planning and the learning record. A holder "
                     + "whose learning data may not be processed still gets an answer — that is "
                     + "how they learn the account is suspended — but the plan, the job, the "

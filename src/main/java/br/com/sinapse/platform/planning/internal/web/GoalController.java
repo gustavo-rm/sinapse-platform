@@ -86,7 +86,7 @@ public class GoalController {
      * @return every goal set, closed ones included, most pressing first
      */
     @GetMapping(value = PlanningRoutes.GOALS, produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Lists the caller's goals",
+    @Operation(operationId = "goals", summary = "Lists the caller's goals",
             description = "Closed goals included, because what was abandoned is part of what the "
                     + "student has decided. The status says which is which.")
     @ApiResponse(responseCode = "200", description = "The goals")
@@ -153,7 +153,7 @@ public class GoalController {
      */
     @PostMapping(value = PlanningRoutes.GOALS + "/{goalId}/abandonment",
             produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Abandons a goal",
+    @Operation(operationId = "abandonGoal", summary = "Abandons a goal",
             description = "Not a deletion. The goal stays, with the instant the student stopped "
                     + "pursuing it, and the subject becomes free for a new goal.")
     @ApiResponses({

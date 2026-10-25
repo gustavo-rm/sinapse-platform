@@ -95,7 +95,7 @@ public class AvailabilityController {
      * @return the windows, ordered by day and then by start time
      */
     @GetMapping(value = PlanningRoutes.AVAILABILITY, produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Lists the caller's availability windows",
+    @Operation(operationId = "availability", summary = "Lists the caller's availability windows",
             description = "Without a date this returns every window ever declared, closed ones "
                     + "included, which is what lets a client show the routine and its history. "
                     + "The date is supplied by the caller rather than defaulted to today, "

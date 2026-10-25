@@ -97,7 +97,7 @@ public class InviteController {
      */
     @GetMapping(value = EducationalRoutes.CLASSROOMS + "/{classroomId}/invites",
             produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Lists the invites of a classroom",
+    @Operation(operationId = "invites", summary = "Lists the invites of a classroom",
             description = "Codes are returned in clear. That is why they are stored in clear, and "
                     + "why this route is restricted to the classroom's own teacher.")
     @ApiResponses({

@@ -60,7 +60,7 @@ public class StudyPlanController {
      * @return the active plan
      */
     @GetMapping(value = PlanningRoutes.CURRENT_PLAN, produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "The caller's active plan",
+    @Operation(operationId = "currentPlan", summary = "The caller's active plan",
             description = "At most one exists. A student with no plan yet has not run the "
                     + "generation job, or its last run has not finished.")
     @ApiResponses({
@@ -84,7 +84,7 @@ public class StudyPlanController {
      * @return the plans, most recent first
      */
     @GetMapping(value = PlanningRoutes.STUDY_PLANS, produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Lists the caller's plans",
+    @Operation(operationId = "planHistory", summary = "Lists the caller's plans",
             description = "The supersession chain is readable from the result: each superseded "
                     + "plan carries the identifier of the one that replaced it, and when it was "
                     + "replaced. Returned whole, with a hard ceiling, because re-planning is "

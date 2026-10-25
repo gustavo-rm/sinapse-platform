@@ -157,7 +157,8 @@ public class ConsentController {
      * @return no content
      */
     @DeleteMapping(IdentityRoutes.CONSENTS + "/{purpose}")
-    @Operation(summary = "Withdraws the consent in force for one purpose",
+    @Operation(operationId = "revokeConsent",
+            summary = "Withdraws the consent in force for one purpose",
             description = "Nothing is deleted: the record gains a withdrawal timestamp. Withdrawing "
                     + "an essential purpose suspends the account and ends its sessions, in the same "
                     + "transaction. Withdrawing ACADEMIC_RESEARCH has no effect on the service.")
