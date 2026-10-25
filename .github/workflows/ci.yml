@@ -99,13 +99,14 @@ jobs:
 
       # Columns of jacoco.csv: GROUP, PACKAGE, CLASS, INSTRUCTION_MISSED, INSTRUCTION_COVERED,
       # BRANCH_MISSED, BRANCH_COVERED, LINE_MISSED, LINE_COVERED, ... The floors shown are read
-      # from pom.xml, the only place they are set.
+      # from pom.xml, the only place they are set. Written to the job log as well, so the numbers
+      # can be read wherever the logs can, without the summary page or the artifact.
       - name: Coverage summary
         if: always()
         run: |
           CSV=target/site/jacoco/jacoco.csv
           if [ ! -f "$CSV" ]; then
-            echo "Coverage report missing." >> "$GITHUB_STEP_SUMMARY"
+            echo "Coverage report missing." | tee -a "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
           INSTRUCTION_FLOOR=$(sed -n 's:.*<coverage.minimum.instruction>\(.*\)</coverage.minimum.instruction>.*:\1:p' pom.xml)
@@ -122,4 +123,4 @@ jobs:
               printf "| Instructions | %d / %d | %.6f | %s |\n", ic, ic+im, ic/(ic+im), ifloor;
               printf "| Branches | %d / %d | %.6f | %s |\n", bc, bc+bm, bc/(bc+bm), bfloor;
               printf "| Lines | %d / %d | %.6f | — |\n", lc, lc+lm, lc/(lc+lm);
-            }' "$CSV" >> "$GITHUB_STEP_SUMMARY"
+            }' "$CSV" | tee -a "$GITHUB_STEP_SUMMARY"
