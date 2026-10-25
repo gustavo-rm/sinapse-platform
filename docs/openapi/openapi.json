@@ -888,43 +888,48 @@
         },
         "type": "object"
       },
-      "ProblemDetail": {
+      "ProblemDetails": {
+        "description": "RFC 7807 error body, served as application/problem+json",
         "properties": {
           "detail": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "description": "Fixed explanation of the error type; it never quotes the request",
+            "type": "string"
+          },
+          "errors": {
+            "description": "Only when type is urn:sinapse:problem:validation-failed: the offending fields, ordered by field and then by message",
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array"
           },
           "instance": {
+            "description": "Path of the request that failed, without the query string",
             "format": "uri",
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "properties": {
-            "additionalProperties": { },
-            "type": [
-              "object",
-              "null"
-            ]
+            "type": "string"
           },
           "status": {
+            "description": "HTTP status of the response",
             "format": "int32",
             "type": "integer"
           },
           "title": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "description": "Short summary of the error type, the same on every occurrence",
+            "type": "string"
           },
           "type": {
+            "description": "Stable identifier of the error type, urn:sinapse:problem:<code>; a client tells errors apart by this member",
+            "example": "urn:sinapse:problem:resource-not-found",
             "format": "uri",
             "type": "string"
           }
         },
+        "required": [
+          "detail",
+          "instance",
+          "status",
+          "title",
+          "type"
+        ],
         "type": "object"
       },
       "ReaffirmationRequest": {
@@ -1588,6 +1593,24 @@
         },
         "type": "object"
       },
+      "ValidationError": {
+        "description": "One offending field of a validation failure",
+        "properties": {
+          "field": {
+            "description": "Name of the field in the request contract, or \"request\" for the request as a whole",
+            "type": "string"
+          },
+          "message": {
+            "description": "Message of the violated constraint; it never quotes the value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "field",
+          "message"
+        ],
+        "type": "object"
+      },
       "VisibilityDescription": {
         "description": "What the teacher will be able to see",
         "properties": {
@@ -1648,7 +1671,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -1658,7 +1681,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -1668,7 +1691,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -1684,7 +1707,7 @@
     "/api/v1/availability": {
       "get": {
         "description": "Without a date this returns every window ever declared, closed ones included, which is what lets a client show the routine and its history. The date is supplied by the caller rather than defaulted to today, because these are local times in the account's own zone and the server does not decide what day it is for somebody else.",
-        "operationId": "list_6",
+        "operationId": "availability",
         "parameters": [
           {
             "in": "query",
@@ -1744,7 +1767,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -1754,7 +1777,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -1764,7 +1787,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -1817,7 +1840,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -1827,7 +1850,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -1842,7 +1865,7 @@
     },
     "/api/v1/classrooms": {
       "get": {
-        "operationId": "list_4",
+        "operationId": "classrooms",
         "responses": {
           "200": {
             "content": {
@@ -1865,7 +1888,7 @@
       },
       "post": {
         "description": "The subjects declare which ones carry an institutional deadline, which is input for the optimisation core. They do not decide what the teacher will see: that is the visibility scope, and today it is everything.",
-        "operationId": "open_1",
+        "operationId": "openClassroom",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1891,7 +1914,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -1934,7 +1957,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -1944,7 +1967,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -1960,7 +1983,7 @@
     "/api/v1/classrooms/{classroomId}/enrollments": {
       "get": {
         "description": "Enrollment management, and distinct from the class list of section 3.6 of the API contract: it shows every student who is in the classroom, including one who has withdrawn their sharing consent, because removing them has to remain possible.",
-        "operationId": "students_1",
+        "operationId": "classroomEnrollments",
         "parameters": [
           {
             "in": "path",
@@ -1990,7 +2013,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -2006,7 +2029,7 @@
     "/api/v1/classrooms/{classroomId}/invites": {
       "get": {
         "description": "Codes are returned in clear. That is why they are stored in clear, and why this route is restricted to the classroom's own teacher.",
-        "operationId": "list_5",
+        "operationId": "invites",
         "parameters": [
           {
             "in": "path",
@@ -2036,7 +2059,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -2086,7 +2109,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -2096,7 +2119,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -2157,7 +2180,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -2167,7 +2190,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -2177,7 +2200,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -2222,7 +2245,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -2292,7 +2315,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -2302,7 +2325,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -2312,7 +2335,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -2347,7 +2370,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -2380,7 +2403,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -2390,7 +2413,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -2425,7 +2448,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -2435,7 +2458,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -2445,7 +2468,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -2461,7 +2484,7 @@
     "/api/v1/consents/{purpose}": {
       "delete": {
         "description": "Nothing is deleted: the record gains a withdrawal timestamp. Withdrawing an essential purpose suspends the account and ends its sessions, in the same transaction. Withdrawing ACADEMIC_RESEARCH has no effect on the service.",
-        "operationId": "revoke_1",
+        "operationId": "revokeConsent",
         "parameters": [
           {
             "in": "path",
@@ -2485,7 +2508,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -2495,7 +2518,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -2530,7 +2553,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -2540,7 +2563,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -2556,7 +2579,7 @@
     "/api/v1/enrollments": {
       "get": {
         "description": "Ended memberships are included: they are the record of which teachers had access to this student's data, and when it stopped.",
-        "operationId": "list_7",
+        "operationId": "enrollments",
         "responses": {
           "200": {
             "content": {
@@ -2601,7 +2624,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -2617,7 +2640,7 @@
     "/api/v1/goals": {
       "get": {
         "description": "Closed goals included, because what was abandoned is part of what the student has decided. The status says which is which.",
-        "operationId": "list_3",
+        "operationId": "goals",
         "responses": {
           "200": {
             "content": {
@@ -2666,7 +2689,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -2676,7 +2699,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -2729,7 +2752,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -2739,7 +2762,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -2755,7 +2778,7 @@
     "/api/v1/goals/{goalId}/abandonment": {
       "post": {
         "description": "Not a deletion. The goal stays, with the instant the student stopped pursuing it, and the subject becomes free for a new goal.",
-        "operationId": "abandon_1",
+        "operationId": "abandonGoal",
         "parameters": [
           {
             "in": "path",
@@ -2782,7 +2805,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -2792,7 +2815,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -2834,7 +2857,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -2844,7 +2867,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -2886,7 +2909,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -2896,7 +2919,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -2938,7 +2961,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -2948,7 +2971,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -2958,7 +2981,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -2968,7 +2991,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -3003,7 +3026,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -3080,7 +3103,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -3090,7 +3113,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -3100,7 +3123,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -3132,7 +3155,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -3148,7 +3171,7 @@
     "/api/v1/me/erasure-requests": {
       "get": {
         "description": "Including withdrawn and failed ones. None of them carries a copy of anything that was erased.",
-        "operationId": "list_2",
+        "operationId": "erasureRequests",
         "responses": {
           "200": {
             "content": {
@@ -3171,7 +3194,7 @@
       },
       "post": {
         "description": "The account is suspended and its sessions revoked at once; the erasure itself happens after a configured window, and can be withdrawn until then. Signing in still works during the window, and does nothing but let the holder withdraw the request or take their data.",
-        "operationId": "request_1",
+        "operationId": "requestErasure",
         "responses": {
           "201": {
             "content": {
@@ -3187,7 +3210,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -3230,7 +3253,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -3240,7 +3263,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -3256,7 +3279,7 @@
     "/api/v1/me/state": {
       "get": {
         "description": "Composed from identity, planning and the learning record. A holder whose learning data may not be processed still gets an answer — that is how they learn the account is suspended — but the plan, the job, the open session and the readiness flag come back empty.",
-        "operationId": "state_1",
+        "operationId": "myState",
         "responses": {
           "200": {
             "content": {
@@ -3272,7 +3295,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -3307,7 +3330,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -3342,7 +3365,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -3377,7 +3400,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -3387,7 +3410,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -3442,7 +3465,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -3457,7 +3480,7 @@
     },
     "/api/v1/sessions": {
       "get": {
-        "operationId": "list_1",
+        "operationId": "userSessions",
         "responses": {
           "200": {
             "content": {
@@ -3476,7 +3499,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -3516,7 +3539,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -3526,7 +3549,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -3550,7 +3573,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -3586,7 +3609,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -3596,7 +3619,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -3612,7 +3635,7 @@
     "/api/v1/study-plans": {
       "get": {
         "description": "The supersession chain is readable from the result: each superseded plan carries the identifier of the one that replaced it, and when it was replaced. Returned whole, with a hard ceiling, because re-planning is manual and this list grows in single figures.",
-        "operationId": "history_1",
+        "operationId": "planHistory",
         "responses": {
           "200": {
             "content": {
@@ -3637,7 +3660,7 @@
     "/api/v1/study-plans/current": {
       "get": {
         "description": "At most one exists. A student with no plan yet has not run the generation job, or its last run has not finished.",
-        "operationId": "current_1",
+        "operationId": "currentPlan",
         "responses": {
           "200": {
             "content": {
@@ -3653,7 +3676,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -3685,7 +3708,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -3695,7 +3718,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -3705,7 +3728,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -3748,7 +3771,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -3790,7 +3813,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -3836,7 +3859,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -3879,7 +3902,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -3889,7 +3912,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -3899,7 +3922,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -3954,7 +3977,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -3994,7 +4017,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -4004,7 +4027,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -4014,7 +4037,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -4046,7 +4069,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -4088,7 +4111,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -4098,7 +4121,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -4108,7 +4131,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -4151,7 +4174,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -4161,7 +4184,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -4214,7 +4237,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -4224,7 +4247,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
@@ -4295,7 +4318,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
