@@ -1,0 +1,126 @@
+name: CI
+
+# Runs the same `./mvnw clean verify` a contributor runs locally: the whole default suite (unit and
+# integration tests, ModularityTests, the OpenAPI snapshot test) and the JaCoCo floor declared in
+# pom.xml. The floors are the pom's: nothing here overrides them, skips tests or excludes classes
+# (ratchet rule, docs/COBERTURA.md).
+#
+# Not run here: the `core-e2e` profile, which needs a running Sinapse Core.
+#
+# This file alone does NOT block a merge. It makes the check exist and report. For it to block,
+# the job below has to be marked as a required status check in the protection of `main`, which is
+# repository configuration, not something a commit can do. Steps: docs/COBERTURA.md, "Integração
+# contínua".
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+# One run per ref: a new push cancels the run it made obsolete.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    # A new, empty PostgreSQL for every run. The suite uses it through SINAPSE_TEST_DB_URL instead
+    # of starting its own Testcontainers container. An empty database is also what the coverage
+    # floor is measured on: a reused one leaves rows that change which paths run (K28).
+    #
+    # The `citext` extension is created by the first migration (V1__identity.sql,
+    # `create extension if not exists citext`); the image ships it and the service user is a
+    # superuser, so nothing has to be prepared here.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: sinapse_test
+          POSTGRES_USER: sinapse
+          # Not a secret: this database exists only inside this job, in a throwaway container,
+          # holds only synthetic test data and gives access to nothing else.
+          POSTGRES_PASSWORD: sinapse
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U sinapse -d sinapse_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    env:
+      SINAPSE_TEST_DB_URL: jdbc:postgresql://localhost:5432/sinapse_test
+      SINAPSE_TEST_DB_USERNAME: sinapse
+      # Same throwaway value as POSTGRES_PASSWORD above: not a secret.
+      SINAPSE_TEST_DB_PASSWORD: sinapse
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      # `clean` matters: the JaCoCo agent appends to an existing target/jacoco.exec.
+      - name: Build, tests and coverage floor
+        run: ./mvnw -B --no-transfer-progress clean verify
+
+      # Published even when the build fails: they are what explains the failure.
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: target/surefire-reports/
+          retention-days: 14
+          if-no-files-found: warn
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: target/site/jacoco/
+          retention-days: 14
+          if-no-files-found: warn
+
+      # Columns of jacoco.csv: GROUP, PACKAGE, CLASS, INSTRUCTION_MISSED, INSTRUCTION_COVERED,
+      # BRANCH_MISSED, BRANCH_COVERED, LINE_MISSED, LINE_COVERED, ... The floors shown are read
+      # from pom.xml, the only place they are set. Written to the job log as well, so the numbers
+      # can be read wherever the logs can, without the summary page or the artifact.
+      - name: Coverage summary
+        if: always()
+        run: |
+          CSV=target/site/jacoco/jacoco.csv
+          if [ ! -f "$CSV" ]; then
+            echo "Coverage report missing." | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          INSTRUCTION_FLOOR=$(sed -n 's:.*<coverage.minimum.instruction>\(.*\)</coverage.minimum.instruction>.*:\1:p' pom.xml)
+          BRANCH_FLOOR=$(sed -n 's:.*<coverage.minimum.branch>\(.*\)</coverage.minimum.branch>.*:\1:p' pom.xml)
+          TESTS=$(cat target/surefire-reports/TEST-*.xml 2>/dev/null \
+            | sed -n 's:^<testsuite [^>]* tests="\([0-9]*\)".*:\1:p' | awk '{n+=$1} END {print n+0}')
+          awk -F, -v ifloor="$INSTRUCTION_FLOOR" -v bfloor="$BRANCH_FLOOR" -v tests="$TESTS" \
+            'NR>1 {im+=$4; ic+=$5; bm+=$6; bc+=$7; lm+=$8; lc+=$9}
+            END {
+              printf "## Coverage\n\n";
+              printf "Tests in surefire reports: %d\n\n", tests;
+              printf "| Counter | Covered / Total | Ratio | Floor |\n";
+              printf "|---|---:|---:|---:|\n";
+              printf "| Instructions | %d / %d | %.6f | %s |\n", ic, ic+im, ic/(ic+im), ifloor;
+              printf "| Branches | %d / %d | %.6f | %s |\n", bc, bc+bm, bc/(bc+bm), bfloor;
+              printf "| Lines | %d / %d | %.6f | — |\n", lc, lc+lm, lc/(lc+lm);
+            }' "$CSV" | tee -a "$GITHUB_STEP_SUMMARY"

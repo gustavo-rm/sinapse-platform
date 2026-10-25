@@ -165,14 +165,11 @@ class EngineSelectionIntegrationTest extends OrchestrationIntegrationTest {
         assertThat(requestService.claimNext())
                 .as("a rejection is not put back in the queue: the name would be refused again")
                 .isEmpty();
-        assertThat(polled)
-                .as("the student learns the kind of failure and nothing about the core")
-                .doesNotContain("127.0.0.1")
-                .doesNotContainIgnoringCase("http")
-                .doesNotContain("422")
-                .doesNotContain("unknown-engine")
-                .doesNotContain("no-such-engine")
-                .doesNotContainIgnoringCase("exception");
+        // The student learns the kind of failure and nothing about the core: not its status (422),
+        // address, problem type, title or the refused name. Checked member by member, because the
+        // body's UUID and microsecond timestamps contain "422" by chance (K29).
+        JobBodyLeakCheck.assertTellsNothingAboutTheCore(job, 422, "127.0.0.1", "http",
+                "unknown-engine", "unknown engine", "no-such-engine", "exception");
         assertThat(requestColumn(run.jobId(), "core_call_millis", Long.class))
                 .as("a call that produced no plan records no latency")
                 .isNull();
