@@ -3692,7 +3692,7 @@
     "/api/v1/study-plans/generation-requests": {
       "post": {
         "description": "Returns immediately with a job to poll; it never waits for the core. The horizon is configured and is not the client's to choose. One unfinished job per account, and availability and at least one goal have to exist first.",
-        "operationId": "request",
+        "operationId": "requestPlanGeneration",
         "responses": {
           "201": {
             "content": {
@@ -3744,7 +3744,7 @@
     "/api/v1/study-plans/generation-requests/{requestId}": {
       "get": {
         "description": "Polled, because there is no event notification in this version. Once the status is READY the response carries the identifier of the plan. The progress field is absent whenever it is indeterminate, which in this version is always: the core reports none, and nothing here invents one.",
-        "operationId": "state",
+        "operationId": "planGenerationRequest",
         "parameters": [
           {
             "in": "path",
