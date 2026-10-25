@@ -5,6 +5,7 @@ import br.com.sinapse.platform.planning.api.AvailabilityWindowView;
 import br.com.sinapse.platform.planning.api.PlanningDirectory;
 import br.com.sinapse.platform.planning.internal.service.AvailabilityService;
 import br.com.sinapse.platform.planning.internal.service.PlanningAccess;
+import br.com.sinapse.platform.shared.web.problem.ProblemDetailsSchema;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -18,7 +19,6 @@ import java.util.UUID;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -72,14 +72,14 @@ public class AvailabilityController {
             @ApiResponse(responseCode = "400", description = "The window closes before it opens, "
                     + "or stops applying before it applied",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class))),
+                            schema = @Schema(implementation = ProblemDetailsSchema.class))),
             @ApiResponse(responseCode = "403", description = "This account's learning data may "
                     + "not be processed",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class))),
+                            schema = @Schema(implementation = ProblemDetailsSchema.class))),
             @ApiResponse(responseCode = "409", description = "It would overlap an existing window",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     public ResponseEntity<AvailabilityResponse> declare(
             @Valid @RequestBody AvailabilityRequest request) {
 
@@ -95,7 +95,7 @@ public class AvailabilityController {
      * @return the windows, ordered by day and then by start time
      */
     @GetMapping(value = PlanningRoutes.AVAILABILITY, produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Lists the caller's availability windows",
+    @Operation(operationId = "availability", summary = "Lists the caller's availability windows",
             description = "Without a date this returns every window ever declared, closed ones "
                     + "included, which is what lets a client show the routine and its history. "
                     + "The date is supplied by the caller rather than defaulted to today, "
@@ -130,10 +130,10 @@ public class AvailabilityController {
             @ApiResponse(responseCode = "200", description = "Window closed"),
             @ApiResponse(responseCode = "404", description = "No such window for this account",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class))),
+                            schema = @Schema(implementation = ProblemDetailsSchema.class))),
             @ApiResponse(responseCode = "409", description = "The window is already closed",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     public AvailabilityResponse close(@PathVariable UUID windowId,
             @Valid @RequestBody AvailabilityClosureRequest request) {
 

@@ -6,6 +6,7 @@ import br.com.sinapse.platform.identity.internal.config.IdentityProperties;
 import br.com.sinapse.platform.identity.internal.security.SessionCookies;
 import br.com.sinapse.platform.identity.internal.service.AuthenticationService;
 import br.com.sinapse.platform.identity.internal.service.SessionService;
+import br.com.sinapse.platform.shared.web.problem.ProblemDetailsSchema;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -20,7 +21,6 @@ import java.util.UUID;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -79,10 +79,10 @@ public class SessionController {
             @ApiResponse(responseCode = "401", description = "Credential refused. The same answer is "
                     + "given for an unknown address, a wrong password and an account that is not active",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class))),
+                            schema = @Schema(implementation = ProblemDetailsSchema.class))),
             @ApiResponse(responseCode = "429", description = "Rate limit exceeded",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     public ResponseEntity<SessionResponse> open(@Valid @RequestBody LoginRequest request,
             HttpServletRequest http) {
 
@@ -104,12 +104,12 @@ public class SessionController {
      * @return the sessions, newest first
      */
     @GetMapping(value = IdentityRoutes.SESSIONS, produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Lists the caller's own sessions")
+    @Operation(operationId = "userSessions", summary = "Lists the caller's own sessions")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "The sessions still usable"),
             @ApiResponse(responseCode = "401", description = "No usable session on the request",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     public List<SessionSummary> list() {
         AuthenticatedAccount caller = CurrentAccount.require();
         return sessions.listUsable(caller.accountId()).stream()
@@ -134,7 +134,7 @@ public class SessionController {
             @ApiResponse(responseCode = "204", description = "Session ended"),
             @ApiResponse(responseCode = "401", description = "No usable session on the request",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     public ResponseEntity<Void> endCurrent() {
         AuthenticatedAccount caller = CurrentAccount.require();
         sessions.terminate(caller.accountId(), caller.sessionId());
@@ -157,10 +157,10 @@ public class SessionController {
             @ApiResponse(responseCode = "204", description = "Session ended"),
             @ApiResponse(responseCode = "401", description = "No usable session on the request",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class))),
+                            schema = @Schema(implementation = ProblemDetailsSchema.class))),
             @ApiResponse(responseCode = "404", description = "No such session for this caller",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     public ResponseEntity<Void> end(@PathVariable UUID sessionId) {
         AuthenticatedAccount caller = CurrentAccount.require();
         sessions.terminate(caller.accountId(), sessionId);

@@ -1,5 +1,6 @@
 package br.com.sinapse.platform.shared.web.problem;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Comparator;
 import java.util.List;
 import org.springframework.validation.BindingResult;
@@ -20,7 +21,15 @@ import org.springframework.validation.ObjectError;
  * @param field   name of the field in the request contract
  * @param message message of the violated constraint
  */
-public record ValidationError(String field, String message) {
+@Schema(description = "One offending field of a validation failure")
+public record ValidationError(
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED,
+                description = "Name of the field in the request contract, or \"request\" for "
+                        + "the request as a whole")
+        String field,
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED,
+                description = "Message of the violated constraint; it never quotes the value")
+        String message) {
 
     /** Field name used for errors that concern the request as a whole. */
     private static final String REQUEST_LEVEL = "request";

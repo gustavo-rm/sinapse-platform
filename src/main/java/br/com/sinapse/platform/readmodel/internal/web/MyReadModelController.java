@@ -5,6 +5,7 @@ import br.com.sinapse.platform.readmodel.api.DailyAgendaView;
 import br.com.sinapse.platform.readmodel.api.StudentStateView;
 import br.com.sinapse.platform.readmodel.internal.service.AgendaReadModel;
 import br.com.sinapse.platform.readmodel.internal.service.StudentStateReadModel;
+import br.com.sinapse.platform.shared.web.problem.ProblemDetailsSchema;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -14,7 +15,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.Instant;
 import java.util.UUID;
 import org.springframework.http.MediaType;
-import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -48,7 +48,8 @@ public class MyReadModelController {
      * @return the caller's state
      */
     @GetMapping(value = ReadModelRoutes.MY_STATE, produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Everything the initial screen needs, in one call",
+    @Operation(operationId = "myState",
+            summary = "Everything the initial screen needs, in one call",
             description = "Composed from identity, planning and the learning record. A holder "
                     + "whose learning data may not be processed still gets an answer — that is "
                     + "how they learn the account is suspended — but the plan, the job, the "
@@ -57,7 +58,7 @@ public class MyReadModelController {
             @ApiResponse(responseCode = "200", description = "The caller's state"),
             @ApiResponse(responseCode = "401", description = "No usable session on the request",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     public StudentStateView state() {
         return state.of(callerId());
     }
@@ -80,14 +81,14 @@ public class MyReadModelController {
             @ApiResponse(responseCode = "400", description = "The window is empty, inverted or "
                     + "wider than the server will answer",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class))),
+                            schema = @Schema(implementation = ProblemDetailsSchema.class))),
             @ApiResponse(responseCode = "401", description = "No usable session on the request",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class))),
+                            schema = @Schema(implementation = ProblemDetailsSchema.class))),
             @ApiResponse(responseCode = "403", description = "The account's learning data may not "
                     + "be processed",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     public DailyAgendaView agenda(@RequestParam Instant from, @RequestParam Instant to) {
         return agenda.of(callerId(), from, to);
     }

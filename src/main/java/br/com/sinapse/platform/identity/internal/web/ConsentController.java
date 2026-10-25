@@ -9,6 +9,7 @@ import br.com.sinapse.platform.identity.internal.persistence.TermsVersionReposit
 import br.com.sinapse.platform.identity.internal.service.ConsentService;
 import br.com.sinapse.platform.identity.internal.service.MajorityReaffirmationService;
 import br.com.sinapse.platform.identity.internal.service.TermsService;
+import br.com.sinapse.platform.shared.web.problem.ProblemDetailsSchema;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -25,7 +26,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -102,7 +102,7 @@ public class ConsentController {
             @ApiResponse(responseCode = "200", description = "The history"),
             @ApiResponse(responseCode = "401", description = "No usable session on the request",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     @Transactional(readOnly = true)
     public List<ConsentSummary> history() {
         AuthenticatedAccount caller = CurrentAccount.require();
@@ -138,11 +138,11 @@ public class ConsentController {
             @ApiResponse(responseCode = "201", description = "Consent recorded"),
             @ApiResponse(responseCode = "401", description = "No usable session on the request",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class))),
+                            schema = @Schema(implementation = ProblemDetailsSchema.class))),
             @ApiResponse(responseCode = "409", description = "The purpose already has a consent in "
                     + "force, or the accepted wording is no longer the one published",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     public ResponseEntity<Void> grant(@Valid @RequestBody ConsentRequest request, HttpServletRequest http) {
         AuthenticatedAccount caller = CurrentAccount.require();
         consents.grant(caller.accountId(), request.purpose(), request.termsVersionId(),
@@ -157,7 +157,8 @@ public class ConsentController {
      * @return no content
      */
     @DeleteMapping(IdentityRoutes.CONSENTS + "/{purpose}")
-    @Operation(summary = "Withdraws the consent in force for one purpose",
+    @Operation(operationId = "revokeConsent",
+            summary = "Withdraws the consent in force for one purpose",
             description = "Nothing is deleted: the record gains a withdrawal timestamp. Withdrawing "
                     + "an essential purpose suspends the account and ends its sessions, in the same "
                     + "transaction. Withdrawing ACADEMIC_RESEARCH has no effect on the service.")
@@ -165,10 +166,10 @@ public class ConsentController {
             @ApiResponse(responseCode = "204", description = "Consent withdrawn"),
             @ApiResponse(responseCode = "401", description = "No usable session on the request",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class))),
+                            schema = @Schema(implementation = ProblemDetailsSchema.class))),
             @ApiResponse(responseCode = "404", description = "No consent in force for that purpose",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     public ResponseEntity<Void> revoke(@PathVariable ConsentPurpose purpose) {
         AuthenticatedAccount caller = CurrentAccount.require();
         consents.revoke(caller.accountId(), purpose);
@@ -191,14 +192,14 @@ public class ConsentController {
             @ApiResponse(responseCode = "204", description = "Consent reaffirmed"),
             @ApiResponse(responseCode = "401", description = "Neither a token nor a usable session",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class))),
+                            schema = @Schema(implementation = ProblemDetailsSchema.class))),
             @ApiResponse(responseCode = "404", description = "Token unknown, expired or already used",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class))),
+                            schema = @Schema(implementation = ProblemDetailsSchema.class))),
             @ApiResponse(responseCode = "409", description = "The account is in a state that cannot "
                     + "reaffirm, or the holder has not reached the consent age",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     public ResponseEntity<Void> reaffirm(@Valid @RequestBody ReaffirmationRequest request,
             HttpServletRequest http) {
 

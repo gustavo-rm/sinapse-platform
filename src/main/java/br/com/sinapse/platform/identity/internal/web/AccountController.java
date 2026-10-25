@@ -4,6 +4,7 @@ import br.com.sinapse.platform.identity.api.ConsentPurpose;
 import br.com.sinapse.platform.identity.internal.domain.Account;
 import br.com.sinapse.platform.identity.internal.service.EmailVerificationService;
 import br.com.sinapse.platform.identity.internal.service.RegistrationService;
+import br.com.sinapse.platform.shared.web.problem.ProblemDetailsSchema;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -18,7 +19,6 @@ import java.util.Map;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -70,14 +70,14 @@ public class AccountController {
             @ApiResponse(responseCode = "201", description = "Account registered"),
             @ApiResponse(responseCode = "400", description = "Body rejected, with the offending fields",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class))),
+                            schema = @Schema(implementation = ProblemDetailsSchema.class))),
             @ApiResponse(responseCode = "409", description = "Address already registered, or the "
                     + "accepted wording is no longer the one in force",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class))),
+                            schema = @Schema(implementation = ProblemDetailsSchema.class))),
             @ApiResponse(responseCode = "422", description = "Account holder below the consent age",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     public ResponseEntity<RegistrationResponse> register(@Valid @RequestBody RegistrationRequest request,
             HttpServletRequest http) {
 
@@ -107,10 +107,10 @@ public class AccountController {
             @ApiResponse(responseCode = "204", description = "Address verified"),
             @ApiResponse(responseCode = "404", description = "Token unknown, expired or already used",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class))),
+                            schema = @Schema(implementation = ProblemDetailsSchema.class))),
             @ApiResponse(responseCode = "429", description = "Rate limit exceeded",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     public ResponseEntity<Void> verifyEmail(@Valid @RequestBody EmailVerificationRequest request) {
         verification.verify(request.token());
         return ResponseEntity.noContent().build();

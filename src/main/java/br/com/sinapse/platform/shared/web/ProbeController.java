@@ -1,5 +1,6 @@
 package br.com.sinapse.platform.shared.web;
 
+import br.com.sinapse.platform.shared.web.problem.ProblemDetailsSchema;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -10,7 +11,6 @@ import jakarta.validation.Valid;
 import java.time.Clock;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.MediaType;
-import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -62,7 +62,7 @@ public class ProbeController {
     @Operation(summary = "Fails on purpose, to exercise the RFC 7807 contract")
     @ApiResponse(responseCode = "500", description = "Curated error body",
             content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                    schema = @Schema(implementation = ProblemDetail.class)))
+                    schema = @Schema(implementation = ProblemDetailsSchema.class)))
     public ProbeResponse failure() {
         throw new IllegalStateException(
                 "Account aluno@example.com not found in table identity_account, column email_hash");
@@ -81,7 +81,7 @@ public class ProbeController {
             @ApiResponse(responseCode = "200", description = "Body accepted"),
             @ApiResponse(responseCode = "400", description = "Body rejected, with the offending fields",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     public ProbeResponse validation(@Valid @RequestBody ProbeRequest request) {
         return new ProbeResponse("ok", clock.instant());
     }
@@ -98,7 +98,7 @@ public class ProbeController {
             @ApiResponse(responseCode = "200", description = "Within the window"),
             @ApiResponse(responseCode = "429", description = "Window exhausted",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     public ProbeResponse rateLimited() {
         return new ProbeResponse("ok", clock.instant());
     }

@@ -6,6 +6,7 @@ import br.com.sinapse.platform.educational.internal.persistence.EnrollmentReposi
 import br.com.sinapse.platform.educational.internal.service.ClassroomService;
 import br.com.sinapse.platform.educational.internal.service.EducationalDirectoryService;
 import br.com.sinapse.platform.identity.api.CurrentAccount;
+import br.com.sinapse.platform.shared.web.problem.ProblemDetailsSchema;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -18,7 +19,6 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.http.MediaType;
-import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -59,7 +59,8 @@ public class EnrollmentController {
      * @return the memberships
      */
     @GetMapping(value = EducationalRoutes.ENROLLMENTS, produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Lists the caller's own memberships of classrooms",
+    @Operation(operationId = "enrollments",
+            summary = "Lists the caller's own memberships of classrooms",
             description = "Ended memberships are included: they are the record of which teachers "
                     + "had access to this student's data, and when it stopped.")
     @ApiResponse(responseCode = "200", description = "The memberships")
@@ -97,7 +98,7 @@ public class EnrollmentController {
             @ApiResponse(responseCode = "404", description = "No such active membership for this "
                     + "caller",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     public ResponseEntity<Void> leave(@PathVariable UUID enrollmentId) {
         classrooms.leave(CurrentAccount.require().accountId(), enrollmentId);
         return ResponseEntity.noContent().build();

@@ -6,6 +6,7 @@ import br.com.sinapse.platform.datarights.internal.service.AccessDisclosureServi
 import br.com.sinapse.platform.datarights.internal.service.ErasureRequestService;
 import br.com.sinapse.platform.datarights.internal.service.PersonalDataExportService;
 import br.com.sinapse.platform.identity.api.CurrentAccount;
+import br.com.sinapse.platform.shared.web.problem.ProblemDetailsSchema;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -18,7 +19,6 @@ import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -66,7 +66,7 @@ public class DataRightsController {
      */
     @PostMapping(value = DataRightsRoutes.ERASURE_REQUESTS,
             produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Asks for this account to be erased",
+    @Operation(operationId = "requestErasure", summary = "Asks for this account to be erased",
             description = "The account is suspended and its sessions revoked at once; the "
                     + "erasure itself happens after a configured window, and can be withdrawn "
                     + "until then. Signing in still works during the window, and does nothing "
@@ -75,7 +75,7 @@ public class DataRightsController {
             @ApiResponse(responseCode = "201", description = "Erasure requested"),
             @ApiResponse(responseCode = "409", description = "There is already an open request",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     public ResponseEntity<ErasureRequestView> request() {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(requests.request(callerId()));
@@ -88,7 +88,7 @@ public class DataRightsController {
      */
     @GetMapping(value = DataRightsRoutes.ERASURE_REQUESTS,
             produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Lists the caller's erasure requests",
+    @Operation(operationId = "erasureRequests", summary = "Lists the caller's erasure requests",
             description = "Including withdrawn and failed ones. None of them carries a copy of "
                     + "anything that was erased.")
     @ApiResponse(responseCode = "200", description = "The requests")
@@ -111,11 +111,11 @@ public class DataRightsController {
             @ApiResponse(responseCode = "200", description = "Request withdrawn"),
             @ApiResponse(responseCode = "404", description = "No such request for this account",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class))),
+                            schema = @Schema(implementation = ProblemDetailsSchema.class))),
             @ApiResponse(responseCode = "409", description = "The request has already been "
                     + "carried out, withdrawn or failed",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     public ErasureRequestView cancel(@PathVariable UUID requestId) {
         return requests.cancel(callerId(), requestId);
     }
@@ -134,7 +134,7 @@ public class DataRightsController {
     @ApiResponse(responseCode = "200", description = "The holder's data")
     @ApiResponse(responseCode = "429", description = "Rate limit exceeded",
             content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                    schema = @Schema(implementation = ProblemDetail.class)))
+                    schema = @Schema(implementation = ProblemDetailsSchema.class)))
     public ResponseEntity<PersonalDataExportService.PersonalDataExport> export() {
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment()

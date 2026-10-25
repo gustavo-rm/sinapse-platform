@@ -5,6 +5,7 @@ import br.com.sinapse.platform.readmodel.api.ClassroomRosterView;
 import br.com.sinapse.platform.readmodel.api.StudentPanelView;
 import br.com.sinapse.platform.readmodel.internal.service.ClassroomRosterReadModel;
 import br.com.sinapse.platform.readmodel.internal.service.StudentPanelReadModel;
+import br.com.sinapse.platform.shared.web.problem.ProblemDetailsSchema;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -14,7 +15,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.Instant;
 import java.util.UUID;
 import org.springframework.http.MediaType;
-import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -71,14 +71,14 @@ public class ClassroomReadModelController {
             @ApiResponse(responseCode = "400", description = "The window is empty, inverted or "
                     + "wider than the server will answer",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class))),
+                            schema = @Schema(implementation = ProblemDetailsSchema.class))),
             @ApiResponse(responseCode = "403", description = "The caller does not hold the "
                     + "teacher role",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class))),
+                            schema = @Schema(implementation = ProblemDetailsSchema.class))),
             @ApiResponse(responseCode = "404", description = "No such classroom for this caller",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     public ClassroomRosterView students(@PathVariable UUID classroomId,
             @RequestParam Instant from, @RequestParam Instant to) {
 
@@ -107,15 +107,15 @@ public class ClassroomReadModelController {
             @ApiResponse(responseCode = "400", description = "The window is empty, inverted or "
                     + "wider than the server will answer",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class))),
+                            schema = @Schema(implementation = ProblemDetailsSchema.class))),
             @ApiResponse(responseCode = "403", description = "The caller does not hold the "
                     + "teacher role",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class))),
+                            schema = @Schema(implementation = ProblemDetailsSchema.class))),
             @ApiResponse(responseCode = "404", description = "The classroom is not the caller's, "
                     + "or the student is not currently readable by them",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     public StudentPanelView panel(@PathVariable UUID classroomId, @PathVariable UUID accountId,
             @RequestParam Instant from, @RequestParam Instant to) {
 

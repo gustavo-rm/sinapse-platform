@@ -24,7 +24,10 @@ Onde os dois divergirem sobre nome de rota, parâmetro ou campo, vale o snapshot
 abaixo foram conferidas contra ele em 19/10/2026.
 
 **Erros.** RFC 7807 `application/problem+json`. `detail` nunca contém dado pessoal,
-identificador interno, nome de entidade ou de coluna. Ver ADR 0009.
+identificador interno, nome de entidade ou de coluna. Ver ADR 0009. No snapshot, o corpo é o
+esquema `ProblemDetails`: `type`, `title`, `status`, `detail` e `instance` sempre presentes, e
+`errors` (itens com `field` e `message`) só quando `type` é
+`urn:sinapse:problem:validation-failed`.
 
 **Instantes.** ISO-8601 com deslocamento (`2026-09-04T19:00:00-03:00`). Horários locais,
 como janelas de disponibilidade, trafegam como `HH:mm` e são interpretados no fuso da conta.

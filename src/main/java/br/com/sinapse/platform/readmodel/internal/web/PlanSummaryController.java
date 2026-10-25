@@ -3,6 +3,7 @@ package br.com.sinapse.platform.readmodel.internal.web;
 import br.com.sinapse.platform.identity.api.CurrentAccount;
 import br.com.sinapse.platform.readmodel.api.PlanSummaryView;
 import br.com.sinapse.platform.readmodel.internal.service.PlanSummaryReadModel;
+import br.com.sinapse.platform.shared.web.problem.ProblemDetailsSchema;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -11,7 +12,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.UUID;
 import org.springframework.http.MediaType;
-import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
@@ -54,14 +54,14 @@ public class PlanSummaryController {
             @ApiResponse(responseCode = "200", description = "The summary"),
             @ApiResponse(responseCode = "401", description = "No usable session on the request",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class))),
+                            schema = @Schema(implementation = ProblemDetailsSchema.class))),
             @ApiResponse(responseCode = "403", description = "The account's learning data may not "
                     + "be processed",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class))),
+                            schema = @Schema(implementation = ProblemDetailsSchema.class))),
             @ApiResponse(responseCode = "404", description = "No such plan for this caller",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     public PlanSummaryView summary(@PathVariable UUID planId) {
         return summaries.of(CurrentAccount.require().accountId(), planId);
     }

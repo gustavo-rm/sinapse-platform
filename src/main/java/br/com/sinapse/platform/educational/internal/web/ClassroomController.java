@@ -6,6 +6,7 @@ import br.com.sinapse.platform.educational.internal.domain.Classroom;
 import br.com.sinapse.platform.educational.internal.service.ClassroomService;
 import br.com.sinapse.platform.educational.internal.service.EducationalDirectoryService;
 import br.com.sinapse.platform.identity.api.CurrentAccount;
+import br.com.sinapse.platform.shared.web.problem.ProblemDetailsSchema;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -17,7 +18,6 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -57,7 +57,7 @@ public class ClassroomController {
      */
     @PostMapping(value = EducationalRoutes.CLASSROOMS,
             consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Opens a classroom",
+    @Operation(operationId = "openClassroom", summary = "Opens a classroom",
             description = "The subjects declare which ones carry an institutional deadline, which "
                     + "is input for the optimisation core. They do not decide what the teacher "
                     + "will see: that is the visibility scope, and today it is everything.")
@@ -66,7 +66,7 @@ public class ClassroomController {
             @ApiResponse(responseCode = "403", description = "The caller is not a teacher, or has "
                     + "no teacher record",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     public ResponseEntity<ClassroomResponse> open(@Valid @RequestBody ClassroomRequest request) {
         ClassroomView classroom = classrooms.open(CurrentAccount.require().accountId(),
                 request.name().trim(), request.subjectIds());
@@ -79,7 +79,7 @@ public class ClassroomController {
      * @return their classrooms, archived ones included
      */
     @GetMapping(value = EducationalRoutes.CLASSROOMS, produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Lists the classrooms the caller owns")
+    @Operation(operationId = "classrooms", summary = "Lists the classrooms the caller owns")
     @ApiResponse(responseCode = "200", description = "The classrooms, archived ones included")
     public List<ClassroomResponse> list() {
         UUID caller = CurrentAccount.require().accountId();
@@ -105,10 +105,10 @@ public class ClassroomController {
             @ApiResponse(responseCode = "200", description = "Classroom archived"),
             @ApiResponse(responseCode = "404", description = "No such classroom for this teacher",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class))),
+                            schema = @Schema(implementation = ProblemDetailsSchema.class))),
             @ApiResponse(responseCode = "409", description = "It is already archived",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     public ClassroomResponse archive(@PathVariable UUID classroomId) {
         UUID caller = CurrentAccount.require().accountId();
         classrooms.archive(caller, classroomId);
@@ -136,7 +136,8 @@ public class ClassroomController {
      */
     @GetMapping(value = EducationalRoutes.CLASSROOMS + "/{classroomId}/enrollments",
             produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Lists the enrollments currently open in a classroom",
+    @Operation(operationId = "classroomEnrollments",
+            summary = "Lists the enrollments currently open in a classroom",
             description = "Enrollment management, and distinct from the class list of section "
                     + "3.6 of the API contract: it shows every student who is in the classroom, "
                     + "including one who has withdrawn their sharing consent, because removing "
@@ -145,7 +146,7 @@ public class ClassroomController {
             @ApiResponse(responseCode = "200", description = "The active enrollments"),
             @ApiResponse(responseCode = "404", description = "No such classroom for this teacher",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     public List<EnrollmentResponse> students(@PathVariable UUID classroomId) {
         UUID caller = CurrentAccount.require().accountId();
         Classroom classroom = classrooms.requireOwned(caller, classroomId);
@@ -170,7 +171,7 @@ public class ClassroomController {
             @ApiResponse(responseCode = "404", description = "No such classroom for this teacher, "
                     + "or the student is not in it",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                            schema = @Schema(implementation = ProblemDetail.class)))})
+                            schema = @Schema(implementation = ProblemDetailsSchema.class)))})
     public ResponseEntity<Void> removeStudent(@PathVariable UUID classroomId,
             @PathVariable UUID accountId) {
         classrooms.remove(CurrentAccount.require().accountId(), classroomId, accountId);
