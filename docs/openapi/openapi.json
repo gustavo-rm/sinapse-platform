@@ -1635,6 +1635,7 @@
   "info": {
     "description": "Backend of the Sinapse platform: identity, curriculum, educational relationships, learning record and study planning.\n\nEvery route lives under /api/v1. Errors follow RFC 7807 and are served as application/problem+json. Instants are ISO-8601 with offset; local times are interpreted in the account's time zone.",
     "license": {
+      "identifier": "MIT",
       "name": "MIT"
     },
     "title": "Sinapse Platform API",
