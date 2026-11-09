@@ -58,7 +58,7 @@ frontend: [CONTRATO_API_SINAPSE.md](../CONTRATO_API_SINAPSE.md) plus the live Op
 | Real-Core end to end | `./mvnw verify -Pcore-e2e` (tag `core-e2e`, excluded by default) | READ(pom.xml:29,224@e4c0be0) |
 | Profiles | `local` (dev), `catalog` (catalogue importer, no web server), `test` | READ(src/main/resources/*.yml, src/test/resources/application-test.yml@e4c0be0) |
 | Ports | HTTP `${SINAPSE_HTTP_PORT:8080}`; management `${SINAPSE_MANAGEMENT_PORT:8081}` on 127.0.0.1 | READ(application.yml:44,61-62@e4c0be0) |
-| API docs | `/api-docs`, `/swagger-ui.html` | READ(application.yml:87-91@e4c0be0) |
+| API docs | `/api-docs`, `/swagger-ui.html`, served only under the `local` and `test` profiles; 404 with no profile ([ADR 0018](../adr/0018-documentacao-da-api-desligada-por-padrao.md)) | OBSERVED(SP-16, packaged jar) |
 
 Quality gates, exactly as the build has them:
 

@@ -22,6 +22,14 @@ logging:
     format:
       console:
 
+springdoc:
+  # The base configuration publishes no API documentation (ADR 0018); the tests that read the
+  # generated specification run under this profile.
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+
 sinapse:
   rate-limit:
     # Repeated from the base configuration: a list is bound whole from the highest-priority

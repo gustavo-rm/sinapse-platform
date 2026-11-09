@@ -14,10 +14,15 @@ request, que mostra ao frontend o que mudou no contrato.
   `@Operation`, `@ApiResponse` e `@Schema`. Os metadados (título, descrição, licença, versão)
   vêm de `shared/config/OpenApiConfiguration.java`.
 - A aplicação a serve em `GET /api-docs` (`springdoc.api-docs.path` em `application.yml`); a
-  interface Swagger fica em `/swagger-ui.html`. Nenhum perfil liga ou desliga isso: está ativo
-  em todos, produção incluída.
+  interface Swagger fica em `/swagger-ui.html`. Só os perfis `local` e `test` ligam as duas
+  ([ADR 0018](../adr/0018-documentacao-da-api-desligada-por-padrao.md)). Sem perfil, como
+  numa implantação, elas respondem `404`.
 - O snapshot é tirado com **nenhum perfil ativo**, como numa implantação. O perfil `test`
-  acrescenta as rotas `/api/v1/probe/**`, que produção não tem, e por isso não é usado.
+  acrescenta as rotas `/api/v1/probe/**`, que produção não tem, e por isso não é usado. Como
+  sem perfil o documento não é servido, `OpenApiSnapshotIntegrationTest` liga
+  `springdoc.api-docs.enabled=true` só para si, por `@TestPropertySource` e também na segunda
+  partida. A propriedade decide se o documento é servido, não o que ele diz; trocar de perfil
+  mudaria as rotas descritas.
 
 ## O fluxo
 
@@ -87,9 +92,9 @@ Relatado no PR do SP-13 e registrado em [`docs/ai/STATE.md`](../ai/STATE.md).
   cada tipo de erro. **Continua aberto:** 9 operações `GET` não declaram nenhuma resposta de
   erro, embora 8 delas respondam `401` sem sessão; e só 11 das 53 operações que respondem `401`
   o declaram (K30 em [`docs/ai/STATE.md`](../ai/STATE.md)).
-- **Exposição em produção.** Sem perfil ativo, `/api-docs`, `/api-docs/swagger-config` e
-  `/swagger-ui/index.html` respondem `200` a qualquer um, sem autenticação, na porta HTTP da
-  aplicação (a cadeia de segurança cai no `permitAll` final). `/v3/api-docs` responde `404`
-  porque o caminho foi trocado. Se o proxy reverso publica esses caminhos depende da
-  configuração dele, que [PROXY_REVERSO.md](../PROXY_REVERSO.md) não fixa. O documento não
-  declara `securitySchemes`, então um cliente gerado não sabe como se autenticar.
+- **Exposição em produção.** Sem perfil, `/api-docs`, `/api-docs/swagger-config` e
+  `/swagger-ui/index.html` respondiam `200` a qualquer um, sem autenticação (a cadeia de
+  segurança cai no `permitAll` final). Corrigido pelo SP-16 (25/10/2026,
+  [ADR 0018](../adr/0018-documentacao-da-api-desligada-por-padrao.md)): sem perfil, respondem
+  `404`. **Continua aberto:** o documento não declara `securitySchemes`, então um cliente gerado
+  não sabe como se autenticar (K33 em [`docs/ai/STATE.md`](../ai/STATE.md)).
