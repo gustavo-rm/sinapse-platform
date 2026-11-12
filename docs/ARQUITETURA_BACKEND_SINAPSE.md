@@ -333,9 +333,11 @@ cinemática).
 | `HARD` | restrição; violação invalida a solução e aciona os operadores de reparo |
 | `SOFT` | penalidade na função de aptidão; violação permitida com custo |
 
-**Procedência** — `CURATED`, `TEXTBOOK_ORDER`, `DERIVED`, com `source_reference`. Entra no
-*snapshot* enviado ao Core, o que viabiliza o experimento de ablação sem instrumentação
-adicional.
+**Procedência** — `CURATED`, `PROPOSED`, `TEXTBOOK_ORDER`, `DERIVED`, com `source_reference`.
+`CURATED` quer dizer revisada por quem ensina a disciplina e `PROPOSED`, escrita por uma pessoa e
+ainda não revisada (ADR 0019). Entra no *snapshot* enviado ao Core, o que viabiliza o experimento
+de ablação sem instrumentação adicional; o contrato 1.0 não tem `PROPOSED` e a recebe como
+`CURATED` (K35 em `docs/ai/STATE.md`).
 
 `TEACHER` não existe aqui. Aresta definida por professor exige recorte por turma, o que
 faria `curriculum` referenciar `educational` e violaria a regra R3. Quando existir, será
