@@ -8,6 +8,9 @@ import br.com.sinapse.platform.curriculum.api.CatalogCuration;
 import br.com.sinapse.platform.curriculum.api.PrerequisiteEdgeView;
 import br.com.sinapse.platform.curriculum.api.SubjectView;
 import br.com.sinapse.platform.curriculum.api.TopicView;
+import br.com.sinapse.platform.curriculum.api.EdgeProvenance;
+import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -105,7 +108,7 @@ public class CatalogApplier {
                 diff.edgesAdded().size(),
                 diff.edgesChanged().size(),
                 diff.edgesRemoved().size(),
-                notes(diff, allowTopicRemoval)));
+                notes(desired, diff, allowTopicRemoval)));
 
         return new Applied(importId, diff, removed);
     }
@@ -115,14 +118,27 @@ public class CatalogApplier {
      *
      * <p>Topics kept despite being absent are the one thing an import does that is invisible in
      * the counts, and it is exactly the thing somebody will want to know about in six months.
+     *
+     * <p>The provenance of the edges applied is the other. Contract 1.0 sends a {@code PROPOSED}
+     * edge to the core as {@code CURATED} (STATE.md K35), so the snapshot a job stores cannot
+     * tell reviewed from unreviewed; the job's {@code catalog_import_id} can, through this line,
+     * without needing the files at the recorded revision — which a {@code -dirty} import does
+     * not even have. Counts only: who reviewed stays in the files, never in the database.
      */
-    private static String notes(CatalogDiff diff, boolean allowTopicRemoval) {
-        if (diff.topicsMissing().isEmpty()) {
-            return null;
+    private static String notes(DesiredCatalogue desired, CatalogDiff diff, boolean allowTopicRemoval) {
+        List<String> notes = new ArrayList<>();
+        if (!diff.topicsMissing().isEmpty()) {
+            notes.add(allowTopicRemoval
+                    ? "%d topic(s) removed on an explicit instruction".formatted(diff.topicsMissing().size())
+                    : "%d topic(s) absent from the files were kept".formatted(diff.topicsMissing().size()));
         }
-        return allowTopicRemoval
-                ? "%d topic(s) removed on an explicit instruction".formatted(diff.topicsMissing().size())
-                : "%d topic(s) absent from the files were kept".formatted(diff.topicsMissing().size());
+        Map<EdgeProvenance, Integer> byProvenance = new EnumMap<>(EdgeProvenance.class);
+        desired.edges().forEach(edge -> byProvenance.merge(edge.provenance(), 1, Integer::sum));
+        List<String> counts = new ArrayList<>();
+        byProvenance.forEach((provenance, count) -> counts.add(provenance + " " + count));
+        notes.add("edges in the files applied, by provenance: "
+                + (counts.isEmpty() ? "none" : String.join(", ", counts)));
+        return String.join("; ", notes);
     }
 
     private static String reference(DesiredEdge edge) {

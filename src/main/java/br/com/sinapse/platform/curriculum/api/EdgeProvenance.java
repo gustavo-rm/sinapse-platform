@@ -16,8 +16,27 @@ package br.com.sinapse.platform.curriculum.api;
  */
 public enum EdgeProvenance {
 
-    /** Asserted by a human curator. The primary source. */
+    /**
+     * Asserted by a human and <strong>reviewed by someone who teaches the subject</strong>. The
+     * primary source, and the only value that may be read as "curated" in a result.
+     *
+     * <p>The catalogue importer refuses this value on an edge that cites no source, or whose
+     * subject has no recorded review (ADR 0019).
+     */
     CURATED,
+
+    /**
+     * Asserted by a human, <strong>not yet reviewed</strong> by someone who teaches the subject.
+     *
+     * <p>Exists so that an edge somebody wrote cannot carry the label of an edge somebody
+     * checked. It becomes {@link #CURATED} only when a review is recorded for its subject.
+     *
+     * <p>Contract 1.0 with the core has no such value: the snapshot sends it as the contract's
+     * {@code CURATED}, whose documented meaning is "asserted by a human curator", and the
+     * distinction survives on this side only, through the catalogue import a generation job
+     * points at. See {@code docs/ai/STATE.md} K35 and decision SP-17-W.
+     */
+    PROPOSED,
 
     /** Seeded from the curricular ordering of a subject. A textbook table of contents is a
      * valid topological order, even if not a minimal one. */

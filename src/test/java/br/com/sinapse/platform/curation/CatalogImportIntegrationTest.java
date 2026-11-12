@@ -137,7 +137,7 @@ class CatalogImportIntegrationTest extends PlanningIntegrationTest {
 
         write("SUB", topics(), """
                 prerequisite,dependent,strength,provenance,source_reference
-                SUB:a,SUB:b,HARD,CURATED,
+                SUB:a,SUB:b,HARD,PROPOSED,
                 """);
         CatalogApplier.Applied applied = apply(false);
 
@@ -157,7 +157,7 @@ class CatalogImportIntegrationTest extends PlanningIntegrationTest {
                 b,B,2,SHORT
                 """, """
                 prerequisite,dependent,strength,provenance,source_reference
-                SUB:a,SUB:b,HARD,CURATED,
+                SUB:a,SUB:b,HARD,PROPOSED,
                 """);
         CatalogApplier.Applied applied = apply(false);
 
@@ -183,7 +183,7 @@ class CatalogImportIntegrationTest extends PlanningIntegrationTest {
                 b,B,2,SHORT
                 """, """
                 prerequisite,dependent,strength,provenance,source_reference
-                SUB:a,SUB:b,HARD,CURATED,
+                SUB:a,SUB:b,HARD,PROPOSED,
                 """);
         CatalogApplier.Applied applied = apply(true);
 
@@ -217,7 +217,7 @@ class CatalogImportIntegrationTest extends PlanningIntegrationTest {
                 b,B,2,SHORT
                 """, """
                 prerequisite,dependent,strength,provenance,source_reference
-                SUB:a,SUB:b,HARD,CURATED,
+                SUB:a,SUB:b,HARD,PROPOSED,
                 """);
 
         assertThatThrownBy(() -> apply(true)).isInstanceOf(TopicStillReferencedException.class);
@@ -248,9 +248,9 @@ class CatalogImportIntegrationTest extends PlanningIntegrationTest {
                 c,C,3,SHORT
                 """, """
                 prerequisite,dependent,strength,provenance,source_reference
-                SUB:a,SUB:b,HARD,CURATED,
-                SUB:b,SUB:c,HARD,CURATED,
-                SUB:c,SUB:a,HARD,CURATED,
+                SUB:a,SUB:b,HARD,PROPOSED,
+                SUB:b,SUB:c,HARD,PROPOSED,
+                SUB:c,SUB:a,HARD,PROPOSED,
                 """);
 
         assertThatThrownBy(() -> apply(false)).isInstanceOf(RuntimeException.class);
@@ -364,8 +364,8 @@ class CatalogImportIntegrationTest extends PlanningIntegrationTest {
                 b,B,2,SHORT
                 """, """
                 prerequisite,dependent,strength,provenance,source_reference
-                SUB:a,SUB:b,HARD,CURATED,
-                SUB:b,SUB:a,HARD,CURATED,
+                SUB:a,SUB:b,HARD,PROPOSED,
+                SUB:b,SUB:a,HARD,PROPOSED,
                 """);
         List<String> printed = new ArrayList<>();
         CatalogRunner runner = new CatalogRunner(differ, applier, root, printed::add);
@@ -432,7 +432,7 @@ class CatalogImportIntegrationTest extends PlanningIntegrationTest {
     private String edges() {
         return """
                 prerequisite,dependent,strength,provenance,source_reference
-                SUB:a,SUB:b,HARD,CURATED,
+                SUB:a,SUB:b,HARD,PROPOSED,
                 SUB:b,SUB:c,SOFT,TEXTBOOK_ORDER,curricular order of SUB
                 """;
     }

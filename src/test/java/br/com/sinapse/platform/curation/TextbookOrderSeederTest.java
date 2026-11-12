@@ -83,7 +83,7 @@ class TextbookOrderSeederTest {
                 c,C,3,SHORT
                 """, """
                 prerequisite,dependent,strength,provenance,source_reference
-                SUB:a,SUB:b,HARD,CURATED,Moore cap. 1
+                SUB:a,SUB:b,HARD,PROPOSED,Moore cap. 1
                 """);
 
         TextbookOrderSeeder.Result result = TextbookOrderSeeder.seed(root, "SUB", read());
@@ -95,7 +95,7 @@ class TextbookOrderSeederTest {
                 .singleElement()
                 .satisfies(edge -> {
                     assertThat(edge.strength()).isEqualTo(EdgeStrength.HARD);
-                    assertThat(edge.provenance()).isEqualTo(EdgeProvenance.CURATED);
+                    assertThat(edge.provenance()).isEqualTo(EdgeProvenance.PROPOSED);
                     assertThat(edge.sourceReference()).isEqualTo("Moore cap. 1");
                 });
     }

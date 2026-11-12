@@ -43,7 +43,7 @@ class CatalogCommandLineStartupIntegrationTest extends CurriculumIntegrationTest
                 """, StandardCharsets.UTF_8);
         Files.writeString(subject.resolve("prerequisites.csv"), """
                 prerequisite,dependent,strength,provenance,source_reference
-                CLI-SUB:primeiro,CLI-SUB:segundo,HARD,CURATED,
+                CLI-SUB:primeiro,CLI-SUB:segundo,HARD,PROPOSED,
                 """, StandardCharsets.UTF_8);
 
         try (ConfigurableApplicationContext context = new SpringApplicationBuilder(

@@ -40,6 +40,20 @@ public final class CatalogReport {
     }
 
     /**
+     * Prints warnings: things to look at that do not stop an import.
+     *
+     * @param warnings what to look at
+     * @param out      where to write
+     */
+    public static void warnings(List<CatalogProblem> warnings, Consumer<String> out) {
+        if (warnings.isEmpty()) {
+            return;
+        }
+        out.accept("  %d warning(s), which do not stop an import:".formatted(warnings.size()));
+        warnings.forEach(warning -> out.accept("    " + warning));
+    }
+
+    /**
      * Prints a diff, grouped by subject.
      *
      * @param diff what would change
