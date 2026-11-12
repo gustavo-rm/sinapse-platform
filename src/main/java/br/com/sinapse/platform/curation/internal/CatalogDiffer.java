@@ -1,5 +1,6 @@
 package br.com.sinapse.platform.curation.internal;
 
+import br.com.sinapse.platform.curation.internal.model.CatalogProblem;
 import br.com.sinapse.platform.curation.internal.model.DesiredCatalogue;
 import br.com.sinapse.platform.curation.internal.model.DesiredEdge;
 import br.com.sinapse.platform.curation.internal.model.DesiredTopic;
@@ -142,6 +143,87 @@ public class CatalogDiffer {
                 List.copyOf(topicsAdded), List.copyOf(topicsChanged), topicsMissing,
                 topicsUnchanged, List.copyOf(edgesAdded), List.copyOf(edgesChanged), edgesRemoved,
                 edgesUnchanged, Map.copyOf(stored));
+    }
+
+    /**
+     * Cycles that close only through edges already in the catalogue that this run does not read.
+     *
+     * <p>{@link CatalogValidation} sees the files and nothing else. A run restricted with
+     * {@code --subject} reads one subject, but the edges another subject's file declared — say
+     * {@code B:y -> A:x} and {@code A:w -> B:z} — are in the catalogue and survive the import.
+     * A new edge {@code A:x -> A:w}, valid on its own, then closes a loop the files never show,
+     * and the first thing to notice would be the database trigger, which names one edge by its
+     * identifiers. This combines the files with every stored edge the run leaves untouched and
+     * walks the result.
+     *
+     * <p>Run only on files that already validate, so every cycle found goes through at least one
+     * stored edge: a cycle made only of file edges was reported by the validator.
+     *
+     * @param desired what the files describe, already validated
+     * @return the cycles, each as a problem on the first file edge of its loop
+     */
+    @Transactional(readOnly = true)
+    public List<CatalogProblem> cyclesThroughTheCatalogue(DesiredCatalogue desired) {
+        Map<UUID, String> subjectCodes = new LinkedHashMap<>();
+        catalog.subjects().forEach(subject -> subjectCodes.put(subject.id(), subject.code()));
+        if (subjectCodes.isEmpty()) {
+            return List.of();
+        }
+        Map<UUID, TopicView> topics = new LinkedHashMap<>();
+        catalog.topicsOfSubjects(subjectCodes.keySet()).forEach(topic -> topics.put(topic.id(), topic));
+
+        Map<TopicKey, List<TopicKey>> combined = new LinkedHashMap<>();
+        Map<DesiredEdge.Pair, DesiredEdge> fromFiles = new LinkedHashMap<>();
+        Map<TopicKey, String> names = new LinkedHashMap<>();
+        desired.topics().forEach(topic -> names.put(topic.key(), topic.name()));
+        for (DesiredEdge edge : desired.edges()) {
+            combined.computeIfAbsent(edge.prerequisite(), key -> new ArrayList<>()).add(edge.dependent());
+            fromFiles.putIfAbsent(edge.pair(), edge);
+        }
+
+        for (PrerequisiteEdgeView edge : graph.edgesTouchingSubjects(subjectCodes.keySet())) {
+            TopicView from = topics.get(edge.prerequisiteTopicId());
+            TopicView to = topics.get(edge.dependentTopicId());
+            String fromSubject = subjectCodes.get(from.subjectId());
+            String toSubject = subjectCodes.get(to.subjectId());
+            // Both ends in subjects this run reads: the files describe this edge, and the import
+            // will keep, correct or remove it as they say.
+            if (desired.subjects().containsKey(fromSubject) && desired.subjects().containsKey(toSubject)) {
+                continue;
+            }
+            TopicKey fromKey = new TopicKey(fromSubject, from.code());
+            TopicKey toKey = new TopicKey(toSubject, to.code());
+            names.putIfAbsent(fromKey, from.name());
+            names.putIfAbsent(toKey, to.name());
+            combined.computeIfAbsent(fromKey, key -> new ArrayList<>()).add(toKey);
+        }
+
+        List<CatalogProblem> problems = new ArrayList<>();
+        for (List<TopicKey> cycle : PrerequisiteCycles.in(combined)) {
+            DesiredEdge anchor = null;
+            List<String> stored = new ArrayList<>();
+            for (int index = 0; index < cycle.size() - 1; index++) {
+                DesiredEdge.Pair hop = new DesiredEdge.Pair(cycle.get(index), cycle.get(index + 1));
+                DesiredEdge inFiles = fromFiles.get(hop);
+                if (inFiles == null) {
+                    stored.add(hop.prerequisite() + " -> " + hop.dependent());
+                } else if (anchor == null) {
+                    anchor = inFiles;
+                }
+            }
+            // A loop of stored edges alone cannot exist (the trigger refused it when it was
+            // written), and one of file edges alone was reported by the validator.
+            if (anchor == null || stored.isEmpty()) {
+                continue;
+            }
+            problems.add(new CatalogProblem(anchor.file(), anchor.line(),
+                    ("cycle detected through the catalogue:%s%n      It closes through edge(s)"
+                            + " already in the catalogue that this run does not read: %s. Run"
+                            + " over every subject on the loop together (without --subject) and"
+                            + " cut one edge of it").formatted(
+                            PrerequisiteCycles.draw(cycle, names::get), String.join(", ", stored))));
+        }
+        return problems;
     }
 
     private Map<TopicKey, TopicView> storedTopics(Map<String, SubjectView> subjects) {

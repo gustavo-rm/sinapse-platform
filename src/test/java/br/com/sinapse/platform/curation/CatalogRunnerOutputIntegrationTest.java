@@ -209,7 +209,7 @@ class CatalogRunnerOutputIntegrationTest extends PlanningIntegrationTest {
                 b,B,2,SHORT
                 """, """
                 prerequisite,dependent,strength,provenance,source_reference
-                SUB:a,SUB:b,HARD,CURATED,
+                SUB:a,SUB:b,HARD,PROPOSED,
                 """);
         runner().run(command(CatalogCommand.Verb.APPLY));
 

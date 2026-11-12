@@ -89,6 +89,18 @@ SP-H4. Executed on the Core side only: UNVERIFIED(other repository). Correction 
 which wins over the "Why" row above: no Core test fails on the instances' SHA-256; the protection
 is the copy procedure (EOA-H2) and `InstanciasSemChavesIgnoradasTest`.
 
+### SP-H5 — the platform now tells reviewed edges from unreviewed ones; contract 1.0 cannot
+
+| Field | Value |
+|---|---|
+| Date | 2026-11-12 |
+| What changes or is needed | Information first, then a question. The platform's catalogue now has a fourth provenance, `PROPOSED` (asserted by a person, not reviewed by someone who teaches the subject); `CURATED` now means reviewed (platform ADR 0019). Contract 1.0 has no `PROPOSED`, so the platform sends such an edge as `CURATED`, whose contract Javadoc on both sides is "asserted by a human curator" (`SnapshotAssembler.wireProvenanceOf`). **Nothing on the wire changes**: the request bytes are what they were, the shared real-catalogue instances regenerate identically, and all 35 edges of the example catalogue are now `PROPOSED` on the platform side. Question: would the core accept a contract version carrying `PROPOSED`, and where would it sit in the `curated` ⊂ `curated-textbook` ⊂ `all` ladder of `algorithmParams.provenance`? |
+| Why | Under contract 1.0 the core's `curated` arm admits unreviewed edges whenever the catalogue has any, which is what the thesis ablation must not do (platform STATE.md K35) |
+| Interface affected | none today. If adopted: `PlanRequest.prerequisites[].provenance` enum, contract version, the `provenance` filter ladder |
+| What the Core must do | Nothing until the owner decides SP-17-W. Then, if option (b): say in its HANDOFF.md, citing SP-H5, whether and how it would accept the value |
+| Depends on this | decision SP-17-W; any ablation run on a real catalogue with `curated` or `curated-textbook` |
+| Status | open |
+
 ## Responses to requests from the other repository
 
 | Their ID | Read at | Response | Status |
@@ -110,6 +122,7 @@ Newest first, at most 20 entries; older ones leave (git keeps them).
 
 | Date | Change | Interface affected | Action required |
 |---|---|---|---|
+| 2026-11-12 | Platform SP-17: catalogue provenance `PROPOSED` added on the platform side, `CURATED` now means reviewed (ADR 0019); `PROPOSED` is sent as `CURATED` under contract 1.0, so requests and the shared instances are unchanged. `catalog shape` computes `tightness`, `density`, `demanded_minutes`, `available_minutes` by the core's `benchmarks/README.md` (read at other-repo@9e13262) and reproduces the three shared instances | none | Core: none until SP-17-W; SP-H5 is the question |
 | 2026-10-25 | Platform SP-15: SP-H4 closed (Core EOA-14: responses equal in content, 90/90 runs, 3/3 HTTP requests); SP-H3 acknowledged (Core EOA-12: `ga-timeline` resolved, `ga` still refuses 23/30, awaits the owner's allocator decision). Both read at other-repo@16be5b9. The platform now has a CI workflow (`.github/workflows/ci.yml`) | none | none for the Core |
 | 2026-10-20 | Platform SP-8b: the default configuration sends `algorithmParams: {}` (plus `engine` if a deployment names one); `generations`, `population-size`, `mutation-rate` are no longer sent; the three real-catalogue instances regenerated without them (only `algorithmParams` changed) | test inputs; wire: three ignored keys no longer sent | Core: SP-H4 (copy, check SHA-256, compare response contents), its EOA-14 |
 | 2026-10-19 | Platform SP-12: SP-H2 closed (`core_call_millis` on `origin/main` since #23); platform ADR "0015 ponte" renumbered to 0017; dated notes in platform ADRs 0001/0002/0015/0017 that the Core serves `POST /plans` (read at other-repo@3b54ba4) | none | Core: references to the platform's "ADR 0015" for the bridge decision now mean 0017 |

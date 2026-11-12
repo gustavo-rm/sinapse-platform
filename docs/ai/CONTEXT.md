@@ -80,7 +80,8 @@ Quality gates, exactly as the build has them:
 | `src/main/resources/db/migration/` | Flyway; append-only tables are trigger-protected (R8) |
 | `src/test/resources/contract/` | Reference contract JSON, byte-identical with the Core. **Never edit.** |
 | `src/test/resources/instances/` | Three synthetic real-catalogue `PlanRequest`s, also copied into the Core |
-| `catalog/` | Example catalogue (`MED-ANAT`), loaded by the `catalog` profile |
+| `catalog/` | Example catalogue (`MED-ANAT`), loaded by the `catalog` profile; every edge `PROPOSED`, nobody reviewed it (ADR 0019) |
+| `docs/curadoria/modelo-de-autoria/` | Empty authoring template for curators; `AuthoringTemplateTest` keeps it equal to what the importer reads |
 | `docs/` | Team documents, Portuguese; [adr/](../adr/) holds the ADRs |
 | `docs/prompts/` | Numbered implementation prompts (English) |
 | `docs/ai/` | This layer |

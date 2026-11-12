@@ -57,6 +57,25 @@ class CatalogCommandTest {
     void anUnknownVerbIsRefusedRatherThanGuessedAt() {
         assertThat(CatalogCommand.parse(List.of("aply"), List.of())).isNull();
         assertThat(CatalogCommand.parse(List.of(), List.of())).isNull();
-        assertThat(CatalogCommand.usage()).contains("validate", "diff", "apply", "seed-order");
+        assertThat(CatalogCommand.usage()).contains("validate", "diff", "apply", "seed-order",
+                "report", "shape");
+    }
+
+    @Test
+    void theReportAndTheShapeAreRecognisedWithTheirOptions() {
+        assertThat(CatalogCommand.parse(List.of("catalog", "report"), List.of("--subject=SYN-A")))
+                .isEqualTo(new CatalogCommand(CatalogCommand.Verb.REPORT, "SYN-A", false));
+
+        CatalogCommand shape = CatalogCommand.parse(List.of("shape"), List.of(
+                "--availability=MON-FRI 19:00-20:00; SAT 09:00-10:30", "--goals=SYN-A:5,SYN-B:3",
+                "--start=2026-10-12"));
+        assertThat(shape.verb()).isEqualTo(CatalogCommand.Verb.SHAPE);
+        assertThat(shape.availability()).isEqualTo("MON-FRI 19:00-20:00; SAT 09:00-10:30");
+        assertThat(shape.goals()).isEqualTo("SYN-A:5,SYN-B:3");
+        assertThat(shape.start()).isEqualTo("2026-10-12");
+
+        assertThat(CatalogCommand.parse(List.of("shape"), List.of()))
+                .as("missing options are the command's to explain, with an example, not a usage dump")
+                .isEqualTo(new CatalogCommand(CatalogCommand.Verb.SHAPE, null, false));
     }
 }

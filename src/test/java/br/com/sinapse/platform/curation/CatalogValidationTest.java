@@ -47,9 +47,9 @@ class CatalogValidationTest {
                 miologia,Miologia,3,STANDARD
                 """, """
                 prerequisite,dependent,strength,provenance,source_reference
-                MED-ANAT:osteologia,MED-ANAT:artrologia,HARD,CURATED,
-                MED-ANAT:artrologia,MED-ANAT:miologia,HARD,CURATED,
-                MED-ANAT:miologia,MED-ANAT:osteologia,HARD,CURATED,
+                MED-ANAT:osteologia,MED-ANAT:artrologia,HARD,PROPOSED,
+                MED-ANAT:artrologia,MED-ANAT:miologia,HARD,PROPOSED,
+                MED-ANAT:miologia,MED-ANAT:osteologia,HARD,PROPOSED,
                 """);
 
         List<CatalogProblem> problems = validate();
@@ -82,10 +82,10 @@ class CatalogValidationTest {
                 d,D,4,SHORT
                 """, """
                 prerequisite,dependent,strength,provenance,source_reference
-                SUB:a,SUB:b,HARD,CURATED,
-                SUB:b,SUB:c,HARD,CURATED,
-                SUB:c,SUB:d,HARD,CURATED,
-                SUB:d,SUB:a,HARD,CURATED,
+                SUB:a,SUB:b,HARD,PROPOSED,
+                SUB:b,SUB:c,HARD,PROPOSED,
+                SUB:c,SUB:d,HARD,PROPOSED,
+                SUB:d,SUB:a,HARD,PROPOSED,
                 """);
 
         assertThat(validate())
@@ -110,9 +110,9 @@ class CatalogValidationTest {
                 e,,5,SHORT
                 """, """
                 prerequisite,dependent,strength,provenance,source_reference
-                SUB:a,SUB:a,HARD,CURATED,
-                SUB:a,SUB:zzz,HARD,CURATED,
-                SUB:a,SUB:b,MAYBE,CURATED,
+                SUB:a,SUB:a,HARD,PROPOSED,
+                SUB:a,SUB:zzz,HARD,PROPOSED,
+                SUB:a,SUB:b,MAYBE,PROPOSED,
                 """);
 
         List<CatalogProblem> problems = validate();
@@ -126,11 +126,11 @@ class CatalogValidationTest {
                 .collect(java.util.stream.Collectors.joining("\n    ")));
         assertThat(messages(problems)).anySatisfy(m -> assertThat(m).contains("position 1 is already taken"));
         assertThat(messages(problems)).anySatisfy(m -> assertThat(m).contains("duplicate topic code a"));
-        assertThat(messages(problems)).anySatisfy(m -> assertThat(m).contains("effort_tier is not one of"));
+        assertThat(messages(problems)).anySatisfy(m -> assertThat(m).contains("effort_tier is \"ENORMOUS\""));
         assertThat(messages(problems)).anySatisfy(m -> assertThat(m).contains("name is blank"));
         assertThat(messages(problems)).anySatisfy(m -> assertThat(m).contains("cannot be its own prerequisite"));
         assertThat(messages(problems)).anySatisfy(m -> assertThat(m).contains("unknown topic SUB:zzz"));
-        assertThat(messages(problems)).anySatisfy(m -> assertThat(m).contains("strength is not HARD or SOFT"));
+        assertThat(messages(problems)).anySatisfy(m -> assertThat(m).contains("write HARD or SOFT"));
     }
 
     @Test
@@ -210,7 +210,7 @@ class CatalogValidationTest {
                 neuro,Neurofisiologia,1,STANDARD
                 """, """
                 prerequisite,dependent,strength,provenance,source_reference
-                MED-ANAT:cranio,MED-FISIO:neuro,HARD,CURATED,
+                MED-ANAT:cranio,MED-FISIO:neuro,HARD,PROPOSED,
                 """);
 
         assertThat(validate()).isEmpty();
@@ -224,7 +224,7 @@ class CatalogValidationTest {
                 cranio,Crânio,1,STANDARD
                 """, """
                 prerequisite,dependent,strength,provenance,source_reference
-                MED-FISIO:neuro,MED-ANAT:cranio,HARD,CURATED,
+                MED-FISIO:neuro,MED-ANAT:cranio,HARD,PROPOSED,
                 """);
 
         assertThat(messages(validate())).singleElement().satisfies(message ->
@@ -239,8 +239,8 @@ class CatalogValidationTest {
                 b,B,2,SHORT
                 """, """
                 prerequisite,dependent,strength,provenance,source_reference
-                SUB:a,SUB:b,HARD,CURATED,
-                SUB:a,SUB:b,SOFT,CURATED,
+                SUB:a,SUB:b,HARD,PROPOSED,
+                SUB:a,SUB:b,SOFT,PROPOSED,
                 """);
 
         assertThat(messages(validate())).singleElement().satisfies(message ->
@@ -309,8 +309,8 @@ class CatalogValidationTest {
                 b,B,2,SHORT
                 """, """
                 prerequisite,dependent,strength,provenance,source_reference
-                a,SUB:b,HARD,CURATED,
-                SUB:a,SUB:b:c,HARD,CURATED,
+                a,SUB:b,HARD,PROPOSED,
+                SUB:a,SUB:b:c,HARD,PROPOSED,
                 """);
 
         assertThat(messages(validate()))
@@ -349,7 +349,7 @@ class CatalogValidationTest {
                 """);
 
         assertThat(messages(validate())).singleElement().satisfies(message ->
-                assertThat(message).contains("provenance is not one of"));
+                assertThat(message).contains("write PROPOSED, CURATED, TEXTBOOK_ORDER or DERIVED"));
     }
 
     /** Two independent cycles are two problems, and both are named in full. */
@@ -363,8 +363,8 @@ class CatalogValidationTest {
                 d,D,4,SHORT
                 """, """
                 prerequisite,dependent,strength,provenance,source_reference
-                SUB:a,SUB:b,HARD,CURATED,
-                SUB:b,SUB:a,HARD,CURATED,
+                SUB:a,SUB:b,HARD,PROPOSED,
+                SUB:b,SUB:a,HARD,PROPOSED,
                 SUB:c,SUB:d,SOFT,TEXTBOOK_ORDER,
                 SUB:d,SUB:c,SOFT,TEXTBOOK_ORDER,
                 """);

@@ -200,7 +200,35 @@ public class SnapshotAssembler {
         return new PlanRequest.PrerequisiteEdge(edge.prerequisiteTopicId(),
                 edge.dependentTopicId(),
                 EdgeStrength.valueOf(edge.strength().name()),
-                EdgeProvenance.valueOf(edge.provenance().name()));
+                wireProvenanceOf(edge.provenance()));
+    }
+
+    /**
+     * The provenance an edge travels to the core with.
+     *
+     * <p>One value to one value, except {@code PROPOSED}. Contract 1.0 has no value for an edge
+     * a human wrote and nobody who teaches the subject has reviewed, and its {@code CURATED} is
+     * documented on both sides as "asserted by a human curator" — origin, not review. So a
+     * proposed edge goes out as {@code CURATED}, which is what it was before the catalogue
+     * learned the difference, and the request is byte for byte what it was.
+     *
+     * <p><strong>This is the one place the distinction is lost</strong>, and it is lost in the
+     * snapshot stored with the job too, because the snapshot is the document sent. What keeps a
+     * result attributable is the job's {@code catalog_import_id}: the import names the revision
+     * of the files, and the files say which edges were reviewed. Carrying the distinction on the
+     * wire is a contract change that belongs to the owner and the core (STATE.md K35, decision
+     * SP-17-W, HANDOFF SP-H5).
+     *
+     * <p>A switch without a default on purpose: a new provenance on this side does not compile
+     * until somebody decides what it is on the wire.
+     */
+    static EdgeProvenance wireProvenanceOf(
+            br.com.sinapse.platform.curriculum.api.EdgeProvenance provenance) {
+        return switch (provenance) {
+            case CURATED, PROPOSED -> EdgeProvenance.CURATED;
+            case TEXTBOOK_ORDER -> EdgeProvenance.TEXTBOOK_ORDER;
+            case DERIVED -> EdgeProvenance.DERIVED;
+        };
     }
 
     /** What one topic's sessions add up to, accumulated in the order they happened. */

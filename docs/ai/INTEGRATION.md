@@ -19,6 +19,7 @@ against `origin/main` at `e4c0be0`; Core references are to `origin/main` at `oth
 | Worker cycle | `poll-cron: '0/10 * * * * *'`, `batch-size: 1` | READ(application.yml:319-321@e4c0be0) |
 | Rate limit on asking | 10 generation requests per hour per account | READ(application.yml:199-203@e4c0be0) |
 | Credentials sent | none: body, `Content-Type`, `Accept` only | READ(RestSinapseCore.java:67-72@e4c0be0) |
+| Edge provenance sent | the platform has four values, the contract three: `PROPOSED` (unreviewed, ADR 0019) is sent as `CURATED`, the rest unchanged; the core's `curated` arm therefore admits unreviewed edges (STATE.md K35, decision SP-17-W, HANDOFF SP-H5) | READ(`planning/orchestration/SnapshotAssembler.wireProvenanceOf`); `WireProvenanceTest` |
 
 Error mapping (the full table, with the reasoning, is [INTEGRACAO_CORE.md §2](../INTEGRACAO_CORE.md)):
 

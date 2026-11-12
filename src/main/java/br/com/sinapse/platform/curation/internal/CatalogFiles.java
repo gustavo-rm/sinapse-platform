@@ -5,6 +5,7 @@ import br.com.sinapse.platform.curation.internal.csv.CsvRow;
 import br.com.sinapse.platform.curation.internal.model.CatalogProblem;
 import br.com.sinapse.platform.curation.internal.model.DesiredCatalogue;
 import br.com.sinapse.platform.curation.internal.model.DesiredEdge;
+import br.com.sinapse.platform.curation.internal.model.DesiredReview;
 import br.com.sinapse.platform.curation.internal.model.DesiredTopic;
 import br.com.sinapse.platform.curation.internal.model.TopicKey;
 import br.com.sinapse.platform.curriculum.api.EdgeProvenance;
@@ -14,6 +15,8 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -32,10 +35,15 @@ import java.util.stream.Stream;
  * {@link CatalogValidation}.
  *
  * <p>The columns are exactly the four and five that ADR 0014 names, because the authoring
- * surface is a spreadsheet and a format it cannot produce is a format nobody will maintain. The
- * one addition is {@code subject.csv}, a single optional cell holding the subject's display
- * name — see the report accompanying this change for why it exists and what it is standing in
- * for.
+ * surface is a spreadsheet and a format it cannot produce is a format nobody will maintain. Two
+ * optional files sit beside them: {@code subject.csv}, a single cell holding the subject's display
+ * name, and {@code reviews.csv}, the record of who reviewed the subject's graph and when
+ * (ADR 0019).
+ *
+ * <p><strong>Every column is declared once, in the lists below</strong>, and the authoring
+ * template under {@code docs/curadoria/modelo-de-autoria/} is checked against them. Dropping a
+ * column — the effort band, if the core's measurement shows it changes nothing — is a change to
+ * one list, one reader branch and one template file, not to the tool.
  */
 public final class CatalogFiles {
 
@@ -46,7 +54,28 @@ public final class CatalogFiles {
     static final List<String> EDGE_COLUMNS =
             List.of("prerequisite", "dependent", "strength", "provenance", "source_reference");
 
+    /** Columns of {@code reviews.csv}. */
+    static final List<String> REVIEW_COLUMNS = List.of("reviewer", "reviewed_on");
+
+    /** Columns of {@code subject.csv}. */
+    static final List<String> SUBJECT_COLUMNS = List.of("name");
+
+    /**
+     * Every file a subject directory may hold, with its columns, in the order a curator meets
+     * them. The authoring template is checked against this, so the two cannot drift apart.
+     */
+    public static final Map<String, List<String>> COLUMNS_BY_FILE = columnsByFile();
+
     private CatalogFiles() {
+    }
+
+    private static Map<String, List<String>> columnsByFile() {
+        Map<String, List<String>> columns = new LinkedHashMap<>();
+        columns.put("subject.csv", SUBJECT_COLUMNS);
+        columns.put("topics.csv", TOPIC_COLUMNS);
+        columns.put("prerequisites.csv", EDGE_COLUMNS);
+        columns.put("reviews.csv", REVIEW_COLUMNS);
+        return java.util.Collections.unmodifiableMap(columns);
     }
 
     /**
@@ -60,11 +89,12 @@ public final class CatalogFiles {
         Map<String, String> subjects = new LinkedHashMap<>();
         List<DesiredTopic> topics = new ArrayList<>();
         List<DesiredEdge> edges = new ArrayList<>();
+        List<DesiredReview> reviews = new ArrayList<>();
         List<CatalogProblem> problems = new ArrayList<>();
 
         if (!Files.isDirectory(root)) {
             problems.add(CatalogProblem.inFile(root.toString(), "the catalogue directory does not exist"));
-            return new DesiredCatalogue(subjects, topics, edges, problems);
+            return new DesiredCatalogue(subjects, topics, edges, reviews, problems);
         }
 
         for (Path directory : subjectDirectories(root, onlySubject)) {
@@ -72,13 +102,14 @@ public final class CatalogFiles {
             subjects.put(code, subjectName(directory, code, problems));
             readTopics(directory, code, topics, problems);
             readEdges(directory, code, edges, problems);
+            readReviews(directory, code, reviews, problems);
         }
         if (subjects.isEmpty()) {
             problems.add(CatalogProblem.inFile(root.toString(), onlySubject == null
                     ? "no subject directories found"
                     : "no directory for subject " + onlySubject));
         }
-        return new DesiredCatalogue(subjects, topics, edges, problems);
+        return new DesiredCatalogue(subjects, topics, edges, reviews, problems);
     }
 
     /**
@@ -115,7 +146,7 @@ public final class CatalogFiles {
         }
         Csv.Parsed parsed = Csv.read(file);
         String relative = code + "/subject.csv";
-        if (!parsed.header().containsKey("name")) {
+        if (!parsed.header().containsKey(SUBJECT_COLUMNS.getFirst())) {
             problems.add(CatalogProblem.inFile(relative, "missing required column: name"));
             return code;
         }
@@ -158,14 +189,15 @@ public final class CatalogFiles {
             Integer position = positive(row.get("position"));
             if (position == null) {
                 problems.add(new CatalogProblem(relative, row.line(),
-                        "position is not a whole number of zero or more: " + quoted(row.get("position"))));
+                        "position is not a whole number: " + quoted(row.get("position"))
+                                + ". Number the topics 1, 2, 3 … in the order the subject is taught"));
                 continue;
             }
             EffortTier tier = readEnum(EffortTier.class, row.get("effort_tier"));
             if (tier == null) {
                 problems.add(new CatalogProblem(relative, row.line(),
-                        "effort_tier is not one of SHORT, STANDARD, LONG, EXTENDED: "
-                                + quoted(row.get("effort_tier"))));
+                        "effort_tier is " + quoted(row.get("effort_tier"))
+                                + ": write one of SHORT, STANDARD, LONG, EXTENDED"));
                 continue;
             }
             topics.add(new DesiredTopic(new TopicKey(subject, code), name, position, tier, row.line()));
@@ -191,24 +223,63 @@ public final class CatalogFiles {
             TopicKey dependent = TopicKey.parse(row.get("dependent"));
             if (prerequisite == null || dependent == null) {
                 problems.add(new CatalogProblem(relative, row.line(),
-                        "prerequisite and dependent must both read subject_code:topic_code"));
+                        "prerequisite and dependent must both read subject_code:topic_code,"
+                                + " for example " + subject + ":<code from topics.csv>"));
                 continue;
             }
             EdgeStrength strength = readEnum(EdgeStrength.class, row.get("strength"));
             if (strength == null) {
                 problems.add(new CatalogProblem(relative, row.line(),
-                        "strength is not HARD or SOFT: " + quoted(row.get("strength"))));
+                        "strength is " + quoted(row.get("strength")) + ": write HARD or SOFT"));
                 continue;
             }
             EdgeProvenance provenance = readEnum(EdgeProvenance.class, row.get("provenance"));
             if (provenance == null) {
                 problems.add(new CatalogProblem(relative, row.line(),
-                        "provenance is not one of CURATED, TEXTBOOK_ORDER, DERIVED: "
-                                + quoted(row.get("provenance"))));
+                        "provenance is " + quoted(row.get("provenance"))
+                                + ": write PROPOSED, CURATED, TEXTBOOK_ORDER or DERIVED"));
                 continue;
             }
             edges.add(new DesiredEdge(prerequisite, dependent, strength, provenance,
-                    row.get("source_reference"), row.line()));
+                    row.get("source_reference"), subject, row.line()));
+        }
+    }
+
+    /**
+     * Reads the subject's review record.
+     *
+     * <p>Absent is legitimate and is the normal state of a subject nobody has reviewed yet: its
+     * edges are {@code PROPOSED}. What the absence forbids is {@code CURATED}, and that is
+     * {@link CatalogValidation}'s to say, because it needs the edges and the reviews together.
+     */
+    private static void readReviews(Path directory, String subject, List<DesiredReview> reviews,
+            List<CatalogProblem> problems) {
+
+        String relative = subject + "/reviews.csv";
+        Path file = directory.resolve("reviews.csv");
+        if (!Files.isRegularFile(file)) {
+            return;
+        }
+        Csv.Parsed parsed = Csv.read(file);
+        if (reportStructure(parsed, relative, REVIEW_COLUMNS, problems)) {
+            return;
+        }
+        for (CsvRow row : parsed.rows()) {
+            String reviewer = row.get("reviewer");
+            if (reviewer.isEmpty()) {
+                problems.add(new CatalogProblem(relative, row.line(),
+                        "reviewer is blank: write who reviewed the graph, as the project"
+                                + " identifies its reviewers"));
+                continue;
+            }
+            LocalDate reviewedOn = date(row.get("reviewed_on"));
+            if (reviewedOn == null) {
+                problems.add(new CatalogProblem(relative, row.line(),
+                        "reviewed_on is " + quoted(row.get("reviewed_on"))
+                                + ": write the date of the review as year-month-day, for example 2026-11-30"));
+                continue;
+            }
+            reviews.add(new DesiredReview(subject, reviewer, reviewedOn, row.line()));
         }
     }
 
@@ -240,6 +311,14 @@ public final class CatalogFiles {
         try {
             return Enum.valueOf(type, value.toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException unknown) {
+            return null;
+        }
+    }
+
+    private static LocalDate date(String value) {
+        try {
+            return LocalDate.parse(value);
+        } catch (DateTimeParseException unreadable) {
             return null;
         }
     }

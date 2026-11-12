@@ -12,3 +12,6 @@ spring:
 sinapse:
   catalog:
     directory: catalog
+    # The horizon "catalog shape" lays a weekly availability over. A reference, not a copy: the
+    # shape is only comparable with what the platform sends if it uses the platform's horizon.
+    horizon: ${sinapse.planning.generation.horizon}
